@@ -44,7 +44,7 @@ if not DUMMY_SUBTITLE.exists():
     DUMMY_SUBTITLE.write_text("""WEBVTT
 
 00:00:01.000 --> 00:00:03.000
-Hello! This is a subtitle example.
+Welcome to NEXFIX MP4HUB. JOIN ..
 
 00:00:04.000 --> 00:00:06.000
 Subtitles are working fine!
@@ -71,13 +71,14 @@ def save_db(data: List[Dict]) -> None:
 async def download_file(url: str, dest: Path) -> bool:
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
                 if resp.status == 200:
                     dest.write_bytes(await resp.read())
                     return True
-    except Exception:
-        pass
-    return False
+        return False
+    except Exception as e:
+        print(f"Download failed: {e}")
+        return False
 
 # ---------- Main Endpoints ----------
 
@@ -85,8 +86,8 @@ async def download_file(url: str, dest: Path) -> bool:
 async def request_stream(
     url: str = Query(...),
     user_id: str = Query(...),
-    thumbnail_url: str = Query(None),
-    subtitle_url: str = Query(None)
+    thumbnail_url: str = Query(default=None),
+    subtitle_url: str = Query(default=None)
 ):
     video_id = secrets.token_urlsafe(12)
     timestamp = datetime.utcnow().isoformat()
@@ -278,7 +279,7 @@ async def get_analytics(video_id: str = Query(...)):
 async def fetch_sources(url: str) -> List[Dict[str, str]]:
     sources = []
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
             if response.status == 200:
                 text = await response.text()
                 soup = BeautifulSoup(text, 'html.parser')
@@ -291,11 +292,14 @@ async def fetch_sources(url: str) -> List[Dict[str, str]]:
                         quality = determine_quality(title)
                         duration = 0
                         try:
-                            async with session.head(link) as head:
+                            async with session.head(link, timeout=aiohttp.ClientTimeout(total=5)) as head:
                                 if 'X-Content-Duration' in head.headers:
                                     duration = float(head.headers['X-Content-Duration'])
-                        except:
-                            pass
+                                elif 'Content-Length' in head.headers:
+                                    # Rough estimate: assume 128kbps average bitrate
+                                    duration = int(head.headers['Content-Length']) / (128 * 1024 / 8)
+                        except Exception as e:
+                            print(f"Failed to get duration for {link}: {e}")
                         sources.append({
                             "url": link,
                             "quality": quality,
