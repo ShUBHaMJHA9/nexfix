@@ -16,7 +16,7 @@ from typing import List, Dict
 
 # Constants
 EXPIRY_MINUTES = 60  # video expiration time in minutes
-DB_PATH = "database.json"
+DB_PATH = "/tmp/database.json"
 
 # Initialize FastAPI
 app = FastAPI(title="StreamHub Pro", version="2.0", docs_url="/api/docs")
