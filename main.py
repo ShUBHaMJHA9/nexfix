@@ -53,7 +53,7 @@ Subtitles are working fine!
 """)
 
 # Mount static
-app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Database operations
 def load_db() -> List[Dict]:
