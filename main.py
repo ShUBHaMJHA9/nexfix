@@ -20,7 +20,7 @@ templates = Jinja2Templates(directory="templates")
 
 # Configuration
 DB_PATH = "video_db.json"
-EXPIRY_MINUTES = 30
+EXPIRY_MINUTES = 500
 STATIC_PATH = Path(__file__).parent / "static"
 SUBTITLE_PATH = STATIC_PATH / "subtitles"
 THUMBNAIL_PATH = STATIC_PATH / "thumbnail.jpg"
