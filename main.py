@@ -16,7 +16,7 @@ from typing import List, Dict
 
 # Constants
 EXPIRY_MINUTES = 60  # video expiration time in minutes
-DB_PATH = "database.json"
+DB_PATH = "/tmp/database.json"
 
 # Initialize FastAPI
 app = FastAPI(title="StreamHub Pro", version="2.0", docs_url="/api/docs")
@@ -317,6 +317,13 @@ def determine_quality(title: str) -> str:
     if 'hd' in title: return "HD"
     return "Unknown"
 
-# ---------- Run Server ----------
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import sys
+    import logging
+
+    logging.basicConfig(level=logging.INFO)
+    try:
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    except Exception as e:
+        logging.error(f"Failed to start the server: {e}")
+        sys.exit(1)
