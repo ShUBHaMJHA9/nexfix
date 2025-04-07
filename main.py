@@ -309,7 +309,7 @@ async def fetch_sources(url: str) -> List[Dict[str, str]]:
 
 def determine_quality(title: str) -> str:
     title = title.lower()
-    if '1080' in title: return "1080p"
+    #if '1080' in title: return "1080p"
     if '720' in title: return "720p"
     if '480' in title: return "480p"
     if '360' in title: return "360p"
