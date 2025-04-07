@@ -14,31 +14,33 @@ import re
 from bs4 import BeautifulSoup
 from typing import List, Dict
 
+# Constants
+EXPIRY_MINUTES = 60  # video expiration time in minutes
+DB_PATH = "database.json"
+
 # Initialize FastAPI
 app = FastAPI(title="StreamHub Pro", version="2.0", docs_url="/api/docs")
 templates = Jinja2Templates(directory="templates")
 
-# Configuration
-DB_PATH = "video_db.json"
-EXPIRY_MINUTES = 500
-STATIC_PATH = Path(__file__).parent / "static"
+# Directories
+TMP_DIR = Path("/tmp")
+STATIC_PATH = TMP_DIR / "static"
 SUBTITLE_PATH = STATIC_PATH / "subtitles"
 THUMBNAIL_PATH = STATIC_PATH / "thumbnail.jpg"
 LOGO_PATH = STATIC_PATH / "logo.svg"
 DEFAULT_SUBTITLE = "/static/subtitles/english.vtt"
 
-# Ensure required directories exist
+# Create necessary directories
 STATIC_PATH.mkdir(parents=True, exist_ok=True)
 SUBTITLE_PATH.mkdir(parents=True, exist_ok=True)
 
-# Dummy static files
+# Dummy files
 if not LOGO_PATH.exists():
     LOGO_PATH.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="10" y="50">Logo</text></svg>')
 
 if not THUMBNAIL_PATH.exists():
     THUMBNAIL_PATH.write_bytes(b"\x89PNG\r\n\x1a\n")
 
-# Default subtitle file
 DUMMY_SUBTITLE = SUBTITLE_PATH / "english.vtt"
 if not DUMMY_SUBTITLE.exists():
     DUMMY_SUBTITLE.write_text("""WEBVTT
@@ -50,11 +52,10 @@ Welcome to NEXFIX MP4HUB. JOIN ..
 Subtitles are working fine!
 """)
 
-# Serve static files
+# Mount static
 app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
-# ---------- Utility Functions ----------
-
+# Database operations
 def load_db() -> List[Dict]:
     if os.path.exists(DB_PATH):
         try:
@@ -79,7 +80,6 @@ async def download_file(url: str, dest: Path) -> bool:
     except Exception as e:
         print(f"Download failed: {e}")
         return False
-
 # ---------- Main Endpoints ----------
 
 @app.get("/request-movie", response_class=JSONResponse)
