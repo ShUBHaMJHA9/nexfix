@@ -1,3 +1,4 @@
+python-dotenv
 fastapi
 uvicorn
 aiohttp
@@ -5,3 +6,9 @@ jinja2
 beautifulsoup4
 python-multipart
 psycopg2
+fastapi
+aiohttp
+python-dotenv
+psycopg2-binary
+beautifulsoup4
+jinja2
