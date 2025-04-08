@@ -43,8 +43,12 @@ def get_db_connection():
 def init_db():
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
+            # Drop existing table (for dev/testing)
+            cursor.execute("DROP TABLE IF EXISTS mov")
+
+            # Create table
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS mov (
+                CREATE TABLE mov (
                     video_id VARCHAR(255) PRIMARY KEY,
                     user_id VARCHAR(255) NOT NULL,
                     sources JSONB NOT NULL,
@@ -56,12 +60,16 @@ def init_db():
                     subtitle_file_path TEXT
                 )
             """)
+
+            # Create index on timestamp
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_timestamp 
-                ON movies (timestamp)
+                ON mov (timestamp)
             """)
+
             conn.commit()
 
+# Call the function
 init_db()
 
 # File management
