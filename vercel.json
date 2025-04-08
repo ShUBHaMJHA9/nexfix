@@ -6,7 +6,7 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
-        "installCommand": "pip3 install --no-cache-dir -r req.txt"
+        "installCommand": "pip3 install --no-cache-dir -r requirements.txt"
       }
     }
   ],
