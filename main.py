@@ -181,6 +181,18 @@ async def get_stream_data(video_id: str):
         }],
         "thumbnail": entry["thumbnail"]
     }
+import httpx
+from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, HTTPException, Request
+from datetime import datetime, timedelta
+import re
+
+app = FastAPI()
+CHUNK_SIZE = 1 * 1024 * 1024  # 1 MB chunks
+EXPIRY_MINUTES = 60
+
+# Global persistent client (very important for speed!)
+http_client = httpx.AsyncClient(http2=True, timeout=httpx.Timeout(10.0, read=60.0))
 
 @app.get("/stream-proxy/{video_id}")
 async def stream_proxy(video_id: str, quality: str, request: Request):
@@ -197,11 +209,11 @@ async def stream_proxy(video_id: str, quality: str, request: Request):
         raise HTTPException(status_code=404, detail="Quality not available")
 
     range_header = request.headers.get("range")
-    async with aiohttp.ClientSession() as session:
-        async with session.head(selected_source["url"]) as head_resp:
-            if head_resp.status != 200:
-                raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
-            total_size = int(head_resp.headers.get("Content-Length", 0))
+    try:
+        head_resp = await http_client.head(selected_source["url"])
+        total_size = int(head_resp.headers.get("Content-Length", 0))
+    except Exception:
+        raise HTTPException(status_code=502, detail="Could not reach source")
 
     start, end = 0, total_size - 1
     if range_header:
@@ -214,13 +226,14 @@ async def stream_proxy(video_id: str, quality: str, request: Request):
             raise HTTPException(status_code=416, detail="Invalid range")
 
     headers = {"Range": f"bytes={start}-{end}"}
+
     async def stream_chunk():
-        async with aiohttp.ClientSession() as session:
-            async with session.get(selected_source["url"], headers=headers) as resp:
-                if resp.status not in [200, 206]:
-                    raise HTTPException(status_code=resp.status, detail="Failed to fetch video")
-                async for chunk in resp.content.iter_chunked(CHUNK_SIZE):
+        try:
+            async with http_client.stream("GET", selected_source["url"], headers=headers) as resp:
+                async for chunk in resp.aiter_bytes(CHUNK_SIZE):
                     yield chunk
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Stream error: {str(e)}")
 
     return StreamingResponse(
         stream_chunk(),
@@ -232,6 +245,7 @@ async def stream_proxy(video_id: str, quality: str, request: Request):
             "Content-Type": "video/mp4"
         }
     )
+
 
 @app.get("/analytics", response_class=JSONResponse)
 async def get_analytics(video_id: str = Query(...)):
