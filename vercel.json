@@ -1,14 +1,19 @@
+
 {
+  "version": 2,
   "builds": [
     {
-      "src": "index.py",
-      "use": "@vercel/python"
+      "src": "main.py",
+      "use": "@vercel/python",
+      "config": {
+        "installCommand": "pip3 install --no-cache-dir -r requirements.txt"
+      }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/main.py"
+      "dest": "main.py"
     }
   ]
 }
