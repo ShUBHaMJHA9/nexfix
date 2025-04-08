@@ -1,56 +1,80 @@
-from fastapi import FastAPI, Request, Query, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Dict
-from bs4 import BeautifulSoup
+import uvicorn
+import secrets
+import os
 import aiohttp
 import asyncio
-import secrets
-import json
-import os
 import re
-import uvicorn
+import psycopg2
+from psycopg2 import sql
+from psycopg2.extras import RealDictCursor, execute_batch
+from bs4 import BeautifulSoup
+from typing import List, Dict, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Constants
 EXPIRY_MINUTES = 60
-DB_PATH = "/tmp/database.json"
+CHUNK_SIZE = 1024 * 512  # 512KB chunks
 
-# FastAPI app setup
-app = FastAPI(title="StreamHub Pro", version="2.0", docs_url="/api/docs")
+# Initialize FastAPI
+app = FastAPI(title="StreamHub Pro", version="3.0", docs_url="/api/docs")
 templates = Jinja2Templates(directory="templates")
 
-# Directories
+# Database configuration
+def get_db_connection():
+    return psycopg2.connect(
+        host=os.getenv("TEMBO_HOST"),
+        port=os.getenv("TEMBO_PORT"),
+        database=os.getenv("TEMBO_DB"),
+        user=os.getenv("TEMBO_USER"),
+        password=os.getenv("TEMBO_PASSWORD"),
+        cursor_factory=RealDictCursor
+    )
+
+# Initialize database tables
+def init_db():
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS movies (
+                    video_id VARCHAR(255) PRIMARY KEY,
+                    user_id VARCHAR(255) NOT NULL,
+                    sources JSONB NOT NULL,
+                    timestamp TIMESTAMP NOT NULL,
+                    views INTEGER DEFAULT 0,
+                    duration INTEGER NOT NULL,
+                    subtitle TEXT,
+                    thumbnail TEXT,
+                    subtitle_file_path TEXT
+                )
+            """)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_timestamp 
+                ON movies (timestamp)
+            """)
+            conn.commit()
+
+init_db()
+
+# File management
 TMP_DIR = Path("/tmp")
-STATIC_PATH = Path("static")
+STATIC_PATH = TMP_DIR / "static"
 SUBTITLE_PATH = STATIC_PATH / "subtitles"
-THUMBNAIL_PATH = STATIC_PATH / "thumbnail.jpg"
-LOGO_PATH = STATIC_PATH / "logo.svg"
-DEFAULT_SUBTITLE = "/static/subtitles/english.vtt"
-
-# Mount static files
+SUBTITLE_PATH.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
-
-# Helper functions
-def load_db() -> List[Dict]:
-    if os.path.exists(DB_PATH):
-        try:
-            with open(DB_PATH, "r") as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            return []
-    return []
-
-def save_db(data: List[Dict]) -> None:
-    with open(DB_PATH, "w") as f:
-        json.dump(data, f, indent=2)
 
 async def download_file(url: str, dest: Path) -> bool:
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            async with session.get(url, timeout=10) as resp:
                 if resp.status == 200:
                     dest.write_bytes(await resp.read())
                     return True
@@ -59,166 +83,164 @@ async def download_file(url: str, dest: Path) -> bool:
         print(f"Download failed: {e}")
         return False
 
-# Routes
+# Database operations
+async def db_execute(query: str, params: tuple = None) -> Optional[List[Dict]]:
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(query, params)
+                if query.strip().upper().startswith("SELECT"):
+                    return cursor.fetchall()
+                conn.commit()
+                return None
+    except Exception as e:
+        print(f"Database error: {e}")
+        raise HTTPException(status_code=500, detail="Database operation failed")
+
+async def cleanup_expired_entries():
+    expiry_time = datetime.utcnow() - timedelta(minutes=EXPIRY_MINUTES)
+    await db_execute(
+        "DELETE FROM movies WHERE timestamp < %s",
+        (expiry_time,)
+    )
+
+# Main endpoints
 @app.get("/request-movie", response_class=JSONResponse)
 async def request_stream(
     url: str = Query(...),
     user_id: str = Query(...),
-    thumbnail_url: str = Query(default=None),
-    subtitle_url: str = Query(default=None)
+    thumbnail_url: str = Query(None),
+    subtitle_url: str = Query(None)
 ):
-    video_id = secrets.token_urlsafe(12)
-    timestamp = datetime.utcnow().isoformat()
-    subtitle_file = DEFAULT_SUBTITLE
-    downloaded_sub = None
-
-    # Subtitle
+    video_id = secrets.token_urlsafe(16)
+    timestamp = datetime.utcnow()
+    
+    # Handle subtitles
+    subtitle_path = None
     if subtitle_url:
         sub_path = SUBTITLE_PATH / f"{video_id}.vtt"
         if await download_file(subtitle_url, sub_path):
-            subtitle_file = f"/static/subtitles/{video_id}.vtt"
-            downloaded_sub = str(sub_path)
+            subtitle_path = f"/static/subtitles/{video_id}.vtt"
 
-    # Thumbnail
-    thumbnail_file = "/static/thumbnail.jpg"
+    # Handle thumbnails
+    thumbnail_path = "/static/thumbnail.jpg"
     if thumbnail_url:
         thumb_path = STATIC_PATH / f"{video_id}.jpg"
         if await download_file(thumbnail_url, thumb_path):
-            thumbnail_file = f"/static/{video_id}.jpg"
+            thumbnail_path = f"/static/{video_id}.jpg"
 
+    # Fetch video sources
     sources = await fetch_sources(url)
     if not sources:
-        raise HTTPException(status_code=400, detail="No video sources found")
+        raise HTTPException(status_code=400, detail="No valid sources found")
 
-    video_entry = {
-        "video_id": video_id,
-        "user_id": user_id,
-        "sources": sources,
-        "timestamp": timestamp,
-        "views": 0,
-        "duration": max([s.get("duration", 0) for s in sources], default=0),
-        "subtitle": subtitle_file,
-        "thumbnail": thumbnail_file,
-        "subtitle_file_path": downloaded_sub
-    }
-
-    data = load_db()
-    data.append(video_entry)
-    save_db(data)
+    # Database insertion
+    await db_execute(
+        """
+        INSERT INTO movies (
+            video_id, user_id, sources, timestamp,
+            duration, subtitle, thumbnail, subtitle_file_path
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        (
+            video_id, user_id, json.dumps(sources), timestamp,
+            max(s["duration"] for s in sources),
+            subtitle_path, thumbnail_path,
+            str(sub_path) if subtitle_path else None
+        )
+    )
 
     return {
         "video_id": video_id,
         "movie_url": f"/movie?video_id={video_id}",
-        "expires_at": (datetime.utcnow() + timedelta(minutes=EXPIRY_MINUTES)).isoformat()
+        "expires_at": (timestamp + timedelta(minutes=EXPIRY_MINUTES)).isoformat()
     }
 
 @app.get("/movie", response_class=HTMLResponse)
-async def video_movie(request: Request, video_id: str = Query(...)):
-    return templates.TemplateResponse("player.html", {"request": request, "video_id": video_id})
+async def video_player(request: Request, video_id: str):
+    return templates.TemplateResponse("player.html", {
+        "request": request,
+        "video_id": video_id
+    })
 
 @app.get("/stream/{video_id}", response_class=JSONResponse)
-async def get_stream(video_id: str):
-    data = load_db()
-    new_data = []
-    updated = False
+async def get_stream_data(video_id: str):
+    # Cleanup expired entries first
+    await cleanup_expired_entries()
 
-    for entry in data:
-        if entry["video_id"] == video_id:
-            entry_time = datetime.fromisoformat(entry["timestamp"])
-            if datetime.utcnow() - entry_time > timedelta(minutes=EXPIRY_MINUTES):
-                if entry.get("subtitle_file_path") and os.path.exists(entry["subtitle_file_path"]):
-                    os.remove(entry["subtitle_file_path"])
-                thumb_file = STATIC_PATH / f"{video_id}.jpg"
-                if thumb_file.exists():
-                    os.remove(thumb_file)
-                continue
+    result = await db_execute(
+        "SELECT * FROM movies WHERE video_id = %s",
+        (video_id,)
+    )
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Content not found")
 
-            entry["views"] += 1
-            updated = True
+    entry = result[0]
+    await db_execute(
+        "UPDATE movies SET views = views + 1 WHERE video_id = %s",
+        (video_id,)
+    )
 
-            return {
-                "sources": [
-                    {
-                        "url": f"/stream-proxy/{video_id}?quality={s['quality']}",
-                        "quality": s["quality"]
-                    } for s in entry["sources"]
-                ],
-                "meta": {
-                    "resolution": entry.get("resolution", "Unknown"),
-                    "duration": entry["duration"],
-                    "views": entry["views"]
-                },
-                "subtitles": [
-                    {
-                        "label": "English",
-                        "lang": "en",
-                        "url": entry["subtitle"],
-                        "default": True
-                    }
-                ],
-                "thumbnail": entry["thumbnail"],
-                "logo": "/static/logo.svg"
-            }
-        new_data.append(entry)
-
-    if updated:
-        save_db(new_data)
-
-    raise HTTPException(status_code=404, detail="Content not found or expired")
+    return {
+        "sources": [
+            {"url": f"/stream-proxy/{video_id}?quality={s['quality']}", "quality": s["quality"]}
+            for s in entry["sources"]
+        ],
+        "meta": {
+            "duration": entry["duration"],
+            "views": entry["views"] + 1,
+            "resolution": "HD"
+        },
+        "subtitles": [{
+            "label": "English",
+            "lang": "en",
+            "url": entry["subtitle"],
+            "default": True
+        }],
+        "thumbnail": entry["thumbnail"]
+    }
 
 @app.get("/stream-proxy/{video_id}")
-async def stream_proxy(video_id: str, request: Request, quality: str = Query(...)):
-    data = load_db()
-    for entry in data:
-        if entry["video_id"] == video_id:
-            entry_time = datetime.fromisoformat(entry["timestamp"])
-            if datetime.utcnow() - entry_time > timedelta(minutes=EXPIRY_MINUTES):
-                raise HTTPException(status_code=403, detail="Stream expired")
+async def stream_proxy(video_id: str, quality: str, request: Request):
+    result = await db_execute(
+        "SELECT sources, timestamp FROM movies WHERE video_id = %s",
+        (video_id,)
+    )
+    
+    if not result:
+        raise HTTPException(status_code=404, detail="Invalid video ID")
 
-            selected_source = next((s for s in entry["sources"] if s["quality"] == quality), None)
-            if not selected_source:
-                raise HTTPException(status_code=404, detail="Quality not available")
+    entry = result[0]
+    if datetime.utcnow() - entry["timestamp"] > timedelta(minutes=EXPIRY_MINUTES):
+        raise HTTPException(status_code=403, detail="Stream expired")
 
-            range_header = request.headers.get("range", None)
-            async with aiohttp.ClientSession() as session:
-                async with session.head(selected_source["url"]) as head_resp:
-                    if head_resp.status != 200:
-                        raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
-                    total_size = int(head_resp.headers.get("Content-Length", 0))
+    source = next((s for s in entry["sources"] if s["quality"] == quality), None)
+    if not source:
+        raise HTTPException(status_code=404, detail="Quality not available")
 
-            # Byte range
-            start = 0
-            end = total_size - 1
-            if range_header:
-                match = re.match(r"bytes=(\d+)-(\d*)", range_header)
-                if match:
-                    start = int(match.group(1))
-                    end = int(match.group(2)) if match.group(2) else end
-                if start > end:
-                    raise HTTPException(status_code=416, detail="Invalid range")
+    # Streaming logic
+    range_header = request.headers.get("range")
+    headers = {"Range": range_header} if range_header else {}
 
-            headers = {"Range": f"bytes={start}-{end}"}
+    async def stream_generator():
+        async with aiohttp.ClientSession() as session:
+            async with session.get(source["url"], headers=headers) as response:
+                if response.status not in (200, 206):
+                    raise HTTPException(status_code=response.status, detail="Upstream error")
+                
+                async for chunk in response.content.iter_chunked(CHUNK_SIZE):
+                    yield chunk
 
-            async def stream_chunk():
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(selected_source["url"], headers=headers) as resp:
-                        if resp.status not in [200, 206]:
-                            raise HTTPException(status_code=resp.status, detail="Failed to fetch video")
-                        async for chunk in resp.content.iter_chunked(1024 * 512):
-                            yield chunk
-
-            content_length = end - start + 1
-            return StreamingResponse(
-                stream_chunk(),
-                status_code=206 if range_header else 200,
-                headers={
-                    "Content-Range": f"bytes {start}-{end}/{total_size}",
-                    "Accept-Ranges": "bytes",
-                    "Content-Length": str(content_length),
-                    "Content-Type": "video/mp4"
-                }
-            )
-    raise HTTPException(status_code=404, detail="Invalid video ID")
+    return StreamingResponse(
+        stream_generator(),
+        media_type="video/mp4",
+        headers={
+            "Accept-Ranges": "bytes",
+            "Content-Disposition": "inline",
+            "Cache-Control": "public, max-age=3600"
+        }
+    )
 
 @app.get("/analytics", response_class=JSONResponse)
 async def get_analytics(video_id: str = Query(...)):
@@ -276,13 +298,5 @@ def determine_quality(title: str) -> str:
     if 'hd' in title: return "HD"
     return "Unknown"
 
-# Run the app
 if __name__ == "__main__":
-    import sys
-    import logging
-    logging.basicConfig(level=logging.INFO)
-    try:
-        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-    except Exception as e:
-        logging.error(f"Failed to start the server: {e}")
-        sys.exit(1)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
