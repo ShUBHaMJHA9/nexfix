@@ -207,7 +207,7 @@ async def stream_proxy(video_id: str, quality: str, request: Request):
         "SELECT sources, timestamp FROM movies WHERE video_id = %s",
         (video_id,)
     )
-    
+
     if not result:
         raise HTTPException(status_code=404, detail="Invalid video ID")
 
@@ -215,31 +215,58 @@ async def stream_proxy(video_id: str, quality: str, request: Request):
     if datetime.utcnow() - entry["timestamp"] > timedelta(minutes=EXPIRY_MINUTES):
         raise HTTPException(status_code=403, detail="Stream expired")
 
-    source = next((s for s in entry["sources"] if s["quality"] == quality), None)
-    if not source:
+    # Find source by quality
+    selected_source = next((s for s in entry["sources"] if s["quality"] == quality), None)
+    if not selected_source:
         raise HTTPException(status_code=404, detail="Quality not available")
 
-    # Streaming logic
     range_header = request.headers.get("range")
-    headers = {"Range": range_header} if range_header else {}
+    print("Range header:", range_header)
 
-    async def stream_generator():
+    async with aiohttp.ClientSession() as session:
+        async with session.head(selected_source["url"]) as head_resp:
+            if head_resp.status != 200:
+                raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
+            total_size = int(head_resp.headers.get("Content-Length", 0))
+            print("Total video size:", total_size)
+
+    # Default byte range
+    start = 0
+    end = total_size - 1
+
+    if range_header:
+        range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+        if range_match:
+            start = int(range_match.group(1))
+            if range_match.group(2):
+                end = int(range_match.group(2))
+        if start > end:
+            raise HTTPException(status_code=416, detail="Invalid range")
+
+    headers = {
+        "Range": f"bytes={start}-{end}"
+    }
+
+    async def stream_chunk():
         async with aiohttp.ClientSession() as session:
-            async with session.get(source["url"], headers=headers) as response:
-                if response.status not in (200, 206):
-                    raise HTTPException(status_code=response.status, detail="Upstream error")
-                
-                async for chunk in response.content.iter_chunked(CHUNK_SIZE):
+            async with session.get(selected_source["url"], headers=headers) as resp:
+                if resp.status not in [200, 206]:
+                    raise HTTPException(status_code=resp.status, detail="Failed to fetch video")
+                async for chunk in resp.content.iter_chunked(1024 * 512):  # 512KB chunks
                     yield chunk
 
+    content_length = end - start + 1
+    response_headers = {
+        "Content-Range": f"bytes {start}-{end}/{total_size}",
+        "Accept-Ranges": "bytes",
+        "Content-Length": str(content_length),
+        "Content-Type": "video/mp4"
+    }
+
     return StreamingResponse(
-        stream_generator(),
-        media_type="video/mp4",
-        headers={
-            "Accept-Ranges": "bytes",
-            "Content-Disposition": "inline",
-            "Cache-Control": "public, max-age=3600"
-        }
+        stream_chunk(),
+        status_code=206 if range_header else 200,
+        headers=response_headers
     )
 
 @app.get("/analytics", response_class=JSONResponse)
