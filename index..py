@@ -44,7 +44,7 @@ def init_db():
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS movies (
+                CREATE TABLE IF NOT EXISTS mov (
                     video_id VARCHAR(255) PRIMARY KEY,
                     user_id VARCHAR(255) NOT NULL,
                     sources JSONB NOT NULL,
