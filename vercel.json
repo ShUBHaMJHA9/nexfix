@@ -1,12 +1,14 @@
 {
   "builds": [
-    { "src": "api/index.py", "use": "@vercel/python" }
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
   ],
   "routes": [
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/watch", "dest": "/api/index.py" },
-    { "src": "/stream/(.*)", "dest": "/api/index.py" },
-    { "src": "/stream-proxy/(.*)", "dest": "/api/index.py" },
-    { "src": "/request", "dest": "/api/index.py" }
+    {
+      "src": "/(.*)",
+      "dest": "api/main.py"
+    }
   ]
 }
