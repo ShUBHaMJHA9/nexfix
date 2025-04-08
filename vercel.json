@@ -1,19 +1,12 @@
-
 {
-  "version": 2,
   "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "installCommand": "pip3 install --no-cache-dir -r requirements.txt"
-      }
-    }
+    { "src": "api/index.py", "use": "@vercel/python" }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "main.py"
-    }
+    { "src": "/static/(.*)", "dest": "/static/$1" },
+    { "src": "/watch", "dest": "/api/index.py" },
+    { "src": "/stream/(.*)", "dest": "/api/index.py" },
+    { "src": "/stream-proxy/(.*)", "dest": "/api/index.py" },
+    { "src": "/request", "dest": "/api/index.py" }
   ]
 }
