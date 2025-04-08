@@ -4,20 +4,21 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import List, Dict
+from bs4 import BeautifulSoup
 import aiohttp
 import asyncio
 import secrets
-import os
 import json
+import os
 import re
-from bs4 import BeautifulSoup
-from typing import List, Dict
+import uvicorn
 
 # Constants
-EXPIRY_MINUTES = 60  # Video expiration time in minutes
+EXPIRY_MINUTES = 60
 DB_PATH = "/tmp/database.json"
 
-# Initialize FastAPI
+# FastAPI app setup
 app = FastAPI(title="StreamHub Pro", version="2.0", docs_url="/api/docs")
 templates = Jinja2Templates(directory="templates")
 
@@ -32,7 +33,7 @@ DEFAULT_SUBTITLE = "/static/subtitles/english.vtt"
 # Mount static files
 app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
-# Database operations
+# Helper functions
 def load_db() -> List[Dict]:
     if os.path.exists(DB_PATH):
         try:
@@ -58,7 +59,7 @@ async def download_file(url: str, dest: Path) -> bool:
         print(f"Download failed: {e}")
         return False
 
-# Main Endpoints
+# Routes
 @app.get("/request-movie", response_class=JSONResponse)
 async def request_stream(
     url: str = Query(...),
@@ -71,14 +72,14 @@ async def request_stream(
     subtitle_file = DEFAULT_SUBTITLE
     downloaded_sub = None
 
-    # Subtitle Handling
+    # Subtitle
     if subtitle_url:
         sub_path = SUBTITLE_PATH / f"{video_id}.vtt"
         if await download_file(subtitle_url, sub_path):
             subtitle_file = f"/static/subtitles/{video_id}.vtt"
             downloaded_sub = str(sub_path)
 
-    # Thumbnail Handling
+    # Thumbnail
     thumbnail_file = "/static/thumbnail.jpg"
     if thumbnail_url:
         thumb_path = STATIC_PATH / f"{video_id}.jpg"
@@ -118,14 +119,13 @@ async def video_movie(request: Request, video_id: str = Query(...)):
 @app.get("/stream/{video_id}", response_class=JSONResponse)
 async def get_stream(video_id: str):
     data = load_db()
-    updated = False
     new_data = []
+    updated = False
 
     for entry in data:
         if entry["video_id"] == video_id:
             entry_time = datetime.fromisoformat(entry["timestamp"])
             if datetime.utcnow() - entry_time > timedelta(minutes=EXPIRY_MINUTES):
-                # Cleanup expired content
                 if entry.get("subtitle_file_path") and os.path.exists(entry["subtitle_file_path"]):
                     os.remove(entry["subtitle_file_path"])
                 thumb_file = STATIC_PATH / f"{video_id}.jpg"
@@ -141,8 +141,7 @@ async def get_stream(video_id: str):
                     {
                         "url": f"/stream-proxy/{video_id}?quality={s['quality']}",
                         "quality": s["quality"]
-                    }
-                    for s in entry["sources"]
+                    } for s in entry["sources"]
                 ],
                 "meta": {
                     "resolution": entry.get("resolution", "Unknown"),
@@ -167,7 +166,6 @@ async def get_stream(video_id: str):
 
     raise HTTPException(status_code=404, detail="Content not found or expired")
 
-
 @app.get("/stream-proxy/{video_id}")
 async def stream_proxy(video_id: str, request: Request, quality: str = Query(...)):
     data = load_db()
@@ -177,39 +175,29 @@ async def stream_proxy(video_id: str, request: Request, quality: str = Query(...
             if datetime.utcnow() - entry_time > timedelta(minutes=EXPIRY_MINUTES):
                 raise HTTPException(status_code=403, detail="Stream expired")
 
-            selected_source = next(
-                (s for s in entry["sources"] if s["quality"] == quality),
-                None
-            )
+            selected_source = next((s for s in entry["sources"] if s["quality"] == quality), None)
             if not selected_source:
                 raise HTTPException(status_code=404, detail="Quality not available")
 
             range_header = request.headers.get("range", None)
-            print("Range header:", range_header)
-
             async with aiohttp.ClientSession() as session:
                 async with session.head(selected_source["url"]) as head_resp:
                     if head_resp.status != 200:
                         raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
                     total_size = int(head_resp.headers.get("Content-Length", 0))
-                    print("Total video size:", total_size)
 
-            # Default start and end bytes
+            # Byte range
             start = 0
             end = total_size - 1
-
             if range_header:
-                range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
-                if range_match:
-                    start = int(range_match.group(1))
-                    if range_match.group(2):
-                        end = int(range_match.group(2))
+                match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+                if match:
+                    start = int(match.group(1))
+                    end = int(match.group(2)) if match.group(2) else end
                 if start > end:
                     raise HTTPException(status_code=416, detail="Invalid range")
 
-            headers = {
-                "Range": f"bytes={start}-{end}"
-            }
+            headers = {"Range": f"bytes={start}-{end}"}
 
             async def stream_chunk():
                 async with aiohttp.ClientSession() as session:
@@ -220,19 +208,16 @@ async def stream_proxy(video_id: str, request: Request, quality: str = Query(...
                             yield chunk
 
             content_length = end - start + 1
-            response_headers = {
-                "Content-Range": f"bytes {start}-{end}/{total_size}",
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(content_length),
-                "Content-Type": "video/mp4"
-            }
-
             return StreamingResponse(
                 stream_chunk(),
                 status_code=206 if range_header else 200,
-                headers=response_headers
+                headers={
+                    "Content-Range": f"bytes {start}-{end}/{total_size}",
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": str(content_length),
+                    "Content-Type": "video/mp4"
+                }
             )
-
     raise HTTPException(status_code=404, detail="Invalid video ID")
 
 @app.get("/analytics", response_class=JSONResponse)
@@ -253,16 +238,13 @@ async def get_analytics(video_id: str = Query(...)):
     raise HTTPException(status_code=404, detail="Content not found")
 
 # ---------- Scraper ----------
-
 async def fetch_sources(url: str) -> List[Dict[str, str]]:
     sources = []
     async with aiohttp.ClientSession() as session:
         async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
             if response.status == 200:
-                text = await response.text()
-                soup = BeautifulSoup(text, 'html.parser')
-                movie_divs = soup.find_all('div', class_='mast')
-                for div in movie_divs:
+                soup = BeautifulSoup(await response.text(), 'html.parser')
+                for div in soup.find_all('div', class_='mast'):
                     link_tag = div.find('a', rel='nofollow')
                     if link_tag:
                         link = link_tag['href']
@@ -274,7 +256,6 @@ async def fetch_sources(url: str) -> List[Dict[str, str]]:
                                 if 'X-Content-Duration' in head.headers:
                                     duration = float(head.headers['X-Content-Duration'])
                                 elif 'Content-Length' in head.headers:
-                                    # Rough estimate: assume 128kbps average bitrate
                                     duration = int(head.headers['Content-Length']) / (128 * 1024 / 8)
                         except Exception as e:
                             print(f"Failed to get duration for {link}: {e}")
@@ -287,7 +268,7 @@ async def fetch_sources(url: str) -> List[Dict[str, str]]:
 
 def determine_quality(title: str) -> str:
     title = title.lower()
-    #if '1080' in title: return "1080p"
+    if '1080' in title: return "1080p"
     if '720' in title: return "720p"
     if '480' in title: return "480p"
     if '360' in title: return "360p"
@@ -295,10 +276,10 @@ def determine_quality(title: str) -> str:
     if 'hd' in title: return "HD"
     return "Unknown"
 
+# Run the app
 if __name__ == "__main__":
     import sys
     import logging
-
     logging.basicConfig(level=logging.INFO)
     try:
         uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
