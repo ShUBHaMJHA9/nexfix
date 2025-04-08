@@ -1,14 +1,19 @@
+
 {
   "version": 2,
   "builds": [
     {
       "src": "api/index.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "50mb" }
+      "config": {
+        "installCommand": "pip3 install --no-cache-dir -r req.txt"
+      }
     }
   ],
   "routes": [
-    { "src": "/static/(.*)", "dest": "/static/$1" },
-    { "src": "/(.*)", "dest": "main.py" }
+    {
+      "src": "/(.*)",
+      "dest": "main.py"
+    }
   ]
 }
