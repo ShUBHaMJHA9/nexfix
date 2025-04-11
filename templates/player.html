@@ -1,425 +1,320 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <!-- Ensure proper scaling and prevent zooming on mobile -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- Allow the app to be added to the home screen on Android -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <!-- Theme color for mobile browser UI -->
-  <meta name="theme-color" content="#0A0A0A">
-  <title>NEXFIX MP4HUB - Premium Streaming</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#e50914">
+    <meta name="description" content="NEXFIX MP4HUB - Premium Video Streaming Experience">
+    <title>NEXFIX MP4HUB - Premium Video Player</title>
 
-  <!-- Video.js Core CSS -->
-  <link href="https://vjs.zencdn.net/8.10.0/video-js.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-icons/3.0.1/iconfont/material-icons.min.css">
-  
-  <!-- Custom Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- PWA Manifest and Icons -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
 
-  <style>
-    :root {
-      --primary-accent: #FF4D89;
-      --secondary-accent: #00FF88;
-      --bg-dark: #0A0A0A;
-      --surface-dark: #1A1A1A;
-      --text-primary: rgba(255, 255, 255, 0.92);
-      --glass-effect: blur(16px) saturate(180%);
-    }
+    <!-- Preload critical assets -->
+    <link rel="preload" href="https://vjs.zencdn.net/8.10.0/video-js.min.css" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" as="style">
+    <link rel="preload" href="/static/nefix-logo.png" as="image">
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="static/styles.css">
 
-    body {
-      background: var(--bg-dark);
-      color: var(--text-primary);
-      font-family: 'Inter', sans-serif;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
+    <!-- Embedded CSS for Skip Ad Button and Video Player Container -->
+    <style>
+        .video_player {
+            position: relative; /* Ensures absolute children are positioned relative to this container */
+            width: 100%;
+            height: auto;
+        }
 
-    .nexfix-header {
-      padding: 1.5rem 2rem;
-      display: flex;
-      align-items: center;
-      background: linear-gradient(145deg, rgba(26,26,26,0.95) 0%, rgba(10,10,10,0.95) 100%);
-      -webkit-backdrop-filter: var(--glass-effect);
-              backdrop-filter: var(--glass-effect);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
+        .skip-ad-btn {
+            position: absolute;
+            bottom: 120px; /* Positioned just above the controls */
+            right: 15px;
+            padding: 0.6rem 1.2rem;
+            background: rgba(20, 20, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: var(--text-light);
+            font-family: var(--font-stack);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: not-allowed;
+            opacity: 0;
+            transition: opacity 0.3s ease, background 0.2s ease, transform 0.2s ease;
+            z-index: 50; /* Adjusted to be above controls for clickability */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
 
-    .brand-logo {
-      height: 42px;
-      margin-right: 1.25rem;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-    }
+        .skip-ad-btn.visible {
+            opacity: 1;
+        }
 
-    .brand-title {
-      font-size: 1.75rem;
-      font-weight: 700;
-      background: linear-gradient(45deg, var(--primary-accent), var(--secondary-accent));
-      -webkit-background-clip: text;
-              background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
-    }
+        .skip-ad-btn:not(:disabled):hover {
+            background: rgba(229, 9, 20, 0.9);
+            transform: scale(1.05);
+        }
 
-    .player-container {
-      width: 100%;
-      max-width: 1440px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-      position: relative;
-    }
+        .skip-ad-btn:not(:disabled) {
+            cursor: pointer;
+        }
 
-    .video-js {
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      transition: transform 0.3s ease;
-    }
+        .skip-ad-btn:disabled {
+            background: rgba(50, 50, 50, 0.85);
+            color: #888;
+        }
 
-    .video-js:hover {
-      transform: scale(1.005);
-    }
+        .skip-ad-btn .skip-ad-active {
+            display: none;
+        }
 
-    .vjs-control-bar {
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 100%) !important;
-      -webkit-backdrop-filter: var(--glass-effect);
-              backdrop-filter: var(--glass-effect);
-      height: 4rem !important;
-      padding: 0 1.5rem !important;
-    }
+        .skip-ad-btn:not(:disabled) .skip-ad-text {
+            display: none;
+        }
 
-    .player-controls-overlay {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      display: flex;
-      gap: 1rem;
-      z-index: 1000;
-    }
-
-    .control-button {
-      background: rgba(26, 26, 26, 0.8);
-      -webkit-backdrop-filter: var(--glass-effect);
-              backdrop-filter: var(--glass-effect);
-      border: none;
-      color: white;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .control-button:hover {
-      background: var(--surface-dark);
-      transform: translateY(-1px);
-    }
-
-    .quality-menu {
-      position: absolute;
-      top: 3.5rem;
-      right: 1.5rem;
-      background: rgba(26, 26, 26, 0.95);
-      -webkit-backdrop-filter: var(--glass-effect);
-              backdrop-filter: var(--glass-effect);
-      border-radius: 8px;
-      padding: 0.75rem;
-      min-width: 160px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      display: none;
-    }
-
-    .quality-option {
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .quality-option:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .stats-panel {
-      position: absolute;
-      bottom: 5rem;
-      left: 1.5rem;
-      background: rgba(26, 26, 26, 0.9);
-      -webkit-backdrop-filter: var(--glass-effect);
-              backdrop-filter: var(--glass-effect);
-      padding: 1rem 1.5rem;
-      border-radius: 12px;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem 2rem;
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.95rem;
-    }
-
-    .stat-value {
-      color: var(--primary-accent);
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 500;
-    }
-
-    .nexfix-watermark {
-      position: absolute;
-      bottom: 1.5rem;
-      left: 1.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 1.1rem;
-      opacity: 0.9;
-    }
-
-    /* Enhanced responsiveness for mobile devices */
-    @media (max-width: 768px) {
-      .nexfix-header {
-        padding: 1rem;
-      }
-
-      .brand-title {
-        font-size: 1.5rem;
-      }
-
-      .player-container {
-        margin: 1rem auto;
-        padding: 0 0.5rem;
-      }
-
-      .stats-panel {
-        position: static;
-        margin-top: 1rem;
-        grid-template-columns: 1fr;
-        padding: 0.75rem;
-        gap: 0.5rem;
-      }
-
-      .player-controls-overlay {
-        top: 1rem;
-        right: 1rem;
-      }
-
-      .control-button {
-        padding: 0.5rem 0.75rem;
-      }
-    }
-  </style>
+        .skip-ad-btn:not(:disabled) .skip-ad-active {
+            display: inline;
+        }
+    </style>
 </head>
 <body>
-  <header class="nexfix-header">
-    <img src="/static/nexfix-logo.png" alt="NEXFIX MP4HUB" class="brand-logo">
-    <h1 class="brand-title">NEXFIX MP4HUB</h1>
-  </header>
-
-  <div class="player-container">
-    <video-js id="mainPlayer"
-              class="vjs-default-skin vjs-fluid"
-              controls
-              preload="auto"
-              playsinline
-              crossorigin="anonymous"
-              poster="/static/nexfix-logo.png">
-      <p class="vjs-no-js">Enable JavaScript to experience premium streaming.</p>
-    </video-js>
-
-    <div class="player-controls-overlay">
-      <button class="control-button" id="qualityToggle">
-        <i class="material-icons">high_quality</i>
-        <span>Quality</span>
-      </button>
-      <div class="quality-menu" id="qualityMenu">
-        <!-- Quality options will be injected here -->
-      </div>
-    </div>
-
-    <div class="stats-panel">
-      <div class="stat-item">
-        <i class="material-icons">visibility</i>
-        <span class="stat-value" id="viewCount">0</span>
-        <span>Views</span>
-      </div>
-      <div class="stat-item">
-        <i class="material-icons">speed</i>
-        <span class="stat-value" id="bitrate">0</span>
-        <span>kbps</span>
-      </div>
-      <div class="stat-item">
-        <i class="material-icons">schedule</i>
-        <span class="stat-value" id="videoDuration">0:00</span>
-        <span>Duration</span>
-      </div>
-      <div class="stat-item">
-        <i class="material-icons">dns</i>
-        <span class="stat-value" id="bufferHealth">0</span>
-        <span>Buffer</span>
-      </div>
-    </div>
-
-    <div class="nexfix-watermark">
-      <img src="/static/nexfix-icon.png" alt="Watermark" width="24">
-      <span>NEXFIX MP4HUB</span>
-    </div>
-  </div>
-
-  <!-- Video.js and plugins -->
-  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/videojs-seek-buttons@2.6.0/dist/videojs-seek-buttons.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/videojs-hotkeys@0.2.27/videojs.hotkeys.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/videojs-pip@2.0.3/dist/videojs-pip.min.js"></script>
-
-  <script>
-    (function() {
-      const videoId = new URLSearchParams(window.location.search).get('video_id');
-      const player = videojs('mainPlayer', {
-        fluid: true,
-        responsive: true,
-        playbackRates: [0.5, 1, 1.25, 1.5, 2],
-        controlBar: {
-          volumePanel: { inline: false },
-          children: [
-            'playToggle',
-            'volumePanel',
-            'currentTimeDisplay',
-            'progressControl',
-            'durationDisplay',
-            'remainingTimeDisplay',
-            'playbackRateMenuButton',
-            'qualitySelector',
-            'fullscreenToggle'
-          ]
-        }
-      });
-
-      // Quality Selector Logic
-      const qualityToggle = document.getElementById('qualityToggle');
-      const qualityMenu = document.getElementById('qualityMenu');
-
-      qualityToggle.addEventListener('click', () => {
-        qualityMenu.style.display = qualityMenu.style.display === 'block' ? 'none' : 'block';
-      });
-
-      // Close quality menu when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!qualityToggle.contains(e.target) && !qualityMenu.contains(e.target)) {
-          qualityMenu.style.display = 'none';
-        }
-      });
-
-      async function initializePlayer() {
-        try {
-          const response = await fetch(`/stream/${videoId}`);
-          if (!response.ok) throw new Error('Stream unavailable');
-          
-          const { sources, meta } = await response.json();
-          
-          // Initialize sources
-          const initialSource = sources.find(s => s.quality === '1080p') || sources[0];
-          player.src({ src: initialSource.url, type: 'video/mp4' });
-
-          // Populate quality menu
-          qualityMenu.innerHTML = sources.map(source => `
-            <div class="quality-option" data-url="${source.url}">
-              ${source.quality}${source.bitrate ? ` (${source.bitrate}kbps)` : ''}
+    <header class="nexfix-header">
+        <div class="header-left">
+            <img src="/static/nefix-logo.png" alt="NEXFIX MP4HUB" class="brand-logo">
+            <h1 class="brand-title">NEXFIX MP4HUB</h1>
+        </div>
+        <div class="content-type">
+            <button class="content-type-btn" id="contentTypeBtn">
+                <i class="material-icons">movie</i>
+                <span>Movies</span>
+                <i class="material-icons">arrow_drop_down</i>
+            </button>
+            <div class="content-type-dropdown" id="contentTypeDropdown">
+                <div class="content-type-item active" data-type="movies">
+                    <i class="material-icons">movie</i>
+                    <span>Movies</span>
+                </div>
+                <div class="content-type-item" data-type="albums">
+                    <i class="material-icons">album</i>
+                    <span>Albums</span>
+                </div>
+                <div class="content-type-item" data-type="tv">
+                    <i class="material-icons">live_tv</i>
+                    <span>TV Shows</span>
+                </div>
             </div>
-          `).join('');
+        </div>
+    </header>
+<div class="telegram-join-banner">
+    <img src="/static/Telegram_logo.png" alt="Join Telegram" class="telegram-logo">
+    <div class="telegram-text">
+        <p>Stay Updated — Join Us on Telegram</p>
+        <div class="telegram-links">
+            <a href="https://t.me/TeraBoX_dlFree_bot" target="_blank" class="telegram-btn">Our Telegram Bot</a>
+            <a href="https://t.me/freeDL_1" target="_blank" class="telegram-btn">Main Channel</a>
+        </div>
+    </div>
+</div>
 
-          document.querySelectorAll('.quality-option').forEach(option => {
-            option.addEventListener('click', () => {
-              player.src({ src: option.dataset.url, type: 'video/mp4' });
-              player.play();
-              qualityMenu.style.display = 'none';
-            });
-          });
 
-          // Initialize metadata
-          document.getElementById('viewCount').textContent =
-            new Intl.NumberFormat().format(meta.views);
-          
-          // Format duration from seconds to hh:mm:ss
-          const formatDuration = (seconds) => {
-            const h = Math.floor(seconds / 3600);
-            const m = Math.floor((seconds % 3600) / 60);
-            const s = Math.floor(seconds % 60);
-            return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
-          };
-          document.getElementById('videoDuration').textContent =
-            formatDuration(meta.duration);
+    <div class="video_player" id="videoPlayer">
+        <video-js id="mainPlayer" class="vjs-default-skin vjs-fluid video-js main-video" preload="auto" playsinline crossorigin="anonymous">
+            <p class="vjs-no-js">Enable JavaScript to experience premium streaming.</p>
+        </video-js>
 
-          // Player event listeners for metadata and buffering
-          player.on('loadedmetadata', () => {
-            if (player.tech_.vhs) {
-              const bandwidth = player.tech_.vhs.playlists.media()?.attributes?.BANDWIDTH;
-              if (bandwidth) {
-                document.getElementById('bitrate').textContent =
-                  Math.round(bandwidth / 1000);
-              }
-            }
-          });
+        <div class="nexfix-overlay">NEXFIX</div>
+        <div class="brightness-overlay" id="brightnessOverlay"></div>
+        <div class="center-control" id="centerControl">
+            <i class="material-icons">play_arrow</i>
+        </div>
+        <div class="quality-badge" id="qualityBadge">HD</div>
 
-          player.on('progress', () => {
-            if (player.buffered().length > 0) {
-              const bufferEnd = player.buffered().end(player.buffered().length - 1);
-              const bufferHealth = bufferEnd - player.currentTime();
-              document.getElementById('bufferHealth').textContent =
-                `${Math.round(bufferHealth)}s`;
-            }
-          });
+        <!-- Skip Ad Button -->
+        <button class="skip-ad-btn" id="skipAdBtn" disabled>
+            <span class="skip-ad-text">Skip Ad in <span id="skipAdTimer">5</span>s</span>
+            <span class="skip-ad-active" style="display: none;">Skip Ad</span>
+        </button>
 
-          // Initialize plugins
-          player.seekButtons({ forward: 10, back: 10 });
-          player.hotkeys({
-            volumeStep: 0.1,
-            seekStep: 10,
-            enableModifiersForNumbers: false
-          });
-        } catch (error) {
-          console.error('Player initialization error:', error);
-          player.error({
-            code: 4,
-            message: 'Premium content unavailable. Try refreshing.'
-          });
-        }
-      }
+        <div class="swipe-overlay" id="volumeOverlay">
+            <div class="swipe-indicator" id="volumeIndicator">
+                <i class="material-icons" id="volumeIcon">volume_up</i>
+                <span id="volumeValue">80%</span>
+            </div>
+        </div>
 
-      player.ready(() => {
-        // Restore user preferences
-        const savedVolume = localStorage.getItem('playerVolume');
-        if (savedVolume !== null) player.volume(parseFloat(savedVolume));
+        <div class="swipe-overlay" id="brightnessOverlayIndicator">
+            <div class="swipe-indicator" id="brightnessIndicator">
+                <i class="material-icons" id="brightnessIcon">brightness_5</i>
+                <span id="brightnessValue">100%</span>
+            </div>
+        </div>
 
-        // Save preferences
-        player.on('volumechange', () => {
-          localStorage.setItem('playerVolume', player.volume());
-        });
+        <div class="tap-indicator left" id="rewindIndicator">
+            <div class="tap-indicator-content">
+                <i class="material-icons">replay_10</i>
+                <span id="rewindValue">-10 sec</span>
+            </div>
+        </div>
 
-        initializePlayer();
-      });
+        <div class="tap-indicator right" id="forwardIndicator">
+            <div class="tap-indicator-content">
+                <i class="material-icons">forward_10</i>
+                <span id="forwardValue">+10 sec</span>
+            </div>
+        </div>
 
-      // Auto-quality detection (only for HLS/DASH)
-      if (player.tech_.vhs) {
-        player.tech_.vhs.representations().then(reps => {
-          const initialQuality = reps.find(r => r.height === 720);
-          if (initialQuality) initialQuality.enabled(true);
-        }).catch(err => console.error('Quality selection error:', err));
-      }
-    })();
-  </script>
+        <div class="seek-feedback left" id="seekFeedbackLeft"></div>
+        <div class="seek-feedback right" id="seekFeedbackRight"></div>
+        <div class="speed-feedback" id="speedFeedback"></div>
+
+        <div class="controls">
+            <div class="progress-area" id="progressArea">
+                <div class="bufferedBar"></div>
+                <div class="progress-bar"><span></span></div>
+            </div>
+
+            <div class="controls-list">
+                <div class="controls-left">
+                    <span class="icon fast-rewind"><i class="material-icons">replay_10</i></span>
+                    <span class="icon fast-forward"><i class="material-icons">forward_10</i></span>
+                    <span class="icon volume">
+                        <i class="material-icons">volume_up</i>
+                        <div class="volume-popup">
+                            <input type="range" min="0" max="100" class="volume-slider" value="80">
+                            <span class="volume-percentage">80%</span>
+                        </div>
+                    </span>
+                    <div class="timer">
+                        <span class="current">0:00</span> / <span class="duration">0:00</span>
+                        <span class="live-indicator" id="liveBtn">LIVE</span>
+                    </div>
+                </div>
+
+                <div class="controls-right">
+                    <span class="icon auto-play"><i class="material-icons">repeat</i></span>
+                    <span class="icon captionsBtn"><i class="material-icons">closed_caption</i></span>
+                    <span class="icon settingsBtn"><i class="material-icons">settings</i></span>
+                    <span class="icon picture_in_picture"><i class="material-icons">picture_in_picture_alt</i></span>
+                    <span class="icon fullscreen"><i class="material-icons">fullscreen</i></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings" id="settingsPanel">
+            <div class="settings-panel active" data-label="settingHome">
+                <div class="settings-header">Settings</div>
+                <ul>
+                    <li data-label="speed">
+                        <span>Playback Speed</span>
+                        <span class="material-symbols-outlined icon">chevron_right</span>
+                    </li>
+                    <li data-label="quality">
+                        <span>Quality Settings</span>
+                        <span class="material-symbols-outlined icon">chevron_right</span>
+                    </li>
+                    <li data-label="zoom">
+                        <span>Zoom</span>
+                        <span class="material-symbols-outlined icon">chevron_right</span>
+                    </li>
+                    <li data-label="advanced">
+                        <span>Advanced Settings</span>
+                        <span class="material-symbols-outlined icon">chevron_right</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="settings-panel" data-label="speed">
+                <div class="settings-header">
+                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome">arrow_back</span>
+                    <span>Playback Speed</span>
+                </div>
+                <ul>
+                    <li data-speed="0.25">0.25x</li>
+                    <li data-speed="0.5">0.5x</li>
+                    <li data-speed="0.75">0.75x</li>
+                    <li data-speed="1" class="active">Normal (1x)</li>
+                    <li data-speed="1.25">1.25x</li>
+                    <li data-speed="1.5">1.5x</li>
+                    <li data-speed="1.75">1.75x</li>
+                    <li data-speed="2">2x</li>
+                </ul>
+            </div>
+
+            <div class="settings-panel" data-label="quality">
+                <div class="settings-header">
+                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome">arrow_back</span>
+                    <span>Video Quality</span>
+                </div>
+                <ul id="qualityMenu">
+                    <li data-quality="144p">144p</li>
+                    <li data-quality="240p">240p</li>
+                    <li data-quality="360p">360p</li>
+                    <li data-quality="480p">480p</li>
+                    <li data-quality="720p" class="active">720p</li>
+                    <li data-quality="1080p">1080p</li>
+                </ul>
+            </div>
+
+            <div class="settings-panel" data-label="zoom">
+                <div class="settings-header">
+                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome">arrow_back</span>
+                    <span>Zoom</span>
+                </div>
+                <ul>
+                    <li data-zoom="1" class="active">1x (Normal)</li>
+                    <li data-zoom="1.5">1.5x</li>
+                    <li data-zoom="2">2x</li>
+                    <li data-zoom="2.5">2.5x</li>
+                    <li data-zoom="3">3x</li>
+                </ul>
+            </div>
+
+            <div class="settings-panel" data-label="advanced">
+                <div class="settings-header">
+                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome">arrow_back</span>
+                    <span>Advanced Settings</span>
+                </div>
+                <ul>
+                    <li id="statsToggle">Show Technical Stats</li>
+                    <li id="chapterMarkersToggle" class="active">Show Chapter Markers</li>
+                    <li id="swipeControlsToggle" class="active">Enable Swipe Controls</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="captions" id="captionsPanel">
+            <div class="settings-header">Subtitles</div>
+            <ul id="captionMenu"></ul>
+        </div>
+    </div>
+
+    <div class="stats-panel" id="statsPanel" style="display: none;">
+        <div class="stat-item"><i class="material-icons">visibility</i> <span id="viewCount">0</span> Views</div>
+        <div class="stat-item"><i class="material-icons">speed</i> <span id="bitrate">0</span> kbps</div>
+        <div class="stat-item"><i class="material-icons">schedule</i> <span id="videoDuration">0:00</span> Duration</div>
+        <div class="stat-item"><i class="material-icons">dns</i> <span id="bufferHealth">0</span>s Buffer</div>
+        <div class="stat-item"><i class="material-icons">volume_up</i> <span id="currentVolume">80</span>% Volume</div>
+        <div class="stat-item"><i class="material-icons">brightness_5</i> <span id="currentBrightness">100</span>% Brightness</div>
+    </div>
+
+    <div class="description-section">
+        <h2 class="description-title" id="videoTitle">Loading...</h2>
+        <p class="description-content" id="videoDescription">Loading video information...</p>
+    </div>
+
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/videojs-seek-buttons@2.6.0/dist/videojs-seek-buttons.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/videojs-hotkeys@0.2.27/videojs.hotkeys.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/videojs-pip@2.0.3/dist/videojs-pip.min.js"></script>
+    <script defer src="https://polyfill.io/v3/polyfill.min.js?features=Promise,fetch,URLSearchParams"></script>
+    <script src="static/scripts.js"></script>
 </body>
 </html>
