@@ -4,95 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#e50914">
-    <meta name="description" content="NEXFIX MP4HUB - Premium Video Streaming Experience">
-    <title>NEXFIX MP4HUB - Premium Video Player</title>
-
-    <!-- PWA Manifest and Icons -->
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-
+    <title>NEXFIX MP4HUB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Preload critical assets -->
-    <link rel="preload" href="https://vjs.zencdn.net/8.10.0/video-js.min.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/video-js.min.css" as="style">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" as="style">
     <link rel="preload" href="/static/nefix-logo.png" as="image">
 
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.min.css" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/video-js.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Symbols+Outlined" rel="stylesheet">
-    <link rel="stylesheet" href="static/styles.css">
-
-    <!-- Embedded CSS for Skip Ad Button and Video Player Container -->
-    <style>
-        .video_player {
-            position: relative; /* Ensures absolute children are positioned relative to this container */
-            width: 100%;
-            height: auto;
-        }
-
-        .skip-ad-btn {
-            position: absolute;
-            bottom: 120px; /* Positioned just above the controls */
-            right: 15px;
-            padding: 0.6rem 1.2rem;
-            background: rgba(20, 20, 20, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            color: var(--text-light);
-            font-family: var(--font-stack);
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: not-allowed;
-            opacity: 0;
-            transition: opacity 0.3s ease, background 0.2s ease, transform 0.2s ease;
-            z-index: 50; /* Adjusted to be above controls for clickability */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .skip-ad-btn.visible {
-            opacity: 1;
-        }
-
-        .skip-ad-btn:not(:disabled):hover {
-            background: rgba(229, 9, 20, 0.9);
-            transform: scale(1.05);
-        }
-
-        .skip-ad-btn:not(:disabled) {
-            cursor: pointer;
-        }
-
-        .skip-ad-btn:disabled {
-            background: rgba(50, 50, 50, 0.85);
-            color: #888;
-        }
-
-        .skip-ad-btn .skip-ad-active {
-            display: none;
-        }
-
-        .skip-ad-btn:not(:disabled) .skip-ad-text {
-            display: none;
-        }
-
-        .skip-ad-btn:not(:disabled) .skip-ad-active {
-            display: inline;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <header class="nexfix-header">
         <div class="header-left">
-            <img src="/static/nefix-logo.png" alt="NEXFIX MP4HUB" class="brand-logo">
+            <img src="/static/nefix-logo.png" alt="NEXFIX MP4HUB Logo" class="brand-logo">
             <h1 class="brand-title">NEXFIX MP4HUB</h1>
         </div>
         <div class="content-type">
-            <button class="content-type-btn" id="contentTypeBtn">
+            <button class="content-type-btn" id="contentTypeBtn" aria-label="Select content type">
                 <i class="material-icons">movie</i>
                 <span>Movies</span>
                 <i class="material-icons">arrow_drop_down</i>
@@ -113,61 +46,63 @@
             </div>
         </div>
     </header>
-<div class="telegram-join-banner">
-    <img src="/static/Telegram_logo.png" alt="Join Telegram" class="telegram-logo">
-    <div class="telegram-text">
-        <p>Stay Updated — Join Us on Telegram</p>
-        <div class="telegram-links">
-            <a href="https://t.me/TeraBoX_dlFree_bot" target="_blank" class="telegram-btn">Our Telegram Bot</a>
-            <a href="https://t.me/freeDL_1" target="_blank" class="telegram-btn">Main Channel</a>
+
+    <div class="telegram-join-banner">
+        <img src="/static/Telegram_logo.png" alt="Join Telegram" class="telegram-logo">
+        <div class="telegram-text">
+            <p>Stay Updated — Join Us on Telegram</p>
+            <div class="telegram-links">
+                <a href="https://t.me/TeraBoX_dlFree_bot" target="_blank" class="telegram-btn" rel="noopener">Our Telegram Bot</a>
+                <a href="https://t.me/freeDL_1" target="_blank" class="telegram-btn" rel="noopener">Main Channel</a>
+            </div>
         </div>
     </div>
-</div>
-
 
     <div class="video_player" id="videoPlayer">
-        <video-js id="mainPlayer" class="vjs-default-skin vjs-fluid video-js main-video" preload="auto" playsinline crossorigin="anonymous">
+        <video id="mainPlayer" class="video-js vjs-default-skin vjs-fluid" preload="auto" playsinline crossorigin="anonymous">
             <p class="vjs-no-js">Enable JavaScript to experience premium streaming.</p>
-        </video-js>
+        </video>
 
-        <div class="nexfix-overlay">NEXFIX</div>
-        <div class="brightness-overlay" id="brightnessOverlay"></div>
-        <div class="center-control" id="centerControl">
+        <div class="center-control" id="centerControl" aria-label="Play or pause video">
             <i class="material-icons">play_arrow</i>
         </div>
         <div class="quality-badge" id="qualityBadge">HD</div>
 
-        <!-- Skip Ad Button -->
-        <button class="skip-ad-btn" id="skipAdBtn" disabled>
+        <!-- Skip Ad Button with Progress Bar -->
+        <button class="skip-ad-btn" id="skipAdBtn" disabled aria-label="Skip advertisement">
             <span class="skip-ad-text">Skip Ad in <span id="skipAdTimer">5</span>s</span>
-            <span class="skip-ad-active" style="display: none;">Skip Ad</span>
+            <span class="skip-ad-active">Skip Ad</span>
+            <div class="skip-ad-progress"></div>
         </button>
 
-        <div class="swipe-overlay" id="volumeOverlay">
+        <!-- Volume Overlay with Progress Bar -->
+        <div class="swipe-overlay volume-overlay" id="volumeOverlay">
             <div class="swipe-indicator" id="volumeIndicator">
                 <i class="material-icons" id="volumeIcon">volume_up</i>
                 <span id="volumeValue">80%</span>
             </div>
+            <div class="volume-bar"></div>
         </div>
 
-        <div class="swipe-overlay" id="brightnessOverlayIndicator">
+        <!-- Brightness Overlay with Progress Bar -->
+        <div class="swipe-overlay brightness-overlay" id="brightnessOverlay">
             <div class="swipe-indicator" id="brightnessIndicator">
                 <i class="material-icons" id="brightnessIcon">brightness_5</i>
                 <span id="brightnessValue">100%</span>
             </div>
+            <div class="brightness-bar"></div>
         </div>
 
         <div class="tap-indicator left" id="rewindIndicator">
             <div class="tap-indicator-content">
                 <i class="material-icons">replay_10</i>
-                <span id="rewindValue">-10 sec</span>
+                <span id="rewindValue">-10s</span>
             </div>
         </div>
-
         <div class="tap-indicator right" id="forwardIndicator">
             <div class="tap-indicator-content">
                 <i class="material-icons">forward_10</i>
-                <span id="forwardValue">+10 sec</span>
+                <span id="forwardValue">+10s</span>
             </div>
         </div>
 
@@ -176,123 +111,132 @@
         <div class="speed-feedback" id="speedFeedback"></div>
 
         <div class="controls">
-            <div class="progress-area" id="progressArea">
+            <div class="progress-area" id="progressArea" role="slider" aria-label="Video progress">
                 <div class="bufferedBar"></div>
                 <div class="progress-bar"><span></span></div>
             </div>
-
             <div class="controls-list">
                 <div class="controls-left">
-                    <span class="icon fast-rewind"><i class="material-icons">replay_10</i></span>
-                    <span class="icon fast-forward"><i class="material-icons">forward_10</i></span>
-                    <span class="icon volume">
+                    <button class="icon fast-rewind" aria-label="Rewind 10 seconds">
+                        <i class="material-icons">replay_10</i>
+                    </button>
+                    <button class="icon fast-forward" aria-label="Fast forward 10 seconds">
+                        <i class="material-icons">forward_10</i>
+                    </button>
+                    <div class="icon volume" role="button" aria-label="Toggle mute">
                         <i class="material-icons">volume_up</i>
                         <div class="volume-popup">
-                            <input type="range" min="0" max="100" class="volume-slider" value="80">
+                            <input type="range" min="0" max="100" class="volume-slider" value="80" aria-label="Volume control">
                             <span class="volume-percentage">80%</span>
                         </div>
-                    </span>
+                    </div>
                     <div class="timer">
                         <span class="current">0:00</span> / <span class="duration">0:00</span>
-                        <span class="live-indicator" id="liveBtn">LIVE</span>
+                        <span class="live-indicator" id="liveBtn">
+                            <i class="material-icons">live_tv</i>
+                            LIVE <span id="liveTimer">0:00:00</span>
+                        </span>
                     </div>
                 </div>
-
                 <div class="controls-right">
-                    <span class="icon auto-play"><i class="material-icons">repeat</i></span>
-                    <span class="icon captionsBtn"><i class="material-icons">closed_caption</i></span>
-                    <span class="icon settingsBtn"><i class="material-icons">settings</i></span>
-                    <span class="icon picture_in_picture"><i class="material-icons">picture_in_picture_alt</i></span>
-                    <span class="icon fullscreen"><i class="material-icons">fullscreen</i></span>
+                    <button class="icon auto-play" aria-label="Toggle autoplay">
+                        <i class="material-icons">repeat</i>
+                    </button>
+                    <button class="audio_track" aria-label="Toggle audio">
+                        <i class="material-icons">music_note</i>
+                      </button>                      
+                    <button class="icon captionsBtn" aria-label="Toggle subtitles">
+                        <i class="material-icons">closed_caption</i>
+                    </button>
+                    <button class="icon settingsBtn" aria-label="Open settings">
+                        <i class="material-icons">settings</i>
+                    </button>
+                    <button class="icon picture_in_picture" aria-label="Toggle picture-in-picture">
+                        <i class="material-icons">picture_in_picture_alt</i>
+                    </button>
+                    <button class="icon fullscreen" aria-label="Toggle fullscreen">
+                        <i class="material-icons">fullscreen</i>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <div class="settings" id="settingsPanel">
+        <div class="settings" id="settingsPanel" role="dialog" aria-label="Settings panel">
             <div class="settings-panel active" data-label="settingHome">
                 <div class="settings-header">Settings</div>
                 <ul>
-                    <li data-label="speed">
+                    <li data-label="speed" role="button" tabindex="0">
                         <span>Playback Speed</span>
                         <span class="material-symbols-outlined icon">chevron_right</span>
                     </li>
-                    <li data-label="quality">
+                    <li data-label="quality" role="button" tabindex="0">
                         <span>Quality Settings</span>
                         <span class="material-symbols-outlined icon">chevron_right</span>
                     </li>
-                    <li data-label="zoom">
+                    <li data-label="zoom" role="button" tabindex="0">
                         <span>Zoom</span>
                         <span class="material-symbols-outlined icon">chevron_right</span>
                     </li>
-                    <li data-label="advanced">
+                    <li data-label="advanced" role="button" tabindex="0">
                         <span>Advanced Settings</span>
                         <span class="material-symbols-outlined icon">chevron_right</span>
                     </li>
                 </ul>
             </div>
-
             <div class="settings-panel" data-label="speed">
                 <div class="settings-header">
-                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome">arrow_back</span>
+                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings">arrow_back</span>
                     <span>Playback Speed</span>
                 </div>
                 <ul>
-                    <li data-speed="0.25">0.25x</li>
-                    <li data-speed="0.5">0.5x</li>
-                    <li data-speed="0.75">0.75x</li>
-                    <li data-speed="1" class="active">Normal (1x)</li>
-                    <li data-speed="1.25">1.25x</li>
-                    <li data-speed="1.5">1.5x</li>
-                    <li data-speed="1.75">1.75x</li>
-                    <li data-speed="2">2x</li>
+                    <li data-speed="0.25" role="button" tabindex="0">0.25x</li>
+                    <li data-speed="0.5" role="button" tabindex="0">0.5x</li>
+                    <li data-speed="0.75" role="button" tabindex="0">0.75x</li>
+                    <li data-speed="1" class="active" role="button" tabindex="0">Normal (1x)</li>
+                    <li data-speed="1.25" role="button" tabindex="0">1.25x</li>
+                    <li data-speed="1.5" role="button" tabindex="0">1.5x</li>
+                    <li data-speed="1.75" role="button" tabindex="0">1.75x</li>
+                    <li data-speed="2" role="button" tabindex="0">2x</li>
                 </ul>
             </div>
-
             <div class="settings-panel" data-label="quality">
                 <div class="settings-header">
-                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome">arrow_back</span>
+                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings">arrow_back</span>
                     <span>Video Quality</span>
                 </div>
-                <ul id="qualityMenu">
-                    <li data-quality="144p">144p</li>
-                    <li data-quality="240p">240p</li>
-                    <li data-quality="360p">360p</li>
-                    <li data-quality="480p">480p</li>
-                    <li data-quality="720p" class="active">720p</li>
-                    <li data-quality="1080p">1080p</li>
+                <ul id="qualityMenu" role="listbox">
+                    <!-- Populated dynamically -->
                 </ul>
             </div>
-
             <div class="settings-panel" data-label="zoom">
                 <div class="settings-header">
-                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome">arrow_back</span>
+                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings">arrow_back</span>
                     <span>Zoom</span>
                 </div>
                 <ul>
-                    <li data-zoom="1" class="active">1x (Normal)</li>
-                    <li data-zoom="1.5">1.5x</li>
-                    <li data-zoom="2">2x</li>
-                    <li data-zoom="2.5">2.5x</li>
-                    <li data-zoom="3">3x</li>
+                    <li data-zoom="1" class="active" role="button" tabindex="0">1x (Normal)</li>
+                    <li data-zoom="1.5" role="button" tabindex="0">1.5x</li>
+                    <li data-zoom="2" role="button" tabindex="0">2x</li>
+                    <li data-zoom="2.5" role="button" tabindex="0">2.5x</li>
+                    <li data-zoom="3" role="button" tabindex="0">3x</li>
                 </ul>
             </div>
-
             <div class="settings-panel" data-label="advanced">
                 <div class="settings-header">
-                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome">arrow_back</span>
+                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings">arrow_back</span>
                     <span>Advanced Settings</span>
                 </div>
                 <ul>
-                    <li id="statsToggle">Show Technical Stats</li>
-                    <li id="chapterMarkersToggle" class="active">Show Chapter Markers</li>
-                    <li id="swipeControlsToggle" class="active">Enable Swipe Controls</li>
+                    <li id="statsToggle" role="button" tabindex="0">Show Technical Stats</li>
+                    <li id="chapterMarkersToggle" class="active" role="button" tabindex="0">Show Chapter Markers</li>
+                    <li id="swipeControlsToggle" class="active" role="button" tabindex="0">Enable Swipe Controls</li>
                 </ul>
             </div>
         </div>
 
-        <div class="captions" id="captionsPanel">
+        <div class="captions" id="captionsPanel" role="dialog" aria-label="Subtitles panel">
             <div class="settings-header">Subtitles</div>
-            <ul id="captionMenu"></ul>
+            <ul id="captionMenu" role="listbox"></ul>
         </div>
     </div>
 
@@ -305,16 +249,23 @@
         <div class="stat-item"><i class="material-icons">brightness_5</i> <span id="currentBrightness">100</span>% Brightness</div>
     </div>
 
-    <div class="description-section">
-        <h2 class="description-title" id="videoTitle">Loading...</h2>
-        <p class="description-content" id="videoDescription">Loading video information...</p>
+    <div class="downloader" id="downloader_button">
+        <button id="fast_downloader">Fast Downloader</button>
+        <button id="hd_downloader">HD Downloader</button>
     </div>
 
-    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/videojs-seek-buttons@2.6.0/dist/videojs-seek-buttons.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/videojs-hotkeys@0.2.27/videojs.hotkeys.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/videojs-pip@2.0.3/dist/videojs-pip.min.js"></script>
-    <script defer src="https://polyfill.io/v3/polyfill.min.js?features=Promise,fetch,URLSearchParams"></script>
-    <script src="static/scripts.js"></script>
+    <div class="description-section">
+        <h2 class="description-title" id="videoTitle">Loading...</h2>
+        <p class="description-content" id="videoDescription">Loading video description...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.15.0/videojs-contrib-hls.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-seek-buttons/2.6.0/videojs-seek-buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-hotkeys/0.2.27/videojs.hotkeys.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-pip/2.0.3/videojs-pip.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=Promise,fetch,URLSearchParams"></script>
+    <script src="/static/scripts.js" defer></script>
 </body>
 </html>

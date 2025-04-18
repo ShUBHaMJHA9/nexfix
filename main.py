@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
@@ -9,15 +10,19 @@ import secrets
 from fastapi.responses import StreamingResponse, JSONResponse, Response
 import os
 import json
+import logging
 import aiohttp
+from aiohttp import ClientSession
 import asyncio
 import re
+from aiohttp import ClientTimeout
+from fastapi.middleware.cors import CORSMiddleware
 from bs4 import BeautifulSoup
 from enum import Enum
 from typing import List, Dict, Tuple, Optional
-import aiohttp
 import m3u8
 from urllib.parse import urljoin, quote
+
 # Constants
 EXPIRY_MINUTES = 60
 DB_PATH = "database.json"
@@ -27,6 +32,9 @@ SUBTITLE_PATH = STATIC_PATH / "subtitles"
 THUMBNAIL_PATH = STATIC_PATH / "nexfix-logo.jpg"
 LOGO_PATH = STATIC_PATH / "logo.svg"
 DEFAULT_SUBTITLE = "/static/subtitles/english.vtt"
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class MediaType(str, Enum):
     MOVIE = "movie"
@@ -38,11 +46,15 @@ class MediaType(str, Enum):
 app = FastAPI(title="StreamHub Pro", version="3.0", docs_url="/api/docs")
 templates = Jinja2Templates(directory="templates")
 
-from fastapi.middleware.cors import CORSMiddleware
+@app.on_event("startup")
+async def startup_event():
+    global session
+    connector = aiohttp.TCPConnector(limit=100, ssl=False)
+    session = aiohttp.ClientSession(connector=connector)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # You can restrict this for security
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -190,111 +202,122 @@ async def homepage():
     <body><h1>Welcome to Nexfix</h1></body>
     </html>
     """
-# ——————— Rewrite HLS playlists on the fly ———————
+
 def rewrite_hls_playlist(playlist_text: str, base_uri: str) -> str:
-    """
-    Given the raw text of an HLS playlist and its base URI,
-    rewrite every media URL line to go through our /proxy endpoint.
-    """
     out = []
     for line in playlist_text.splitlines():
         if line.strip().startswith("#"):
             out.append(line)
         elif line.strip():
-            # this is a URI to segment, variant, or subtitle
             uri = line.strip()
             full = uri if uri.startswith("http") else urljoin(base_uri, uri)
-            proxied = f"/proxy?url={quote(full, safe='')}"
+            proxied = f"/proxy?url={quote(full)}"
             out.append(proxied)
         else:
             out.append(line)
     return "\n".join(out)
-
-
-# ——————— Proxy endpoint ———————
 @app.get("/proxy")
 async def proxy(request: Request, url: str):
-    """
-    Streams any URL (playlist, segment, subtitle) through our server with CORS headers.
-    If it's a .m3u8, rewrites the playlist so all URIs are proxied too.
-    """
-    headers = {"Access-Control-Allow-Origin": "*"}
+    range_header = request.headers.get("Range")
+    
     try:
         async with aiohttp.ClientSession() as session:
+            # Get the total content length from HEAD request
+            async with session.head(url) as head_resp:
+                if head_resp.status != 200:
+                    raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
+                total_size = int(head_resp.headers.get("Content-Length", 0))
+
+            start, end = 0, total_size - 1
+            if range_header:
+                range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+                if range_match:
+                    start = int(range_match.group(1))
+                    if range_match.group(2):
+                        end = int(range_match.group(2))
+                    if start > end:
+                        raise HTTPException(status_code=416, detail="Invalid range")
+
+            # Function to stream the file
+            async def stream_chunk():
+                headers = {}
+                if range_header:
+                    headers["Range"] = f"bytes={start}-{end}"
+                async with session.get(url, headers=headers) as resp:
+                    async for chunk in resp.content.iter_chunked(512 * 1024):
+                        yield chunk
+
+            # Prepare response headers
+            response_headers = {
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(end - start + 1),
+                "Content-Type": "video/mp4"
+            }
+            if range_header:
+                response_headers["Content-Range"] = f"bytes {start}-{end}/{total_size}"
+
+            return StreamingResponse(
+                stream_chunk(),
+                status_code=206 if range_header else 200,
+                headers=response_headers
+            )
+
+    except Exception as e:
+        logger.error(f"Proxy streaming error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def parse_m3u8_to_json(url: str) -> Dict[str, any]:
+    timeout = ClientTimeout(total=5)
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.get(url) as resp:
                 if resp.status != 200:
-                    raise HTTPException(status_code=resp.status, detail="Upstream error")
-
-                content_type = resp.headers.get("Content-Type", "")
-                # If it's an HLS playlist, rewrite it
-                if "application/vnd.apple.mpegurl" in content_type or url.lower().endswith(".m3u8"):
-                    text = await resp.text()
-                    rewritten = rewrite_hls_playlist(text, url)
-                    return Response(content=rewritten, media_type=content_type, headers=headers)
-
-                # Otherwise stream it raw (TS segment, subtitle, etc.)
-                return StreamingResponse(
-                    resp.content.iter_chunked(1024*32),
-                    media_type=content_type or "application/octet-stream",
-                    headers=headers
-                )
+                    raise HTTPException(status_code=resp.status, detail="Failed to fetch playlist")
+                content = await resp.text()
     except aiohttp.ClientError as e:
-        raise HTTPException(status_code=502, detail=f"Upstream connection error: {e}")
+        raise HTTPException(status_code=503, detail=f"Network error: {str(e)}")
 
-
-# ——————— Parse master playlist to JSON ———————
-async def parse_m3u8_to_json(url: str) -> dict:
-    print(" I am Here in m4u8 json")
-    """
-    Fetches and parses a master .m3u8 playlist and returns JSON with proxied sources and subtitles.
-    """
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            if resp.status != 200:
-                raise HTTPException(status_code=resp.status, detail="Failed to fetch master playlist")
-            playlist_content = await resp.text()
-
-    master_playlist = m3u8.loads(playlist_content, uri=url)
-
-    # Extract video sources
-    sources = []
-    for playlist in master_playlist.playlists or []:
-        resolution = getattr(playlist.stream_info, "resolution", None)
-        quality = f"{resolution[1]}p" if resolution else "auto"
-        stream_url = playlist.absolute_uri or urljoin(url, playlist.uri)
-
-        sources.append({
-            "url": f"/proxy?url={quote(stream_url, safe='')}",
-            "quality": quality,
-            "type": "application/x-mpegURL"
-        })
-
-    # Extract subtitles
-    subtitles = []
-    for media in master_playlist.media or []:
-        if media.type == "SUBTITLES" and media.uri:
-            subtitle_url = media.uri if media.uri.startswith("http") else urljoin(url, media.uri)
-            subtitles.append({
-                "label": media.name or "Unknown",
-                "lang": media.language or "en",
-                "url": f"/proxy?url={quote(subtitle_url, safe='')}",
-                "default": bool(media.default)
-            })
-
-    # Fallback for single stream (no playlist variants)
-    if not sources:
-        sources = [{
-            "url": f"/proxy?url={quote(url, safe='')}",
-            "quality": "auto",
-            "type": "application/x-mpegURL"
-        }]
-
-    return {
-        "sources": sources,
-        "subtitles": subtitles
+    playlist = m3u8.loads(content, uri=url)
+    result = {
+        "sources": [],
+        "subtitles": [],
+        "audio_tracks": []
     }
 
-# -------------- 🎬 API Endpoint -------------------
+    for pl in playlist.playlists or []:
+        if not pl.stream_info or not pl.uri:
+            continue
+        codecs = getattr(pl.stream_info, "codecs", "") or ""
+        has_audio = "mp4a" in codecs.lower()
+        resolution = getattr(pl.stream_info, "resolution", None)
+        quality = f"{resolution[1]}p" if resolution and len(resolution) > 1 else "auto"
+
+        result["sources"].append({
+            "url": pl.absolute_uri or urljoin(url, pl.uri),
+            "quality": quality,
+            "type": "application/x-mpegURL",
+            "has_audio": has_audio,
+            "codecs": codecs
+        })
+
+    for media in playlist.media or []:
+        if media.type == "SUBTITLES" and media.uri:
+            subtitle_url = media.absolute_uri or urljoin(url, media.uri)
+            result["subtitles"].append({
+                "url": subtitle_url,
+                "language": media.language or "en",
+                "name": media.name or "Subtitle"
+            })
+        elif media.type == "AUDIO" and media.uri:
+            audio_url = media.absolute_uri or urljoin(url, media.uri)
+            result["audio_tracks"].append({
+                "url": audio_url,
+                "language": media.language or "en",
+                "name": media.name or "Audio Track"
+            })
+
+    return result
 @app.get("/stream/{video_id}", response_class=JSONResponse)
 async def get_stream_info(video_id: str):
     data = load_db()
@@ -303,80 +326,101 @@ async def get_stream_info(video_id: str):
         if entry["video_id"] != video_id:
             continue
 
-        try:
-            entry_time = datetime.fromisoformat(entry["timestamp"])
-        except Exception:
-            continue
-
+        # Check for expiration
+        entry_time = datetime.fromisoformat(entry["timestamp"])
         if datetime.utcnow() - entry_time > timedelta(minutes=EXPIRY_MINUTES):
-            if entry.get("subtitle_file_path") and Path(entry["subtitle_file_path"]).exists():
-                Path(entry["subtitle_file_path"]).unlink()
-            thumb_file = STATIC_PATH / f"{video_id}.jpg"
-            if thumb_file.exists():
-                thumb_file.unlink()
-            continue
+            raise HTTPException(status_code=403, detail="Stream expired")
 
-        # Update views
-        entry["views"] += 1
-        save_db(data)
-
-        media_type = entry.get("media_type", MediaType.MOVIE)
-        print(media_type)
-
-        # 🔴 LIVE STREAM CASE
-        if media_type == MediaType.LIVE:
-            hls_url = (entry.get("sources") or [{}])[0].get("url", "")
-            parsed = await parse_m3u8_to_json(hls_url)
-
-            return {
-                "sources": parsed["sources"],
-                "meta": {
-                    "title": entry.get("title", "Unknown Title"),
-                    "description": entry.get("description", ""),
-                    "duration": entry.get("duration", 0),
-                    "views": entry["views"],
-                    "media_type": media_type,
-                    "is_live": True
-                },
-                "subtitles": parsed["subtitles"],
-                "thumbnail": entry.get("thumbnail", "/static/nexfix-logo.jpg")
-            }
-
-        # 🎥 VOD CASE
-        return {
-            "sources": [
-                {
-                    "url": MediaHandler.create_stream_url(video_id, s, media_type),
-                    "quality": s["quality"],
-                    "type": MediaHandler.get_content_type(media_type)
-                } for s in entry.get("sources", [])
-            ],
+        media_type = entry.get("media_type", MediaType.MOVIE.value)
+        
+        # Common response structure
+        response = {
+            "sources": [],
             "meta": {
                 "title": entry.get("title", "Unknown Title"),
                 "description": entry.get("description", ""),
                 "duration": entry.get("duration", 0),
-                "views": entry["views"],
+                "views": entry.get("views", 0),
                 "media_type": media_type,
-                "is_live": False
+                "is_live": media_type == MediaType.LIVE.value
             },
-            "subtitles": [
-                {
-                    "label": "English",
-                    "lang": "en",
-                    "url": f"/proxy?url={quote(entry['subtitle'])}",
-                    "default": True
-                }
-            ] if entry.get("subtitle") else [],
-            "thumbnail": entry.get("thumbnail", "/static/nexfix-logo.jpg")
+            "subtitles": [],
+            "thumbnail": entry.get("thumbnail", "/static/nexfix-logo.jpg"),
+            "audio_tracks": []
         }
+
+        if media_type == MediaType.LIVE.value:
+            hls_url = (entry.get("sources") or [{}])[0].get("url", "")
+            if not hls_url:
+                raise HTTPException(status_code=400, detail="No valid HLS URL provided")
+            
+            parsed = await parse_m3u8_to_json(hls_url)
+            
+            response["sources"] = [
+                {
+                    "url": f"/proxy?url={quote(src['url'])}",
+                    "quality": src["quality"],
+                    "type": src["type"],
+                    "has_audio": src["has_audio"],
+                    "codecs": src["codecs"]
+                } for src in parsed["sources"]
+            ]
+            
+            response["subtitles"] = [
+                {
+                    "url": f"/proxy?url={quote(sub['url'])}",
+                    "language": sub["language"],
+                    "name": sub["name"],
+                    "default": index == 0
+                } for index, sub in enumerate(parsed["subtitles"])
+            ]
+            
+            response["audio_tracks"] = [
+                {
+                    "url": f"/proxy?url={quote(track['url'])}",
+                    "language": track["language"],
+                    "name": track["name"]
+                } for track in parsed["audio_tracks"]
+            ]
+            
+            response["meta"]["audio_status"] = (
+                "✅ Combined audio-video" if all(src["has_audio"] for src in parsed["sources"])
+                else "⚠️ Separate audio tracks" if parsed["audio_tracks"]
+                else "❌ No audio detected"
+            )
+            
+        else:
+            response["sources"] = [
+                {
+                    "url": MediaHandler.create_stream_url(video_id, s, media_type),
+                    "quality": s["quality"],
+                    "type": MediaHandler.get_content_type(media_type),
+                    "has_audio": True,
+                    "codecs": "avc1.64001e,mp4a.40.2"  # Default codecs for non-HLS
+                } for s in entry.get("sources", [])
+            ]
+            
+            if entry.get("subtitle"):
+                response["subtitles"] = [{
+                    "url": entry["subtitle"],
+                    "language": "en",
+                    "name": "Auto",
+                    "default": True
+                }]
+
+        # Increment views
+        entry["views"] = entry.get("views", 0) + 1
+        save_db(data)
+        
+        return response
 
     raise HTTPException(status_code=404, detail="Content not found or expired")
 
-    raise HTTPException(status_code=404, detail="Not found")
-# Proxy endpoint for non-HLS content
 @app.get("/stream-proxy/{video_id}")
 async def stream_proxy(video_id: str, request: Request, quality: str = Query(...)):
+    global session
     data = load_db()
+
     for entry in data:
         if entry["video_id"] == video_id:
             if datetime.utcnow() - datetime.fromisoformat(entry["timestamp"]) > timedelta(minutes=EXPIRY_MINUTES):
@@ -387,11 +431,10 @@ async def stream_proxy(video_id: str, request: Request, quality: str = Query(...
                 raise HTTPException(status_code=404, detail="Quality not available")
 
             range_header = request.headers.get("range")
-            async with aiohttp.ClientSession() as session:
-                async with session.head(source["url"]) as head_resp:
-                    if head_resp.status != 200:
-                        raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
-                    total_size = int(head_resp.headers.get("Content-Length", 0))
+            async with session.head(source["url"]) as head_resp:
+                if head_resp.status != 200:
+                    raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
+                total_size = int(head_resp.headers.get("Content-Length", 0))
 
             start, end = 0, total_size - 1
             if range_header:
@@ -404,13 +447,10 @@ async def stream_proxy(video_id: str, request: Request, quality: str = Query(...
                         raise HTTPException(status_code=416, detail="Invalid range")
 
             async def stream_chunk():
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        source["url"], 
-                        headers={"Range": f"bytes={start}-{end}"}
-                    ) as resp:
-                        async for chunk in resp.content.iter_chunked(1024 * 512):
-                            yield chunk
+                headers = {"Range": f"bytes={start}-{end}"}
+                async with session.get(source["url"], headers=headers) as resp:
+                    async for chunk in resp.content.iter_chunked(1024 * 1024 * 2):  # 2MB chunks
+                        yield chunk
 
             return StreamingResponse(
                 stream_chunk(),
@@ -425,7 +465,6 @@ async def stream_proxy(video_id: str, request: Request, quality: str = Query(...
 
     raise HTTPException(status_code=404, detail="Invalid video ID")
 
-# Media request endpoints
 @app.get("/request-movie", response_class=JSONResponse)
 async def request_movie(
     url: str = Query(...),
@@ -492,7 +531,6 @@ async def request_anime(
         season=season
     )
 
-# Analytics endpoint
 @app.get("/analytics", response_class=JSONResponse)
 async def get_analytics(video_id: str = Query(...)):
     data = load_db()
@@ -507,7 +545,6 @@ async def get_analytics(video_id: str = Query(...)):
             }
     raise HTTPException(status_code=404, detail="Content not found")
 
-# Helper functions
 async def fetch_sources(url: str) -> Tuple[List[Dict[str, str]], Optional[str], Optional[str]]:
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
