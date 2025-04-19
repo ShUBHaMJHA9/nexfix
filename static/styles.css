@@ -30,7 +30,7 @@
   --glow-color: rgba(229, 9, 20, 0.7);
 }
 
-/* Base Styles with Smooth Scroll */
+/* Base Styles */
 * {
   margin: 0;
   padding: 0;
@@ -53,14 +53,16 @@ body {
   overflow-x: hidden;
 }
 
-/* Enhanced Premium Header with Neon Effects */
+/* Enhanced Header */
 .nexfix-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 2.5rem;
-  background: linear-gradient(135deg, rgba(233, 226, 226, 0.9), rgba(20, 20, 20, 0.85));
-  position: relative;
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.85));
+  position: fixed;
+  top: 0;
+  width: 100%;
   z-index: 100;
   border-bottom: 2px solid #ff0066;
   box-shadow: var(--shadow);
@@ -100,13 +102,11 @@ body {
   font-weight: 900;
   background: var(--rainbow-gradient);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
   margin: 0;
   letter-spacing: -0.5px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  position: relative;
   transition: all var(--transition-medium);
 }
 
@@ -114,7 +114,7 @@ body {
   text-shadow: var(--neon-glow);
 }
 
-/* Enhanced Content Type Selector */
+/* Content Type Selector */
 .content-type {
   position: relative;
 }
@@ -219,17 +219,17 @@ body {
   color: var(--primary-light);
 }
 
-/* Centralized and Enhanced Telegram Banner Below Header */
+/* Centralized Telegram Banner */
 .telegram-join-banner {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  background: linear-gradient(135deg, #ff0066, #ffcc00, #00ff99, #00ccff, #cc00ff);
+  background: linear-gradient(135deg, #0088cc, #00ccff, #ff0066);
   padding: 1.5rem 2rem;
-  margin: 1rem auto;
-  max-width: 600px;
+  margin: 5rem auto 1rem;
+  max-width: 700px;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow);
   position: relative;
@@ -237,14 +237,14 @@ body {
   overflow: hidden;
   animation: gradientPulse 5s ease infinite;
   background-size: 400% 400%;
-  border: 3px solid #ff0066;
+  border: 3px solid #00ccff;
   transition: all var(--transition-medium);
 }
 
 .telegram-join-banner:hover {
   transform: perspective(500px) rotateY(5deg);
   box-shadow: 0 12px 30px rgba(0, 204, 255, 0.5);
-  border-color: #00ff99;
+  border-color: #ff0066;
 }
 
 .telegram-join-banner::before {
@@ -283,7 +283,7 @@ body {
 }
 
 .telegram-logo {
-  height: 3.5rem;
+  height: 4rem;
   width: auto;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
   z-index: 1;
@@ -293,7 +293,7 @@ body {
 
 .telegram-logo:hover {
   transform: scale(1.15) rotate(10deg);
-  filter: drop-shadow(0 0 15px #00ff99);
+  filter: drop-shadow(0 0 15px #00ccff);
 }
 
 .telegram-text {
@@ -302,12 +302,11 @@ body {
 }
 
 .telegram-text p {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 800;
   margin-bottom: 0.75rem;
-  background: linear-gradient(to right, #ffffff, #00ff99, #ffcc00);
+  background: linear-gradient(to right, #ffffff, #00ccff, #ff0066);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -316,7 +315,7 @@ body {
 
 @keyframes textGlow {
   0% { text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
-  100% { text-shadow: 0 0 12px rgba(0, 255, 153, 0.7); }
+  100% { text-shadow: 0 0 12px rgba(0, 204, 255, 0.7); }
 }
 
 .telegram-links {
@@ -326,9 +325,9 @@ body {
 }
 
 .telegram-btn {
-  background: linear-gradient(135deg, #00ff99, #cc00ff, #00ccff);
+  background: linear-gradient(135deg, #00ccff, #ff0066, #00ff99);
   color: white;
-  border: 2px solid #ff0066;
+  border: 2px solid #00ccff;
   padding: 0.6rem 1.5rem;
   border-radius: 32px;
   font-size: 1rem;
@@ -355,10 +354,10 @@ body {
 }
 
 .telegram-btn:hover {
-  background: linear-gradient(135deg, #cc00ff, #00ff99, #ffcc00);
+  background: linear-gradient(135deg, #ff0066, #00ccff, #ffcc00);
   transform: translateY(-3px) scale(1.1);
-  box-shadow: 0 0 20px rgba(0, 255, 153, 0.8);
-  border-color: #00ff99;
+  box-shadow: 0 0 20px rgba(0, 204, 255, 0.8);
+  border-color: #ff0066;
 }
 
 .telegram-btn:hover::before {
@@ -369,7 +368,7 @@ body {
   transform: translateY(-1px) scale(1.05);
 }
 
-/* Premium Video Player Container */
+/* Video Player Container */
 .video_player {
   position: relative;
   width: 100%;
@@ -394,7 +393,7 @@ body {
   background-position: center;
 }
 
-/* Enhanced Center Play Button with Pulsating Gradient */
+/* Center Play Button */
 .center-control {
   position: absolute;
   top: 50%;
@@ -442,7 +441,6 @@ body {
   color: var(--text-primary);
   background: var(--rainbow-gradient);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -464,7 +462,7 @@ body {
   text-shadow: var(--neon-glow);
 }
 
-/* Quality Badge with Animation */
+/* Quality Badge */
 .quality-badge {
   position: absolute;
   top: 1.25rem;
@@ -489,18 +487,19 @@ body {
   100% { box-shadow: 0 0 15px rgba(229, 9, 20, 0.7); }
 }
 
-/* Skip Ad Button with Countdown Animation */
+/* Enhanced Skip Ad Button (YouTube Style) */
 .skip-ad-btn {
   position: absolute;
   bottom: calc(var(--control-height) + 1.25rem);
   right: 1.25rem;
-  background: var(--rainbow-gradient);
-  color: var(--text-primary);
-  border: 2px solid #ff0066;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(200, 200, 200, 0.8));
+  color: #000;
+  border: 1px solid rgba(0, 0, 0, 0.2);
   padding: 0.75rem 1.75rem;
-  border-radius: var(--border-radius-lg);
+  border-radius: 4px;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
+  font-family: 'Roboto', sans-serif;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -509,11 +508,8 @@ body {
   opacity: 0;
   transform: translateY(15px);
   transition: all var(--transition-medium);
-  box-shadow: var(--shadow-small);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  animation: gradientPulse 4s ease infinite;
-  background-size: 200% 200%;
-  position: relative;
 }
 
 .skip-ad-btn::before {
@@ -533,7 +529,7 @@ body {
   left: 0;
   height: 4px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -548,12 +544,19 @@ body {
   animation: countdown 5s linear forwards;
 }
 
+.skip-ad-btn:hover {
+  background: #ffffff;
+  transform: translateY(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .skip-ad-btn:hover::before {
   left: 100%;
 }
 
 .skip-ad-btn[disabled] {
-  background: linear-gradient(135deg, rgba(229, 9, 20, 0.4), rgba(255, 204, 0, 0.3));
+  background: rgba(200, 200, 200, 0.5);
+  color: rgba(0, 0, 0, 0.5);
   cursor: not-allowed;
 }
 
@@ -569,12 +572,6 @@ body {
   display: none;
 }
 
-.skip-ad-btn:hover {
-  transform: translateY(10px);
-  box-shadow: 0 8px 20px rgba(229, 9, 20, 0.5);
-  border-color: #00ff99;
-}
-
 .video_player.vjs-ad-playing .skip-ad-btn {
   opacity: 1;
   transform: translateY(0);
@@ -585,7 +582,7 @@ body {
   to { transform: translateX(-100%); }
 }
 
-/* Swipe Overlays with Glass Morphism */
+/* Swipe Overlays */
 .swipe-overlay {
   position: absolute;
   width: 100%;
@@ -619,7 +616,6 @@ body {
   color: var(--primary-light);
   background: var(--rainbow-gradient);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
 }
@@ -661,7 +657,7 @@ body {
   width: 100%;
 }
 
-/* Seek Indicators with Floating Animation */
+/* Seek Indicators */
 .tap-indicator {
   position: absolute;
   top: 50%;
@@ -701,7 +697,6 @@ body {
   color: var(--primary-light);
   background: var(--rainbow-gradient);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
 }
@@ -718,7 +713,7 @@ body {
   animation: float 1.5s ease-in-out infinite;
 }
 
-/* Seek Feedback Overlays */
+/* Seek Feedback */
 .seek-feedback {
   position: absolute;
   top: 0;
@@ -745,7 +740,7 @@ body {
   opacity: 1;
 }
 
-/* Speed Feedback Indicator */
+/* Speed Feedback */
 .speed-feedback {
   position: absolute;
   top: 50%;
@@ -770,7 +765,7 @@ body {
   animation: popIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Enhanced Modern Controls Bar */
+/* Controls Bar */
 .controls {
   position: absolute;
   bottom: 0;
@@ -787,7 +782,7 @@ body {
   opacity: 0;
 }
 
-/* Enhanced Progress Bar with Glowing Thumb */
+/* Progress Bar */
 .progress-area {
   width: 100%;
   height: var(--progress-height);
@@ -839,7 +834,7 @@ body {
   opacity: 1;
 }
 
-/* Enhanced Premium Controls List */
+/* Controls List */
 .controls-list {
   display: flex;
   justify-content: space-between;
@@ -919,7 +914,6 @@ body {
   font-size: 1rem;
   background: var(--rainbow-gradient);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
 }
@@ -937,7 +931,7 @@ body {
   display: none;
 }
 
-/* Volume Popup with Glass Effect */
+/* Volume Popup */
 .volume-popup {
   position: absolute;
   bottom: calc(100% + 10px);
@@ -966,7 +960,6 @@ body {
   width: 100%;
   height: 6px;
   -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
@@ -1012,12 +1005,11 @@ body {
   font-weight: 600;
   background: var(--rainbow-gradient);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Premium Settings Panel */
+/* Settings Panel */
 .settings {
   position: absolute;
   bottom: calc(var(--control-height) + 1.5rem);
@@ -1062,7 +1054,6 @@ body {
   letter-spacing: 0.5px;
   background: var(--rainbow-gradient);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
 }
@@ -1138,7 +1129,7 @@ body {
   animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-
+/* Audio Track */
 .audio_track {
   position: absolute;
   bottom: calc(var(--control-height) + 1.5rem);
@@ -1166,7 +1157,6 @@ body {
   transition: transform 0.3s ease;
 }
 
-/* Active state with animation */
 .audio_track.active {
   transform: translateY(0);
   opacity: 1;
@@ -1179,8 +1169,7 @@ body {
   color: #fff;
 }
 
-
-/* Enhanced Stats Panel */
+/* Stats Panel */
 .stats-panel {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -1192,8 +1181,6 @@ body {
   max-width: 1600px;
   box-shadow: 0 5px 14px var(--shadow-dark);
   position: relative;
-  top: auto;
-  left: auto;
   border: 2px solid #ff0066;
   transition: all var(--transition-medium);
 }
@@ -1231,7 +1218,7 @@ body {
   font-size: 0.85rem;
 }
 
-/* Enhanced Downloader Buttons with 3D Tilt and Sparkle */
+/* Downloader Buttons */
 .downloader {
   display: flex;
   gap: 1.5rem;
@@ -1286,7 +1273,7 @@ body {
 .downloader button:hover {
   transform: perspective(500px) rotateY(10deg) translateY(-5px);
   box-shadow: 0 10px 25px rgba(229, 9, 20, 0.5);
-  border-color: #00ff99;
+  border-color: #00ccff;
 }
 
 .downloader button:hover::before {
@@ -1301,7 +1288,7 @@ body {
   transform: perspective(500px) rotateY(0deg) translateY(-2px);
 }
 
-/* Enhanced Description Section */
+/* Description Section */
 .description-section {
   max-width: 1300px;
   margin: 0 auto;
@@ -1317,7 +1304,6 @@ body {
   display: inline-block;
   background: var(--rainbow-gradient);
   -webkit-background-clip: text;
-  -moz-background-clip: text;
   background-clip: text;
   color: transparent;
 }
@@ -1340,45 +1326,26 @@ body {
   max-width: 800px;
 }
 
-
-
-
-.controls:not(.active), .center-control:not(.active), .quality-badge:not(.active) {
+/* Non-active states */
+.controls:not(.active),
+.center-control:not(.active),
+.quality-badge:not(.active) {
   opacity: 0;
   pointer-events: none;
 }
 
-/* Disabled buttons in iframe */
+/* Disabled buttons */
 .icon.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Existing styles (ensure these are included) */
+/* Error Message */
 .error-message {
   color: #ff4444;
   font-size: 16px;
   text-align: center;
   margin-top: 10px;
-}
-
-.skip-ad-progress {
-  width: 100%;
-  height: 4px;
-  background: #ccc;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-}
-
-@keyframes countdown {
-  from { width: 100%; }
-  to { width: 0; }
-}
-
-/* Add font fallback */
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Responsive Design */
@@ -1392,7 +1359,7 @@ body {
   }
   
   .telegram-join-banner {
-    margin: 1rem 1.5rem;
+    margin: 5rem 1.5rem 1rem;
     padding: 1rem 1.5rem;
     max-width: 500px;
   }
@@ -1471,7 +1438,7 @@ body {
   }
   
   .telegram-join-banner {
-    margin: 1rem;
+    margin: 4rem 1rem 1rem;
     padding: 0.75rem 1rem;
     max-width: 400px;
   }
@@ -1544,7 +1511,7 @@ body {
   }
   
   .telegram-join-banner {
-    margin: 0.75rem;
+    margin: 3.5rem 0.75rem 0.75rem;
     padding: 0.5rem 0.75rem;
     max-width: 300px;
   }
@@ -1691,5 +1658,5 @@ body {
 
 @keyframes textGlow {
   0% { text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
-  100% { text-shadow: 0 0 12px rgba(0, 255, 153, 0.7); }
+  100% { text-shadow: 0 0 12px rgba(0, 204, 255, 0.7); }
 }
