@@ -275,9 +275,6 @@ async def stream_file(url: str, request: Request):
                 "Content-Type": "video/mp4"
             }
         )
-
-
-
 @app.get("/proxy")
 async def proxy_stream(url: str, request: Request):
     try:
@@ -320,7 +317,7 @@ async def handle_hls_playlist(playlist_url: str, request: Request):
             
             # Base URL for relative paths
             base_url = playlist_url.rsplit("/", 1)[0] + "/"
-            proxy_url = "https://potential-potato-69v64xw9j5wpcgrw-8002.app.github.dev/proxy"
+            proxy_url = os.getenv("PROXY_URL")
 
             # Process playlist lines
             processed_lines = []
