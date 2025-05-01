@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+      "video.js": "^8.22.0",
+      "@videojs/http-streaming": "^3.17.0",
+      "videojs-contrib-quality-levels": "^4.1.0",
+      "videojs-http-source-selector": "^1.1.6"
+  },
+  "resolutions": {
+      "video.js": "^8.22.0",
+      "@videojs/http-streaming": "^3.17.0",
+      "videojs-contrib-quality-levels": "^4.1.0"
+  }
+}

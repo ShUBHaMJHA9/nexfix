@@ -1,40 +1,55 @@
-
-from fastapi import FastAPI, Request, Query, HTTPException
+from fastapi import FastAPI, Request, Query, HTTPException, Depends
 from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from datetime import datetime, timedelta
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import uvicorn
+from m3u8 import ParseError
+import httpx
+from typing import List, Dict, Optional, Tuple
+from enum import Enum
+from fastapi.responses import StreamingResponse, Response
+import tempfile
+import re
+from starlette.status import HTTP_206_PARTIAL_CONTENT, HTTP_200_OK
+from pydantic import BaseModel
+from bs4 import BeautifulSoup
 import secrets
-from fastapi.responses import StreamingResponse, JSONResponse, Response
+from urllib.parse import unquote, urljoin
+from typing import Optional, List, Dict, Any
 import os
 import json
-import logging
 import aiohttp
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ClientTimeout, TCPConnector
 import asyncio
-import re
-from aiohttp import ClientTimeout
 from fastapi.middleware.cors import CORSMiddleware
-from bs4 import BeautifulSoup
-from enum import Enum
-from typing import List, Dict, Tuple, Optional
 import m3u8
-from urllib.parse import urljoin, quote
+from urllib.parse import urljoin, quote, urlparse
+from cachetools import TTLCache
+import ipaddress
+import logging
 
 # Constants
 EXPIRY_MINUTES = 60
 DB_PATH = "database.json"
-TMP_DIR = Path("/tmp")
+TMP_DIR = Path("")
 STATIC_PATH = TMP_DIR / "static"
 SUBTITLE_PATH = STATIC_PATH / "subtitles"
 THUMBNAIL_PATH = STATIC_PATH / "nexfix-logo.jpg"
 LOGO_PATH = STATIC_PATH / "logo.svg"
+NODE = "node_modules"
 DEFAULT_SUBTITLE = "/static/subtitles/english.vtt"
+
+http_client = httpx.AsyncClient()
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Rate limiting with TTLCache
+rate_limit_cache = TTLCache(maxsize=1000, ttl=60)  # 60-second TTL for rate limiting
+RATE_LIMIT_REQUESTS = 100  # Max requests per minute per IP
 
 class MediaType(str, Enum):
     MOVIE = "movie"
@@ -49,9 +64,19 @@ templates = Jinja2Templates(directory="templates")
 @app.on_event("startup")
 async def startup_event():
     global session
-    connector = aiohttp.TCPConnector(limit=100, ssl=False)
-    session = aiohttp.ClientSession(connector=connector)
+    # Create a new TCPConnector with specified settings
+    connector = TCPConnector(limit=100, ssl=False)
+    # Initialize the session with the connector
+    session = ClientSession(connector=connector)
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    global session
+    # Ensure the session is closed during shutdown
+    if session:
+        await session.close()
+
+# Example of how to use the session in a route
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -76,7 +101,8 @@ def initialize_files_and_dirs():
         dummy_sub.write_text("""WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nWelcome!\n\n00:00:04.000 --> 00:00:06.000\nSubtitles working!\n""")
 
 initialize_files_and_dirs()
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
+app.mount("/node_modules", StaticFiles(directory=NODE), name="node")
 
 # Database operations
 def load_db() -> List[Dict]:
@@ -95,15 +121,24 @@ def save_db(data: List[Dict]) -> None:
 async def download_file(url: str, dest: Path) -> bool:
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            async with session.get(url, timeout=ClientTimeout(total=10)) as resp:
                 if resp.status == 200:
                     dest.write_bytes(await resp.read())
                     return True
         return False
     except Exception as e:
-        print(f"Download failed: {e}")
+        logger.error(f"Download failed: {e}")
         return False
+    
+class MediaSource(BaseModel):
+    url: str
+    quality: str
+    type: Optional[str] = "application/x-mpegURL"
 
+class AudioOption(BaseModel):
+    name: str
+    language: str
+    url: Optional[str]
 class MediaHandler:
     @staticmethod
     def determine_media_type(url: str) -> MediaType:
@@ -180,17 +215,289 @@ class MediaHandler:
             "media_type": media_type.value
         }
 
-# Verification endpoint
-@app.get("/1693bb71edabc1676e00dea6864620a0.html")
-async def serve_verification_file():
-    return PlainTextResponse("1693bb71edabc1676e00dea6864620a0")
+async def validate_url(url: str) -> bool:
+    if not url.startswith(("http://", "https://")):
+        return False
+    try:
+        ip = ipaddress.ip_address(urlparse(url).hostname)
+        if ip.is_private:
+            return False
+    except ValueError:
+        pass
+    return True
 
-# Unified player endpoint
+async def rate_limit_check(request: Request):
+    client_ip = request.client.host
+    current_time = int(datetime.utcnow().timestamp() // 60)  # Minute-based key
+    cache_key = f"{client_ip}:{current_time}"
+
+    request_count = rate_limit_cache.get(cache_key, 0)
+    if request_count >= RATE_LIMIT_REQUESTS:
+        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    
+    rate_limit_cache[cache_key] = request_count + 1
+async def stream_file(url: str, request: Request):
+    range_header = request.headers.get("range")
+
+    # Open a new session for each streaming request
+    async with aiohttp.ClientSession() as session:
+        # Use the original HEAD request to get video header info
+        async with session.head(url) as head_resp:
+            if head_resp.status != 200:
+                raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
+            total_size = int(head_resp.headers.get("Content-Length", 0))
+
+        start, end = 0, total_size - 1
+        if range_header:
+            range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+            if range_match:
+                start = int(range_match.group(1))
+                if range_match.group(2):
+                    end = int(range_match.group(2))
+                if start > end:
+                    raise HTTPException(status_code=416, detail="Invalid range")
+
+        async def stream_chunk():
+            headers = {"Range": f"bytes={start}-{end}"}
+            # Open a new session for each chunk request
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as resp:
+                    async for chunk in resp.content.iter_chunked(1024 * 1024 * 2):  # 2MB chunks
+                        yield chunk
+
+        return StreamingResponse(
+            stream_chunk(),
+            status_code=206 if range_header else 200,
+            headers={
+                "Content-Range": f"bytes {start}-{end}/{total_size}",
+                "Accept-Ranges": "bytes",
+                "Content-Length": str(end - start + 1),
+                "Content-Type": "video/mp4"
+            }
+        )
+
+
+@app.get("/proxy")
+async def proxy_stream(url: str, request: Request):
+    try:
+        # Single decode of the URL
+        decoded_url = unquote(url)
+        
+        # Prevent proxy loops and clean URL
+        if decoded_url.startswith(("http://", "https://")):
+            final_url = decoded_url
+        elif decoded_url.startswith("/proxy"):
+            # Extract the actual URL if it's nested
+            query_start = decoded_url.find("?url=")
+            final_url = unquote(decoded_url[query_start+5:]) if query_start != -1 else decoded_url
+        else:
+            final_url = decoded_url
+
+        print(f"Proxying URL: {final_url}")
+
+        # Route to appropriate handler
+        if any(final_url.endswith(ext) for ext in ['.m3u8', '.m3u']):
+            return await handle_hls_playlist(final_url, request)
+        elif any(ext in final_url for ext in ['init.mp4', 'init.fmp4', 'init.hls.fmp4']):
+            # Don't proxy initialization segments - redirect to original URL
+            return Response(
+                status_code=307,
+                headers={"Location": final_url}
+            )
+        elif any(final_url.endswith(ext) for ext in ['.ts', '.m4s', '.mp4']):
+            return await proxy_media_segment(final_url)
+        else:
+            return await stream_file(final_url, request)
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
+
+async def handle_hls_playlist(playlist_url: str, request: Request):
+    async with httpx.AsyncClient() as client:
+        try:
+            # Fetch the original playlist
+            resp = await client.get(playlist_url)
+            resp.raise_for_status()
+            content = resp.text
+            
+            # Determine base URL for relative paths
+            base_url = playlist_url.rsplit("/", 1)[0] + "/"
+            proxy_url = str(request.url_for("proxy_stream"))
+
+            # Process each line of the playlist
+            processed_lines = []
+            for line in content.splitlines():
+                if not line.strip():
+                    processed_lines.append(line)
+                    continue
+                    
+                # Keep comments unchanged
+                if line.startswith("#"):
+                    # Special handling for EXT-X-MEDIA URIs
+                    if line.startswith("#EXT-X-MEDIA:") and "URI=" in line:
+                        uri_match = re.search(r'URI="([^"]+)"', line)
+                        if uri_match:
+                            original_uri = uri_match.group(1)
+                            if not original_uri.startswith(("http://", "https://")):
+                                full_uri = urljoin(base_url, original_uri)
+                                line = line.replace(
+                                    f'URI="{original_uri}"', 
+                                    f'URI="{proxy_url}?url={quote(full_uri)}"'
+                                )
+                    processed_lines.append(line)
+                    continue
+                    
+                # Handle media segments
+                if not line.startswith(("http://", "https://")):
+                    full_url = urljoin(base_url, line)
+                else:
+                    full_url = line
+                
+                # Special handling for initialization segments
+                if any(ext in full_url for ext in ['init.mp4', 'init.fmp4', 'init.hls.fmp4']):
+                    processed_lines.append(full_url)  # Leave as direct URL
+                else:
+                    processed_lines.append(f"{proxy_url}?url={quote(full_url)}")
+
+            return Response(
+                content="\n".join(processed_lines),
+                media_type="application/vnd.apple.mpegurl",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            )
+            
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"HLS processing error: {str(e)}")
+
+async def proxy_media_segment(segment_url: str):
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(segment_url)
+            resp.raise_for_status()
+            
+            return Response(
+                content=resp.content,
+                media_type="video/MP2T" if segment_url.endswith('.ts') else "video/mp4",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            )
+            
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Segment proxy error: {str(e)}")
+@app.get("/proxy_segment")
+async def proxy_segment():
+    # Your segment handling logic here
+    return {"message": "This is a proxy segment."}
+
+@app.get("/stream/{video_id}", response_class=JSONResponse)
+async def get_stream_info(video_id: str, _: None = Depends(rate_limit_check)):
+    data = load_db()
+    entry = next((e for e in data if e["video_id"] == video_id), None)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Content not found")
+
+    if datetime.utcnow() - datetime.fromisoformat(entry["timestamp"]) > timedelta(minutes=EXPIRY_MINUTES):
+        raise HTTPException(status_code=403, detail="Stream expired")
+
+    media_type = MediaType(entry.get("media_type", MediaType.MOVIE.value))
+
+    response = {
+        "sources": [
+            {
+                "url": f"{quote(s['url'], safe='')}",
+                "quality": s["quality"],
+                "type": s["type"],
+                "codecs": s.get("codecs", "avc1")
+            } for s in entry.get("sources", []) if s.get('url') and s['url'].startswith(('http://', 'https://'))
+        ],
+        "meta": {
+            "title": entry.get("title", "Unknown"),
+            "description": entry.get("description", ""),
+            "duration": entry.get("duration", 0),
+            "views": entry.get("views", 0),
+            "media_type": media_type.value
+        },
+        "subtitles": [{"url": entry["subtitle"], "language": "en", "name": "English"}] if entry.get("subtitle") else [],
+        "thumbnail": entry.get("thumbnail", "/static/nexfix-logo.jpg")
+    }
+
+    entry["views"] = entry.get("views", 0) + 1
+    save_db(data)
+    return response
+async def handle_m3u8_playlist(url: str, request: Request):
+    session = request.app.state.http_client
+    try:
+        # Clean and decode the incoming URL
+        clean_url = unquote(url)
+        
+        # Fetch the original playlist
+        async with session.get(clean_url) as resp:
+            resp.raise_for_status()
+            content = await resp.text()
+        
+        # Determine base URL for relative paths
+        base_url = clean_url.rsplit("/", 1)[0] + "/"
+        proxy_base = str(request.url_for("proxy_stream"))
+        
+        # Process each line of the playlist
+        processed_lines = []
+        for line in content.splitlines():
+            if line.strip() == "":
+                processed_lines.append(line)
+                continue
+                
+            # Keep comments and tags unchanged
+            if line.startswith("#"):
+                # Handle EXT-X-MEDIA URI rewriting
+                if line.startswith("#EXT-X-MEDIA:") and "URI=" in line:
+                    uri_match = re.search(r'URI="([^"]+)"', line)
+                    if uri_match:
+                        original_uri = uri_match.group(1)
+                        if not original_uri.startswith(("http://", "https://")):
+                            full_uri = urljoin(base_url, original_uri)
+                            line = line.replace(f'URI="{original_uri}"', f'URI="{proxy_base}?url={quote(full_uri)}"')
+                processed_lines.append(line)
+                continue
+                
+            # Process media segment URLs
+            if not line.startswith(("http://", "https://")):
+                full_url = urljoin(base_url, line)
+            else:
+                full_url = line
+                
+            # Skip initialization segments from proxying
+            if any(ext in full_url for ext in ['.init.mp4', '.init.fmp4', 'init.hls.fmp4']):
+                processed_lines.append(full_url)
+            else:
+                processed_lines.append(f"{proxy_base}?url={quote(full_url)}")
+
+        return Response(
+            content="\n".join(processed_lines),
+            media_type="application/vnd.apple.mpegurl",
+            headers={
+                "Cache-Control": "no-cache",
+                "Access-Control-Allow-Origin": "*",
+                "Content-Disposition": "inline"
+            }
+        )
+
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing HLS playlist: {str(e)}")
+    
 @app.get("/play", response_class=HTMLResponse)
 async def media_player(request: Request, video_id: str = Query(...)):
     return templates.TemplateResponse("player.html", {"request": request, "video_id": video_id})
 
-# Homepage
 @app.get("/", response_class=HTMLResponse)
 async def homepage():
     return """
@@ -203,274 +510,13 @@ async def homepage():
     </html>
     """
 
-def rewrite_hls_playlist(playlist_text: str, base_uri: str) -> str:
-    out = []
-    for line in playlist_text.splitlines():
-        if line.strip().startswith("#"):
-            out.append(line)
-        elif line.strip():
-            uri = line.strip()
-            full = uri if uri.startswith("http") else urljoin(base_uri, uri)
-            proxied = f"/proxy?url={quote(full)}"
-            out.append(proxied)
-        else:
-            out.append(line)
-    return "\n".join(out)
-@app.get("/proxy")
-async def proxy(request: Request, url: str):
-    range_header = request.headers.get("Range")
-    
-    try:
-        async with aiohttp.ClientSession() as session:
-            # Get the total content length from HEAD request
-            async with session.head(url) as head_resp:
-                if head_resp.status != 200:
-                    raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
-                total_size = int(head_resp.headers.get("Content-Length", 0))
-
-            start, end = 0, total_size - 1
-            if range_header:
-                range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
-                if range_match:
-                    start = int(range_match.group(1))
-                    if range_match.group(2):
-                        end = int(range_match.group(2))
-                    if start > end:
-                        raise HTTPException(status_code=416, detail="Invalid range")
-
-            # Function to stream the file
-            async def stream_chunk():
-                headers = {}
-                if range_header:
-                    headers["Range"] = f"bytes={start}-{end}"
-                async with session.get(url, headers=headers) as resp:
-                    async for chunk in resp.content.iter_chunked(512 * 1024):
-                        yield chunk
-
-            # Prepare response headers
-            response_headers = {
-                "Accept-Ranges": "bytes",
-                "Content-Length": str(end - start + 1),
-                "Content-Type": "video/mp4"
-            }
-            if range_header:
-                response_headers["Content-Range"] = f"bytes {start}-{end}/{total_size}"
-
-            return StreamingResponse(
-                stream_chunk(),
-                status_code=206 if range_header else 200,
-                headers=response_headers
-            )
-
-    except Exception as e:
-        logger.error(f"Proxy streaming error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
-
-
-async def parse_m3u8_to_json(url: str) -> Dict[str, any]:
-    timeout = ClientTimeout(total=5)
-    try:
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(url) as resp:
-                if resp.status != 200:
-                    raise HTTPException(status_code=resp.status, detail="Failed to fetch playlist")
-                content = await resp.text()
-    except aiohttp.ClientError as e:
-        raise HTTPException(status_code=503, detail=f"Network error: {str(e)}")
-
-    playlist = m3u8.loads(content, uri=url)
-    result = {
-        "sources": [],
-        "subtitles": [],
-        "audio_tracks": []
-    }
-
-    for pl in playlist.playlists or []:
-        if not pl.stream_info or not pl.uri:
-            continue
-        codecs = getattr(pl.stream_info, "codecs", "") or ""
-        has_audio = "mp4a" in codecs.lower()
-        resolution = getattr(pl.stream_info, "resolution", None)
-        quality = f"{resolution[1]}p" if resolution and len(resolution) > 1 else "auto"
-
-        result["sources"].append({
-            "url": pl.absolute_uri or urljoin(url, pl.uri),
-            "quality": quality,
-            "type": "application/x-mpegURL",
-            "has_audio": has_audio,
-            "codecs": codecs
-        })
-
-    for media in playlist.media or []:
-        if media.type == "SUBTITLES" and media.uri:
-            subtitle_url = media.absolute_uri or urljoin(url, media.uri)
-            result["subtitles"].append({
-                "url": subtitle_url,
-                "language": media.language or "en",
-                "name": media.name or "Subtitle"
-            })
-        elif media.type == "AUDIO" and media.uri:
-            audio_url = media.absolute_uri or urljoin(url, media.uri)
-            result["audio_tracks"].append({
-                "url": audio_url,
-                "language": media.language or "en",
-                "name": media.name or "Audio Track"
-            })
-
-    return result
-@app.get("/stream/{video_id}", response_class=JSONResponse)
-async def get_stream_info(video_id: str):
-    data = load_db()
-
-    for entry in data:
-        if entry["video_id"] != video_id:
-            continue
-
-        # Check for expiration
-        entry_time = datetime.fromisoformat(entry["timestamp"])
-        if datetime.utcnow() - entry_time > timedelta(minutes=EXPIRY_MINUTES):
-            raise HTTPException(status_code=403, detail="Stream expired")
-
-        media_type = entry.get("media_type", MediaType.MOVIE.value)
-        
-        # Common response structure
-        response = {
-            "sources": [],
-            "meta": {
-                "title": entry.get("title", "Unknown Title"),
-                "description": entry.get("description", ""),
-                "duration": entry.get("duration", 0),
-                "views": entry.get("views", 0),
-                "media_type": media_type,
-                "is_live": media_type == MediaType.LIVE.value
-            },
-            "subtitles": [],
-            "thumbnail": entry.get("thumbnail", "/static/nexfix-logo.jpg"),
-            "audio_tracks": []
-        }
-
-        if media_type == MediaType.LIVE.value:
-            hls_url = (entry.get("sources") or [{}])[0].get("url", "")
-            if not hls_url:
-                raise HTTPException(status_code=400, detail="No valid HLS URL provided")
-            
-            parsed = await parse_m3u8_to_json(hls_url)
-            
-            response["sources"] = [
-                {
-                    "url": f"/proxy?url={quote(src['url'])}",
-                    "quality": src["quality"],
-                    "type": src["type"],
-                    "has_audio": src["has_audio"],
-                    "codecs": src["codecs"]
-                } for src in parsed["sources"]
-            ]
-            
-            response["subtitles"] = [
-                {
-                    "url": f"/proxy?url={quote(sub['url'])}",
-                    "language": sub["language"],
-                    "name": sub["name"],
-                    "default": index == 0
-                } for index, sub in enumerate(parsed["subtitles"])
-            ]
-            
-            response["audio_tracks"] = [
-                {
-                    "url": f"/proxy?url={quote(track['url'])}",
-                    "language": track["language"],
-                    "name": track["name"]
-                } for track in parsed["audio_tracks"]
-            ]
-            
-            response["meta"]["audio_status"] = (
-                "✅ Combined audio-video" if all(src["has_audio"] for src in parsed["sources"])
-                else "⚠️ Separate audio tracks" if parsed["audio_tracks"]
-                else "❌ No audio detected"
-            )
-            
-        else:
-            response["sources"] = [
-                {
-                    "url": MediaHandler.create_stream_url(video_id, s, media_type),
-                    "quality": s["quality"],
-                    "type": MediaHandler.get_content_type(media_type),
-                    "has_audio": True,
-                    "codecs": "avc1.64001e,mp4a.40.2"  # Default codecs for non-HLS
-                } for s in entry.get("sources", [])
-            ]
-            
-            if entry.get("subtitle"):
-                response["subtitles"] = [{
-                    "url": entry["subtitle"],
-                    "language": "en",
-                    "name": "Auto",
-                    "default": True
-                }]
-
-        # Increment views
-        entry["views"] = entry.get("views", 0) + 1
-        save_db(data)
-        
-        return response
-
-    raise HTTPException(status_code=404, detail="Content not found or expired")
-
-@app.get("/stream-proxy/{video_id}")
-async def stream_proxy(video_id: str, request: Request, quality: str = Query(...)):
-    global session
-    data = load_db()
-
-    for entry in data:
-        if entry["video_id"] == video_id:
-            if datetime.utcnow() - datetime.fromisoformat(entry["timestamp"]) > timedelta(minutes=EXPIRY_MINUTES):
-                raise HTTPException(status_code=403, detail="Stream expired")
-
-            source = next((s for s in entry["sources"] if s["quality"] == quality), None)
-            if not source:
-                raise HTTPException(status_code=404, detail="Quality not available")
-
-            range_header = request.headers.get("range")
-            async with session.head(source["url"]) as head_resp:
-                if head_resp.status != 200:
-                    raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
-                total_size = int(head_resp.headers.get("Content-Length", 0))
-
-            start, end = 0, total_size - 1
-            if range_header:
-                range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
-                if range_match:
-                    start = int(range_match.group(1))
-                    if range_match.group(2):
-                        end = int(range_match.group(2))
-                    if start > end:
-                        raise HTTPException(status_code=416, detail="Invalid range")
-
-            async def stream_chunk():
-                headers = {"Range": f"bytes={start}-{end}"}
-                async with session.get(source["url"], headers=headers) as resp:
-                    async for chunk in resp.content.iter_chunked(1024 * 1024 * 2):  # 2MB chunks
-                        yield chunk
-
-            return StreamingResponse(
-                stream_chunk(),
-                status_code=206 if range_header else 200,
-                headers={
-                    "Content-Range": f"bytes {start}-{end}/{total_size}",
-                    "Accept-Ranges": "bytes",
-                    "Content-Length": str(end - start + 1),
-                    "Content-Type": "video/mp4"
-                }
-            )
-
-    raise HTTPException(status_code=404, detail="Invalid video ID")
-
 @app.get("/request-movie", response_class=JSONResponse)
 async def request_movie(
     url: str = Query(...),
     user_id: str = Query(...),
     thumbnail_url: str = Query(default=None),
-    subtitle_url: str = Query(default=None)
+    subtitle_url: str = Query(default=None),
+    _: None = Depends(rate_limit_check)
 ):
     sources, title, description = await fetch_sources(url)
     if not sources:
@@ -485,27 +531,105 @@ async def request_movie(
         thumbnail_url=thumbnail_url,
         subtitle_url=subtitle_url
     )
+async def fetch_m3u8_details(url: str) -> tuple[List[dict], Optional[str], List[dict]]:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Accept": "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+    }
 
-@app.get("/request-live", response_class=JSONResponse)
+    try:
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    error_detail = await resp.text()
+                    raise HTTPException(
+                        status_code=resp.status,
+                        detail=f"Failed to fetch M3U8 playlist. Server responded with: {error_detail}"
+                    )
+
+                content = await resp.text()
+
+        m3u8_obj = m3u8.loads(content)
+        sources = []
+        subtitle_url = None
+        audio_options = []
+
+        if m3u8_obj.is_variant:
+            for playlist in m3u8_obj.playlists:
+                stream_info = playlist.stream_info
+                resolution = stream_info.resolution if stream_info else None
+                quality = f"{resolution[1]}p" if resolution else "auto"
+                absolute_url = urljoin(url, playlist.uri)
+                sources.append({
+                    "url": absolute_url,
+                    "quality": quality,
+                    "type": "application/x-mpegURL"
+                })
+        else:
+            sources.append({
+                "url": url,
+                "quality": "auto"
+            })
+
+        for media in m3u8_obj.media:
+            if media.type == "SUBTITLES" and media.uri:
+                subtitle_url = urljoin(url, media.uri)
+            elif media.type == "AUDIO":
+                audio_url = urljoin(url, media.uri) if media.uri else None
+                audio_options.append({
+                    "name": media.name or "Unknown",
+                    "language": media.language or "und",
+                    "url": audio_url
+                })
+
+        print(f"{sources}, {subtitle_url}, {audio_options} else none")
+        return sources, subtitle_url, audio_options
+
+    except ParseError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid M3U8 content: {str(e)}")
+    except aiohttp.ClientError as e:
+        raise HTTPException(status_code=503, detail=f"Network error occurred: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
+# Usage example
+async def handle_request(url):
+    sources, subtitle_url, audio_options = await fetch_m3u8_details(url)
+    print(sources, subtitle_url, audio_options)
+
+@app.get("/request-live", response_model=Dict[str, Any])
 async def request_live_stream(
-    url: str = Query(..., description="Must be a valid .m3u8 URL"),
-    user_id: str = Query(...),
-    title: str = Query(default="Live Stream"),
-    description: str = Query(default="Live event"),
-    thumbnail_url: str = Query(default=None),
+    url: str = Query(..., description="URL-encoded .m3u8 URL"),
+    user_id: str = Query(..., min_length=1),
+    title: str = Query("Live Stream"),
+    description: str = Query("Live event"),
+    thumbnail_url: Optional[str] = Query(None),
+    _: None = Depends(rate_limit_check)
 ):
-    if not url.lower().endswith(".m3u8"):
-        raise HTTPException(status_code=400, detail="Only .m3u8 URLs are supported")
+    try:
+        decoded_url = unquote(url)
 
-    return await MediaHandler.create_media_entry(
-        media_type=MediaType.LIVE,
-        sources=[{"url": url, "quality": "auto"}],
-        user_id=user_id,
-        title=title,
-        description=description,
-        thumbnail_url=thumbnail_url
-    )
+        sources, subtitle_url, audio_options = await fetch_m3u8_details(decoded_url)
 
+        return await MediaHandler.create_media_entry(
+            media_type=MediaType.LIVE,
+            sources=sources,
+            user_id=user_id,
+            title=title,
+            description=description,
+            thumbnail_url=thumbnail_url,
+            subtitle_url=subtitle_url,
+            audio_options=audio_options
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process request: {str(e)}")
 @app.get("/request-anime", response_class=JSONResponse)
 async def request_anime(
     url: str = Query(...),
@@ -513,7 +637,8 @@ async def request_anime(
     thumbnail_url: str = Query(default=None),
     subtitle_url: str = Query(default=None),
     episode: int = Query(default=1),
-    season: int = Query(default=1)
+    season: int = Query(default=1),
+    _: None = Depends(rate_limit_check)
 ):
     sources, title, description = await fetch_sources(url)
     if not sources:
@@ -532,7 +657,7 @@ async def request_anime(
     )
 
 @app.get("/analytics", response_class=JSONResponse)
-async def get_analytics(video_id: str = Query(...)):
+async def get_analytics(video_id: str = Query(...), _: None = Depends(rate_limit_check)):
     data = load_db()
     for entry in data:
         if entry["video_id"] == video_id:
@@ -557,8 +682,10 @@ async def fetch_sources(url: str) -> Tuple[List[Dict[str, str]], Optional[str], 
                 for div in soup.find_all('div', class_='mast'):
                     if link := div.find('a', rel='nofollow'):
                         sources.append({
-                            "url": link['href'],
+                            "url": urljoin(url, link['href']),
                             "quality": determine_quality(link.text.strip()),
+                            "type": "application/x-mpegURL" if link['href'].endswith('.m3u8') else "video/mp4",
+                            "codecs": "avc1",
                             "duration": 0
                         })
                 return sources, title, description

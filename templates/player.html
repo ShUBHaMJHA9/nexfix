@@ -4,268 +4,246 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>NEXFIX MP4HUB</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Nexfix MP4HUB</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Preload critical assets -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/video-js.min.css" as="style">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" as="style">
-    <link rel="preload" href="/static/nefix-logo.png" as="image">
-
-    <!-- Stylesheets -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/video-js.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Symbols+Outlined" rel="stylesheet">
+    <link href="node_modules/video.js/dist/video-js.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <header class="nexfix-header">
+    <header class="nexfix-header" role="banner">
         <div class="header-left">
-            <img src="/static/nefix-logo.png" alt="NEXFIX MP4HUB Logo" class="brand-logo">
-            <h1 class="brand-title">NEXFIX MP4HUB</h1>
+            <img src="/static/logo.svg" alt="Nexfix MP4HUB Logo" class="brand-logo">
+            <h1 class="brand-title">Nexfix MP4HUB</h1>
         </div>
         <div class="content-type">
-            <button class="content-type-btn" id="contentTypeBtn" aria-label="Select content type">
-                <i class="material-icons">movie</i>
+            <button class="content-type-btn" id="contentTypeBtn" aria-label="Select content type" aria-expanded="false">
+                <span class="material-icons">movie</span>
                 <span>Movies</span>
-                <i class="material-icons">arrow_drop_down</i>
+                <span class="material-icons">arrow_drop_down</span>
             </button>
-            <div class="content-type-dropdown" id="contentTypeDropdown">
-                <div class="content-type-item active" data-type="movies">
-                    <i class="material-icons">movie</i>
+            <div class="content-type-dropdown" id="contentTypeDropdown" role="menu">
+                <div class="content-type-item active" data-type="movies" role="menuitem" tabindex="0">
+                    <span class="material-icons">movie</span>
                     <span>Movies</span>
                 </div>
-                <div class="content-type-item" data-type="albums">
-                    <i class="material-icons">album</i>
+                <div class="content-type-item" data-type="albums" role="menuitem" tabindex="0">
+                    <span class="material-icons">album</span>
                     <span>Albums</span>
                 </div>
-                <div class="content-type-item" data-type="tv">
-                    <i class="material-icons">live_tv</i>
+                <div class="content-type-item" data-type="tv" role="menuitem" tabindex="0">
+                    <span class="material-icons">live_tv</span>
                     <span>TV Shows</span>
+                </div>
+                <div class="content-type-item" data-type="live" role="menuitem" tabindex="0">
+                    <span class="material-icons">sensors</span>
+                    <span>Live Streams</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="telegram-join-banner">
-        <img src="/static/Telegram_logo.png" alt="Join Telegram" class="telegram-logo">
+    <div class="telegram-join-banner" role="complementary">
+        <img src="/static/Telegram_logo.png" alt="Telegram Logo" class="telegram-logo">
         <div class="telegram-text">
             <p>Stay Updated — Join Us on Telegram</p>
             <div class="telegram-links">
-                <a href="https://t.me/TeraBoX_dlFree_bot" target="_blank" class="telegram-btn" rel="noopener">Our Telegram Bot</a>
-                <a href="https://t.me/freeDL_1" target="_blank" class="telegram-btn" rel="noopener">Main Channel</a>
+                <a href="https://t.me/TeraBoX_dlFree_bot" target="_blank" class="telegram-btn" rel="noopener noreferrer">Our Telegram Bot</a>
+                <a href="https://t.me/freeDL_1" target="_blank" class="telegram-btn" rel="noopener noreferrer">Main Channel</a>
             </div>
         </div>
     </div>
 
-    <div class="video_player" id="videoPlayer">
-        <video id="mainPlayer" class="video-js vjs-default-skin vjs-fluid" preload="auto" playsinline crossorigin="anonymous">
-            <p class="vjs-no-js">Enable JavaScript to experience premium streaming.</p>
+    <div id="videoPlayer" class="video_player" role="region" aria-label="Video player">
+        <video id="mainPlayer" class="video-js vjs-big-play-centered" playsinline preload="auto" aria-label="Main video player">
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank" rel="noopener noreferrer">supports HTML5 video</a>
+            </p>
         </video>
-
-        <div class="center-control" id="centerControl" aria-label="Play or pause video">
-            <i class="material-icons">play_arrow</i>
-        </div>
-        <div class="quality-badge" id="qualityBadge">HD</div>
-
-        <!-- Skip Ad Button with Progress Bar -->
-        <button class="skip-ad-btn" id="skipAdBtn" disabled aria-label="Skip advertisement">
-            <span class="skip-ad-text">Skip Ad in <span id="skipAdTimer">5</span>s</span>
-            <span class="skip-ad-active">Skip Ad</span>
-            <div class="skip-ad-progress"></div>
+        <div id="iframePlayerContainer" class="iframe-player-container" aria-label="Embedded video player"></div>
+        <button id="centerControl" class="center-control" aria-label="Play" role="button" tabindex="0">
+            <span class="material-icons">play_arrow</span>
         </button>
-
-        <!-- Volume Overlay with Progress Bar -->
-        <div class="swipe-overlay volume-overlay" id="volumeOverlay">
-            <div class="swipe-indicator" id="volumeIndicator">
-                <i class="material-icons" id="volumeIcon">volume_up</i>
+        <div id="qualityBadge" class="quality-badge" aria-live="polite">Auto</div>
+        <button id="skipAdBtn" class="skip-ad-btn" disabled aria-label="Skip advertisement">
+            <span class="skip-ad-text" id="skipAdTimer">Skip in 5s</span>
+            <span class="skip-ad-active">Skip Ad</span>
+        </button>
+        <div id="volumeOverlay" class="swipe-overlay" aria-hidden="true">
+            <div id="volumeIndicator" class="swipe-indicator">
+                <span class="material-icons" id="volumeIcon">volume_up</span>
                 <span id="volumeValue">80%</span>
             </div>
             <div class="volume-bar"></div>
         </div>
-
-        <!-- Brightness Overlay with Progress Bar -->
-        <div class="swipe-overlay brightness-overlay" id="brightnessOverlay">
-            <div class="swipe-indicator" id="brightnessIndicator">
-                <i class="material-icons" id="brightnessIcon">brightness_5</i>
+        <div id="brightnessOverlay" class="swipe-overlay" aria-hidden="true">
+            <div id="brightnessIndicator" class="swipe-indicator">
+                <span class="material-icons" id="brightnessIcon">brightness_5</span>
                 <span id="brightnessValue">100%</span>
             </div>
             <div class="brightness-bar"></div>
         </div>
-
-        <div class="tap-indicator left" id="rewindIndicator">
+        <div id="rewindIndicator" class="tap-indicator left" aria-hidden="true">
             <div class="tap-indicator-content">
-                <i class="material-icons">replay_10</i>
+                <span class="material-icons">fast_rewind</span>
                 <span id="rewindValue">-10s</span>
             </div>
         </div>
-        <div class="tap-indicator right" id="forwardIndicator">
+        <div id="forwardIndicator" class="tap-indicator right" aria-hidden="true">
             <div class="tap-indicator-content">
-                <i class="material-icons">forward_10</i>
+                <span class="material-icons">fast_forward</span>
                 <span id="forwardValue">+10s</span>
             </div>
         </div>
-
-        <div class="seek-feedback left" id="seekFeedbackLeft"></div>
-        <div class="seek-feedback right" id="seekFeedbackRight"></div>
-        <div class="speed-feedback" id="speedFeedback"></div>
-
-        <div class="controls">
-            <div class="progress-area" id="progressArea" role="slider" aria-label="Video progress">
+        <div id="seekFeedbackLeft" class="seek-feedback left" aria-hidden="true"></div>
+        <div id="seekFeedbackRight" class="seek-feedback right" aria-hidden="true"></div>
+        <div id="speedFeedback" class="speed-feedback" aria-hidden="true"></div>
+        <div id="lockOverlay" class="lock-overlay" aria-hidden="true"></div>
+        <div id="adOverlay" class="ad-overlay" aria-hidden="true">
+            <span id="adText" class="ad-label">Advertisement</span>
+            <span id="adTimer" class="ad-timer">5s</span>
+        </div>
+        <div class="controls" role="toolbar">
+            <div id="progressArea" class="progress-area" role="slider" aria-valuemin="0" aria-label="Video progress">
                 <div class="bufferedBar"></div>
                 <div class="progress-bar"><span></span></div>
             </div>
             <div class="controls-list">
                 <div class="controls-left">
-                    <button class="icon fast-rewind" aria-label="Rewind 10 seconds">
-                        <i class="material-icons">replay_10</i>
+                    <button class="icon fast-rewind" aria-label="Rewind 10 seconds" role="button" tabindex="0">
+                        <span class="material-icons">fast_rewind</span>
                     </button>
-                    <button class="icon fast-forward" aria-label="Fast forward 10 seconds">
-                        <i class="material-icons">forward_10</i>
-                    </button>
-                    <div class="icon volume" role="button" aria-label="Toggle mute">
-                        <i class="material-icons">volume_up</i>
-                        <div class="volume-popup">
-                            <input type="range" min="0" max="100" class="volume-slider" value="80" aria-label="Volume control">
-                            <span class="volume-percentage">80%</span>
-                        </div>
+                    <div class="timer" aria-live="polite">
+                        <span class="current" aria-label="Current time">0:00</span>/<span class="duration" aria-label="Total duration">0:00</span>
                     </div>
-                    <div class="timer">
-                        <span class="current">0:00</span> / <span class="duration">0:00</span>
-                        <span class="live-indicator" id="liveBtn">
-                            <i class="material-icons">live_tv</i>
-                            LIVE <span id="liveTimer">0:00:00</span>
-                        </span>
+                    <div class="live-indicator" id="liveBtn" role="status">
+                        <span class="material-icons">sensors</span>
+                        LIVE <span id="liveTimer" aria-label="Live duration">0:00</span>
                     </div>
                 </div>
                 <div class="controls-right">
-                    <button class="icon auto-play" aria-label="Toggle autoplay">
-                        <i class="material-icons">repeat</i>
+                    <div class="volume" role="group">
+                        <button class="icon" aria-label="Toggle mute" role="button" tabindex="0">
+                            <span class="material-icons">volume_up</span>
+                        </button>
+                        <div class="volume-popup">
+                            <input type="range" class="volume-slider" min="0" max="100" value="80" aria-label="Volume control" role="slider">
+                            <span class="volume-percentage" aria-hidden="true">80%</span>
+                        </div>
+                    </div>
+                    <button class="icon audioTrackBtn" id="audioTrackBtn" aria-label="Open audio tracks menu" role="button" tabindex="0">
+                        <span class="material-icons">audiotrack</span>
                     </button>
-                    <button class="audio_track" aria-label="Toggle audio">
-                        <i class="material-icons">music_note</i>
-                      </button>                      
-                    <button class="icon captionsBtn" aria-label="Toggle subtitles">
-                        <i class="material-icons">closed_caption</i>
+                    <button class="icon settingsBtn" id="settingsBtn" aria-label="Open settings" role="button" tabindex="0">
+                        <span class="material-icons">settings</span>
                     </button>
-                    <button class="icon settingsBtn" aria-label="Open settings">
-                        <i class="material-icons">settings</i>
+                    <button class="icon captionsBtn" id="captionsBtn" aria-label="Open captions menu" role="button" tabindex="0">
+                        <span class="material-icons">closed_caption</span>
                     </button>
-                    <button class="icon picture_in_picture" aria-label="Toggle picture-in-picture">
-                        <i class="material-icons">picture_in_picture_alt</i>
+                    <button class="icon picture_in_picture" aria-label="Toggle Picture-in-Picture" role="button" tabindex="0">
+                        <span class="material-icons">picture_in_picture_alt</span>
                     </button>
-                    <button class="icon fullscreen" aria-label="Toggle fullscreen">
-                        <i class="material-icons">fullscreen</i>
+                    <button class="icon theater-mode" aria-label="Toggle theater mode" role="button" tabindex="0">
+                        <span class="material-icons">theater_comedy</span>
+                    </button>
+                    <button class="icon fullscreen" aria-label="Enter fullscreen" role="button" tabindex="0">
+                        <span class="material-icons">fullscreen</span>
+                    </button>
+                    <button class="icon" id="lockBtn" aria-label="Lock controls" role="button" tabindex="0">
+                        <span class="material-icons">lock_open</span>
                     </button>
                 </div>
             </div>
         </div>
-
-        <div class="settings" id="settingsPanel" role="dialog" aria-label="Settings panel">
+        <div id="settingsPanel" class="settings" role="dialog" aria-label="Settings panel">
             <div class="settings-panel active" data-label="settingHome">
                 <div class="settings-header">Settings</div>
-                <ul>
-                    <li data-label="speed" role="button" tabindex="0">
-                        <span>Playback Speed</span>
-                        <span class="material-symbols-outlined icon">chevron_right</span>
-                    </li>
-                    <li data-label="quality" role="button" tabindex="0">
-                        <span>Quality Settings</span>
-                        <span class="material-symbols-outlined icon">chevron_right</span>
-                    </li>
-                    <li data-label="zoom" role="button" tabindex="0">
-                        <span>Zoom</span>
-                        <span class="material-symbols-outlined icon">chevron_right</span>
-                    </li>
-                    <li data-label="advanced" role="button" tabindex="0">
-                        <span>Advanced Settings</span>
-                        <span class="material-symbols-outlined icon">chevron_right</span>
+                <ul role="menu">
+                    <li data-label="playbackSpeed" role="menuitem" tabindex="0">Playback Speed</li>
+                    <li data-label="qualityMenu" role="menuitem" tabindex="0">Quality</li>
+                    <li id="statsToggle" role="menuitem" tabindex="0">Show Technical Stats</li>
+                    <li id="chapterMarkersToggle" class="active" role="menuitem" tabindex="0">Chapter Markers <span class="material-icons">check</span></li>
+                    <li id="swipeControlsToggle" class="active" role="menuitem" tabindex="0">Swipe Controls <span class="material-icons">check</span></li>
+                    <li id="autoQualityToggle" class="active" role="menuitem" tabindex="0">Auto Quality <span class="material-icons">check</span></li>
+                    <li id="orientationLockToggle" role="menuitem" tabindex="0">Orientation Lock</li>
+                </ul>
+            </div>
+            <div class="settings-panel" data-label="playbackSpeed">
+                <div class="settings-header">
+                    <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Playback Speed
+                </div>
+                <ul role="menu">
+                    <li data-speed="0.25" role="menuitem" tabindex="0">0.25x</li>
+                    <li data-speed="0.5" role="menuitem" tabindex="0">0.5x</li>
+                    <li data-speed="0.75" role="menuitem" tabindex="0">0.75x</li>
+                    <li data-speed="1" class="active" role="menuitem" tabindex="0">1x <span class="material-icons">check</span></li>
+                    <li data-speed="1.25" role="menuitem" tabindex="0">1.25x</li>
+                    <li data-speed="1.5" role="menuitem" tabindex="0">1.5x</li>
+                    <li data-speed="1.75" role="menuitem" tabindex="0">1.75x</li>
+                    <li data-speed="2" role="menuitem" tabindex="0">2x</li>
+                    <li class="custom-speed-input" role="menuitem" tabindex="0">
+                        <input type="number" id="customSpeedInput" step="0.1" min="0.1" max="8" placeholder="Custom speed" aria-label="Custom playback speed">
+                        <button id="saveCustomSpeedBtn" aria-label="Apply custom speed"><span class="material-icons">check</span></button>
                     </li>
                 </ul>
             </div>
-            <div class="settings-panel" data-label="speed">
+            <div class="settings-panel" data-label="qualityMenu">
                 <div class="settings-header">
-                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings">arrow_back</span>
-                    <span>Playback Speed</span>
+                    <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Video Quality
                 </div>
-                <ul>
-                    <li data-speed="0.25" role="button" tabindex="0">0.25x</li>
-                    <li data-speed="0.5" role="button" tabindex="0">0.5x</li>
-                    <li data-speed="0.75" role="button" tabindex="0">0.75x</li>
-                    <li data-speed="1" class="active" role="button" tabindex="0">Normal (1x)</li>
-                    <li data-speed="1.25" role="button" tabindex="0">1.25x</li>
-                    <li data-speed="1.5" role="button" tabindex="0">1.5x</li>
-                    <li data-speed="1.75" role="button" tabindex="0">1.75x</li>
-                    <li data-speed="2" role="button" tabindex="0">2x</li>
-                </ul>
-            </div>
-            <div class="settings-panel" data-label="quality">
-                <div class="settings-header">
-                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings">arrow_back</span>
-                    <span>Video Quality</span>
-                </div>
-                <ul id="qualityMenu" role="listbox">
+                <ul id="qualityMenu" role="menu">
                     <!-- Populated dynamically -->
                 </ul>
             </div>
-            <div class="settings-panel" data-label="zoom">
-                <div class="settings-header">
-                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings">arrow_back</span>
-                    <span>Zoom</span>
-                </div>
-                <ul>
-                    <li data-zoom="1" class="active" role="button" tabindex="0">1x (Normal)</li>
-                    <li data-zoom="1.5" role="button" tabindex="0">1.5x</li>
-                    <li data-zoom="2" role="button" tabindex="0">2x</li>
-                    <li data-zoom="2.5" role="button" tabindex="0">2.5x</li>
-                    <li data-zoom="3" role="button" tabindex="0">3x</li>
-                </ul>
-            </div>
-            <div class="settings-panel" data-label="advanced">
-                <div class="settings-header">
-                    <span class="material-symbols-outlined icon back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings">arrow_back</span>
-                    <span>Advanced Settings</span>
-                </div>
-                <ul>
-                    <li id="statsToggle" role="button" tabindex="0">Show Technical Stats</li>
-                    <li id="chapterMarkersToggle" class="active" role="button" tabindex="0">Show Chapter Markers</li>
-                    <li id="swipeControlsToggle" class="active" role="button" tabindex="0">Enable Swipe Controls</li>
-                </ul>
-            </div>
         </div>
-
         <div class="captions" id="captionsPanel" role="dialog" aria-label="Subtitles panel">
             <div class="settings-header">Subtitles</div>
-            <ul id="captionMenu" role="listbox"></ul>
+            <ul id="captionMenu" role="menu"></ul>
+        </div>
+        <div class="audio-tracks" id="audioTracksPanel" role="dialog" aria-label="Audio tracks panel">
+            <div class="settings-header">Audio Tracks</div>
+            <ul id="audioTrackMenu" role="menu"></ul>
+        </div>
+        <div class="bookmarks" id="bookmarkPanel" role="dialog" aria-label="Bookmarks panel">
+            <div class="settings-header">Bookmarks</div>
+            <ul id="bookmarkMenu" role="menu"></ul>
         </div>
     </div>
 
-    <div class="stats-panel" id="statsPanel" style="display: none;">
-        <div class="stat-item"><i class="material-icons">visibility</i> <span id="viewCount">0</span> Views</div>
-        <div class="stat-item"><i class="material-icons">speed</i> <span id="bitrate">0</span> kbps</div>
-        <div class="stat-item"><i class="material-icons">schedule</i> <span id="videoDuration">0:00</span> Duration</div>
-        <div class="stat-item"><i class="material-icons">dns</i> <span id="bufferHealth">0</span>s Buffer</div>
-        <div class="stat-item"><i class="material-icons">volume_up</i> <span id="currentVolume">80</span>% Volume</div>
-        <div class="stat-item"><i class="material-icons">brightness_5</i> <span id="currentBrightness">100</span>% Brightness</div>
+    <div class="stats-panel" id="statsPanel" role="complementary" aria-label="Technical statistics">
+        <div class="stat-item"><span class="material-icons">play_arrow</span> Playback: <span id="playbackRate">1x</span></div>
+        <div class="stat-item"><span class="material-icons">volume_up</span> Volume: <span id="currentVolume">80%</span></div>
+        <div class="stat-item"><span class="material-icons">brightness_5</span> Brightness: <span id="currentBrightness">100%</span></div>
+        <div class="stat-item"><span class="material-icons">timer</span> Time: <span id="currentTime">0:00</span></div>
+        <div class="stat-item"><span class="material-icons">hourglass_empty</span> Duration: <span id="videoDuration">0:00</span></div>
+        <div class="stat-item"><span class="material-icons">signal_cellular_alt</span> Buffer: <span id="bufferHealth">0s</span></div>
+        <div class="stat-item"><span class="material-icons">high_quality</span> Quality: <span id="currentQuality">Auto</span></div>
+        <div class="stat-item"><span class="material-icons">network_check</span> Network: <span id="networkStatus">Unknown</span></div>
     </div>
 
-    <div class="downloader" id="downloader_button">
-        <button id="fast_downloader">Fast Downloader</button>
-        <button id="hd_downloader">HD Downloader</button>
+    <div class="downloader" id="downloader_button" role="region" aria-label="Download options">
+        <div class="download-btn-container">
+            <button id="hdDownloadBtn" aria-label="Download in HD quality">HD Downloader</button>
+            <div class="download-queue" id="downloadQueueMenu" role="menu" aria-live="polite"></div>
+        </div>
+        <div class="download-btn-container">
+            <button id="fastDownloadBtn" aria-label="Download quickly">Fast Downloader</button>
+            <div class="download-queue" id="fastDownloadQueueMenu" role="menu" aria-live="polite"></div>
+        </div>
     </div>
 
-    <div class="description-section">
+    <div class="description-section" role="complementary">
         <h2 class="description-title" id="videoTitle">Loading...</h2>
         <p class="description-content" id="videoDescription">Loading video description...</p>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/video.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-hls/5.15.0/videojs-contrib-hls.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-seek-buttons/2.6.0/videojs-seek-buttons.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-hotkeys/0.2.27/videojs.hotkeys.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-pip/2.0.3/videojs-pip.min.js"></script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=Promise,fetch,URLSearchParams"></script>
+    <script src="node_modules/video.js/dist/video.min.js"></script>
+    <script src="node_modules/@videojs/http-streaming/dist/videojs-http-streaming.min.js"></script>
+    <script src="node_modules/videojs-contrib-quality-levels/dist/videojs-contrib-quality-levels.min.js"></script>
+    <script src="node_modules/videojs-http-source-selector/dist/videojs-http-source-selector.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-hotkeys/0.2.27/videojs.hotkeys.min.js" defer></script>
     <script src="/static/scripts.js" defer></script>
 </body>
 </html>
