@@ -277,85 +277,82 @@ async def stream_file(url: str, request: Request):
         )
 
 
+
 @app.get("/proxy")
 async def proxy_stream(url: str, request: Request):
     try:
-        # Single decode of the URL
+        # Decode URL once
         decoded_url = unquote(url)
         
-        # Prevent proxy loops and clean URL
-        if decoded_url.startswith(("http://", "https://")):
-            final_url = decoded_url
-        elif decoded_url.startswith("/proxy"):
-            # Extract the actual URL if it's nested
-            query_start = decoded_url.find("?url=")
-            final_url = unquote(decoded_url[query_start+5:]) if query_start != -1 else decoded_url
-        else:
-            final_url = decoded_url
+        # Prevent proxy loops
+        if decoded_url.startswith("/proxy?url="):
+            decoded_url = unquote(decoded_url.split("?url=", 1)[1])
+        
+        # Ensure URL is absolute
+        if not decoded_url.startswith(("http://", "https://")):
+            decoded_url = urljoin("https://", decoded_url)
 
-        print(f"Proxying URL: {final_url}")
+        print(f"Proxying URL: {decoded_url}")
 
-        # Route to appropriate handler
-        if any(final_url.endswith(ext) for ext in ['.m3u8', '.m3u']):
-            return await handle_hls_playlist(final_url, request)
-        elif any(ext in final_url for ext in ['init.mp4', 'init.fmp4', 'init.hls.fmp4']):
-            # Don't proxy initialization segments - redirect to original URL
-            return Response(
-                status_code=307,
-                headers={"Location": final_url}
-            )
-        elif any(final_url.endswith(ext) for ext in ['.ts', '.m4s', '.mp4']):
-            return await proxy_media_segment(final_url)
+        # Route based on URL type
+        if decoded_url.endswith(('.m3u8', '.m3u')):
+            return await handle_hls_playlist(decoded_url, request)
+        elif any(ext in decoded_url for ext in ['init.mp4', 'init.fmp4', 'init.hls.fmp4']):
+            return Response(status_code=307, headers={"Location": decoded_url})
+        elif decoded_url.endswith(('.ts', '.m4s', '.mp4')):
+            return await proxy_media_segment(decoded_url)
+        elif decoded_url.endswith('.key'):
+            return await proxy_encryption_key(decoded_url)
         else:
-            return await stream_file(final_url, request)
+            return await stream_file(decoded_url, request)
             
     except Exception as e:
+        print(f"Proxy error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
 
 async def handle_hls_playlist(playlist_url: str, request: Request):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
         try:
-            # Fetch the original playlist
-            resp = await client.get(playlist_url)
+            # Fetch playlist
+            resp = await client.get(playlist_url, headers={"User-Agent": "Mozilla/5.0"})
             resp.raise_for_status()
             content = resp.text
             
-            # Determine base URL for relative paths
+            # Base URL for relative paths
             base_url = playlist_url.rsplit("/", 1)[0] + "/"
-            proxy_url = str(request.url_for("proxy_stream"))
+            proxy_url = "https://potential-potato-69v64xw9j5wpcgrw-8002.app.github.dev/proxy"
 
-            # Process each line of the playlist
+            # Process playlist lines
             processed_lines = []
             for line in content.splitlines():
-                if not line.strip():
-                    processed_lines.append(line)
-                    continue
-                    
-                # Keep comments unchanged
-                if line.startswith("#"):
-                    # Special handling for EXT-X-MEDIA URIs
-                    if line.startswith("#EXT-X-MEDIA:") and "URI=" in line:
+                if not line.strip() or line.startswith("#"):
+                    if line.startswith("#EXT-X-KEY:"):
                         uri_match = re.search(r'URI="([^"]+)"', line)
                         if uri_match:
-                            original_uri = uri_match.group(1)
-                            if not original_uri.startswith(("http://", "https://")):
-                                full_uri = urljoin(base_url, original_uri)
-                                line = line.replace(
-                                    f'URI="{original_uri}"', 
-                                    f'URI="{proxy_url}?url={quote(full_uri)}"'
-                                )
+                            key_uri = uri_match.group(1)
+                            if not key_uri.startswith(("http://", "https://")):
+                                key_uri = urljoin(base_url, key_uri)
+                            line = line.replace(
+                                f'URI="{uri_match.group(1)}"',
+                                f'URI="{proxy_url}?url={quote(key_uri)}"'
+                            )
+                    elif line.startswith("#EXT-X-MEDIA:") and "URI=" in line:
+                        uri_match = re.search(r'URI="([^"]+)"', line)
+                        if uri_match:
+                            media_uri = uri_match.group(1)
+                            if not media_uri.startswith(("http://", "https://")):
+                                media_uri = urljoin(base_url, media_uri)
+                            line = line.replace(
+                                f'URI="{uri_match.group(1)}"',
+                                f'URI="{proxy_url}?url={quote(media_uri)}"'
+                            )
                     processed_lines.append(line)
                     continue
-                    
-                # Handle media segments
-                if not line.startswith(("http://", "https://")):
-                    full_url = urljoin(base_url, line)
-                else:
-                    full_url = line
                 
-                # Special handling for initialization segments
+                # Handle segment URLs
+                full_url = urljoin(base_url, line) if not line.startswith(("http://", "https://")) else line
                 if any(ext in full_url for ext in ['init.mp4', 'init.fmp4', 'init.hls.fmp4']):
-                    processed_lines.append(full_url)  # Leave as direct URL
+                    processed_lines.append(full_url)
                 else:
                     processed_lines.append(f"{proxy_url}?url={quote(full_url)}")
 
@@ -364,39 +361,73 @@ async def handle_hls_playlist(playlist_url: str, request: Request):
                 media_type="application/vnd.apple.mpegurl",
                 headers={
                     "Cache-Control": "no-cache",
-                    "Access-Control-Allow-Origin": "*"
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, OPTIONS",
+                    "Access-Control-Allow-Headers": "*"
                 }
             )
             
         except httpx.HTTPStatusError as e:
+            print(f"HLS HTTP error: {e.response.status_code} - {e}")
             raise HTTPException(status_code=e.response.status_code, detail=str(e))
         except Exception as e:
+            print(f"HLS processing error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"HLS processing error: {str(e)}")
 
 async def proxy_media_segment(segment_url: str):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
         try:
-            resp = await client.get(segment_url)
+            resp = await client.get(segment_url, headers={"User-Agent": "Mozilla/5.0"})
+            resp.raise_for_status()
+            
+            content_type = {
+                '.ts': "video/MP2T",
+                '.m4s': "video/mp4",
+                '.mp4': "video/mp4"
+            }.get(segment_url[segment_url.rfind('.'):], "video/mp4")
+
+            return Response(
+                content=resp.content,
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, OPTIONS",
+                    "Access-Control-Allow-Headers": "*"
+                }
+            )
+            
+        except httpx.HTTPStatusError as e:
+            print(f"Segment HTTP error: {e.response.status_code} - {e}")
+            raise HTTPException(status_code=e.response.status_code, detail=str(e))
+        except Exception as e:
+            print(f"Segment proxy error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Segment proxy error: {str(e)}")
+
+async def proxy_encryption_key(key_url: str):
+    async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
+        try:
+            resp = await client.get(key_url, headers={"User-Agent": "Mozilla/5.0"})
             resp.raise_for_status()
             
             return Response(
                 content=resp.content,
-                media_type="video/MP2T" if segment_url.endswith('.ts') else "video/mp4",
+                media_type="application/octet-stream",
                 headers={
                     "Cache-Control": "no-cache",
-                    "Access-Control-Allow-Origin": "*"
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET, OPTIONS",
+                    "Access-Control-Allow-Headers": "*"
                 }
             )
             
         except httpx.HTTPStatusError as e:
+            print(f"Key HTTP error: {e.response.status_code} - {e}")
             raise HTTPException(status_code=e.response.status_code, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Segment proxy error: {str(e)}")
-@app.get("/proxy_segment")
-async def proxy_segment():
-    # Your segment handling logic here
-    return {"message": "This is a proxy segment."}
-
+            print(f"Key proxy error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Key proxy error: {str(e)}")
+        
 @app.get("/stream/{video_id}", response_class=JSONResponse)
 async def get_stream_info(video_id: str, _: None = Depends(rate_limit_check)):
     data = load_db()
@@ -701,4 +732,4 @@ def determine_quality(title: str) -> str:
     return "Unknown"
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8002, reload=True)

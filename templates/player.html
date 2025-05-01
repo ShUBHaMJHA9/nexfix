@@ -8,7 +8,8 @@
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="node_modules/video.js/dist/video-js.min.css" rel="stylesheet" />
+    <!-- Local Video.js CSS -->
+    <link href="/static/videojs/video-js.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -57,12 +58,15 @@
 
     <div id="videoPlayer" class="video_player" role="region" aria-label="Video player">
         <video id="mainPlayer" class="video-js vjs-big-play-centered" playsinline preload="auto" aria-label="Main video player">
+            <source id="videoSource" src="" type="application/x-mpegURL">
             <p class="vjs-no-js">
                 To view this video please enable JavaScript, and consider upgrading to a web browser that
                 <a href="https://videojs.com/html5-video-support/" target="_blank" rel="noopener noreferrer">supports HTML5 video</a>
             </p>
         </video>
-        <div id="iframePlayerContainer" class="iframe-player-container" aria-label="Embedded video player"></div>
+        <div id="iframePlayerContainer" class="iframe-player-container" style="display: none;" aria-label="Embedded video player">
+            <iframe id="iframePlayer" frameborder="0" allowfullscreen aria-label="Embedded video content"></iframe>
+        </div>
         <button id="centerControl" class="center-control" aria-label="Play" role="button" tabindex="0">
             <span class="material-icons">play_arrow</span>
         </button>
@@ -238,12 +242,9 @@
         <h2 class="description-title" id="videoTitle">Loading...</h2>
         <p class="description-content" id="videoDescription">Loading video description...</p>
     </div>
-
-    <script src="node_modules/video.js/dist/video.min.js"></script>
-    <script src="node_modules/@videojs/http-streaming/dist/videojs-http-streaming.min.js"></script>
-    <script src="node_modules/videojs-contrib-quality-levels/dist/videojs-contrib-quality-levels.min.js"></script>
-    <script src="node_modules/videojs-http-source-selector/dist/videojs-http-source-selector.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-hotkeys/0.2.27/videojs.hotkeys.min.js" defer></script>
+    <script src="/static/videojs/video.min.js"></script>
+    <script src="/static/videojs/videojs-contrib-quality-levels.min.js"></script>
+    <script src="/static/videojs/videojs-http-source-selector.min.js"></script>
     <script src="/static/scripts.js" defer></script>
 </body>
 </html>

@@ -49,12 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sources = this.options_.sources || [];
                 const currentSrc = this.currentSource().src;
                 const nextSource = sources.find(s => s.src !== currentSrc);
-                if (nextSource) {
+                if (nextSource && retryCount < MAX_RETRIES) {
+                    retryCount++;
+                    console.log(`Retrying with source: ${nextSource.src}`);
                     this.src(nextSource);
                     this.load();
-                    this.play().catch(() => {});
+                    this.play().catch(err => console.error('Retry play error:', err));
                 } else {
-                    displayError('All video sources failed to load');
+                    console.error('No more sources to try or max retries reached');
+                    displayError('Unable to play video: All sources failed');
+                    hideLoadingSpinner();
                 }
             });
         });
@@ -1403,6 +1407,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             const data = await response.json();
+            console.log("data recived from bckend :",data)
             const { sources = [], subtitle, subtitles = [], meta = {}, thumbnail = '', audio_tracks = [], is_live = false } = data;
             if (!sources.length) throw new Error('No valid video sources provided');
             const validSourceTypes = ['video/mp4', 'application/x-mpegURL', 'application/dash+xml', 'video/webm', 'video/ogg', 'video/x-flv', 'iframe'];
@@ -1416,6 +1421,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bIndex = qualityOrder.indexOf(b.quality) === -1 ? qualityOrder.length : qualityOrder.indexOf(b.quality);
                 return aIndex - bIndex;
             });
+        
             const initialSource = mp4Sources[0] || iframeSources[0];
             if (!initialSource) throw new Error('No initial source selected');
             const subtitleList = subtitle ? [{ url: subtitle, name: 'English', language: 'en', default: true }, ...subtitles] : subtitles;
