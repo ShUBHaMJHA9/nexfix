@@ -297,69 +297,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const togglePlay = () => {
         if (isLocked) return;
+    
+        const updateUI = (isPlaying) => {
+            videoPlayer?.classList.toggle('playing', isPlaying);
+            videoPlayer?.classList.toggle('paused', !isPlaying);
+            if (ui.centerControl) {
+                ui.centerControl.innerHTML = `<span class="material-icons">${isPlaying ? 'pause' : 'play_arrow'}</span>`;
+                ui.centerControl.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+                ui.centerControl.classList.toggle('loading', false);
+                ui.centerControl.classList.toggle('active', !isPlaying);
+            }
+        };
+    
         if (isIframeMode && youtubePlayer) {
             const state = youtubePlayer.getPlayerState();
-            if (state === YT.PlayerState.PLAYING) {
+            const isPlaying = state === YT.PlayerState.PLAYING;
+    
+            if (isPlaying) {
                 youtubePlayer.pauseVideo();
-                videoPlayer.classList.remove('playing');
-                videoPlayer.classList.add('paused');
-                if (ui.centerControl) {
-                    ui.centerControl.innerHTML = '<span class="material-icons">play_arrow</span>';
-                    ui.centerControl.setAttribute('aria-label', 'Play');
-                }
             } else {
                 youtubePlayer.playVideo();
-                videoPlayer.classList.remove('paused');
-                videoPlayer.classList.add('playing');
-                if (ui.centerControl) {
-                    ui.centerControl.innerHTML = '<span class="material-icons">pause</span>';
-                    ui.centerControl.setAttribute('aria-label', 'Pause');
-                }
             }
-        } else {
+            updateUI(!isPlaying);
+        } else if (player) {
             if (player.paused()) {
                 player.play().catch(err => {
                     console.error('Play error:', err);
                     displayError('Failed to play video');
                 });
-                videoPlayer.classList.remove('paused');
-                videoPlayer.classList.add('playing');
-                if (ui.centerControl) {
-                    ui.centerControl.innerHTML = '<span class="material-icons">pause</span>';
-                    ui.centerControl.classList.remove('loading');
-                    ui.centerControl.setAttribute('aria-label', 'Pause');
-                }
+                updateUI(true);
             } else {
                 player.pause();
-                videoPlayer.classList.remove('playing');
-                videoPlayer.classList.add('paused');
-                if (ui.centerControl) {
-                    ui.centerControl.innerHTML = '<span class="material-icons">play_arrow</span>';
-                    ui.centerControl.classList.add('active');
-                    ui.centerControl.setAttribute('aria-label', 'Play');
-                }
+                updateUI(false);
             }
         }
-        showControls();
+    
+        showControls(); // Always show controls after toggle
     };
-
+    
     const toggleLock = () => {
         isLocked = !isLocked;
+    
         if (ui.lockOverlay) {
             ui.lockOverlay.classList.toggle('active', isLocked);
-            ui.lockOverlay.innerHTML = isLocked ? '<span class="material-icons">lock</span> Locked' : '';
+            ui.lockOverlay.innerHTML = isLocked
+                ? '<span class="material-icons">lock</span> Locked'
+                : '';
         }
+    
         if (ui.lockBtn) {
             ui.lockBtn.innerHTML = `<span class="material-icons">${isLocked ? 'lock' : 'lock_open'}</span>`;
             ui.lockBtn.setAttribute('aria-label', isLocked ? 'Unlock controls' : 'Lock controls');
         }
-        if (isLocked) {
-            hideControls();
-        } else {
-            showControls();
-        }
+    
+        isLocked ? hideControls() : showControls();
     };
-
+    
     
     const toggleOrientationLock = async () => {
         // Prevent orientation lock in iframe mode
@@ -487,27 +480,72 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const toggleFullscreen = async () => {
         if (isLocked) return;
-        if (!isFullscreenActive()) {
-            try {
-                await videoPlayer.requestFullscreen();
-                videoPlayer.classList.add('fullscreen-mode');
+    
+        const el = videoPlayer;
+    
+        const requestFullscreen = el.requestFullscreen ||
+            el.webkitRequestFullscreen ||
+            el.mozRequestFullScreen ||
+            el.msRequestFullscreen;
+    
+        const exitFullscreen = document.exitFullscreen ||
+            document.webkitExitFullscreen ||
+            document.mozCancelFullScreen ||
+            document.msExitFullscreen;
+    
+        const fullscreenElement = document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement;
+    
+        try {
+            if (!fullscreenElement) {
+                // Request fullscreen
+                if (requestFullscreen) {
+                    await requestFullscreen.call(el);
+                } else {
+                    throw new Error('Fullscreen API not supported');
+                }
+    
+                // Try locking orientation to portrait (for MX-style vertical fullscreen)
+                if (screen.orientation && screen.orientation.lock) {
+                    try {
+                        await screen.orientation.lock('portrait-primary');
+                    } catch (orientationErr) {
+                        console.warn('Orientation lock failed:', orientationErr.message);
+                    }
+                }
+    
+                el.classList.add('fullscreen-mode');
                 hideControls();
-            } catch (err) {
-                console.error('Fullscreen request failed:', err);
-                displayError('Failed to enter fullscreen');
+    
+            } else {
+                // Exit fullscreen
+                if (exitFullscreen) {
+                    await exitFullscreen.call(document);
+                } else {
+                    throw new Error('Exit Fullscreen API not supported');
+                }
+    
+                // Unlock orientation if possible
+                if (screen.orientation && screen.orientation.unlock) {
+                    try {
+                        await screen.orientation.unlock();
+                    } catch (unlockErr) {
+                        console.warn('Orientation unlock failed:', unlockErr.message);
+                    }
+                }
+    
+                el.classList.remove('fullscreen-mode');
             }
-        } else {
-            try {
-                await document.exitFullscreen();
-                videoPlayer.classList.remove('fullscreen-mode');
-            } catch (err) {
-                console.error('Exit fullscreen failed:', err);
-                displayError('Failed to exit fullscreen');
-            }
+    
+            showControls();
+        } catch (err) {
+            console.error('Fullscreen toggle failed:', err);
+            displayError('Failed to toggle fullscreen');
         }
-        showControls();
     };
-
+    
     const setVolume = (vol) => {
         if (isLocked || isIframeMode) return;
         vol = Math.max(0, Math.min(1, vol));
@@ -1281,169 +1319,195 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleTap = (e) => {
         if (isLocked) {
-            toggleLock();
+            toggleLock(); // Unlock on tap if locked
             return;
         }
+    
         const currentTime = Date.now();
-        const tapLength = currentTime - lastTapTime;
-        let tapX = 0, normalizedTapX = 0, validPosition = false;
-        try {
-            const rect = videoPlayer.getBoundingClientRect();
-            if (e.clientX) {
-                tapX = e.clientX - rect.left;
-                validPosition = true;
-            } else if (e.touches?.[0]?.clientX) {
-                tapX = e.touches[0].clientX - rect.left;
-                validPosition = true;
-            }
-            if (rect.width > 0 && validPosition) {
-                normalizedTapX = tapX / rect.width;
-            }
-        } catch (error) {
-            console.error('Position calculation error:', error);
-        }
-        if (tapLength < DOUBLE_TAP_THRESHOLD && tapLength > 0) {
-            tapCount++;
-        } else {
-            tapCount = 1;
-        }
+        const tapDuration = currentTime - lastTapTime;
         lastTapTime = currentTime;
-        if (tapCount === 1) {
-            setTimeout(() => {
-                if (tapCount !== 1) return;
-                if (ui.controls.classList.contains('active')) {
-                    hideControls();
-                } else {
-                    showControls();
-                }
-                tapCount = 0;
-            }, DOUBLE_TAP_THRESHOLD);
-            return;
-        }
-        if (tapCount === 2 && validPosition) {
-            const isLeftTap = normalizedTapX < REGION_THRESHOLD;
-            const isRightTap = normalizedTapX > 1 - REGION_THRESHOLD;
-            const isCenterTap = !isLeftTap && !isRightTap;
-            if (isCenterTap) {
-                toggleFullscreen();
-            } else {
-                const seekSeconds = isLeftTap ? -SEEK_AMOUNT : SEEK_AMOUNT;
-                const direction = isLeftTap ? 'left' : 'right';
-                if (isIframeMode && youtubePlayer) {
-                    const currentTime = youtubePlayer.getCurrentTime();
-                    const duration = youtubePlayer.getDuration();
-                    const newTime = isLeftTap ? Math.max(0, currentTime + seekSeconds) : Math.min(duration, currentTime + seekSeconds);
-                    youtubePlayer.seekTo(newTime, true);
-                } else {
-                    const newTime = isLeftTap ? Math.max(0, player.currentTime() + seekSeconds) : Math.min(player.duration(), player.currentTime() + seekSeconds);
-                    player.currentTime(newTime);
-                }
-                showSeekFeedback(direction, seekSeconds);
+    
+        const rect = videoPlayer.getBoundingClientRect();
+        const clientX = e.clientX || e.touches?.[0]?.clientX;
+    
+        if (!clientX || rect.width === 0) return;
+    
+        const tapX = clientX - rect.left;
+        const normalizedTapX = tapX / rect.width;
+    
+        tapCount++;
+    
+        setTimeout(() => {
+            if (tapCount === 1) {
+                toggleControls();
+            } else if (tapCount === 2) {
+                handleDoubleTap(normalizedTapX);
+            } else if (tapCount === 3) {
+                handleTripleTap();
             }
             tapCount = 0;
-        } else if (tapCount === 3 && validPosition) {
-            setZoom(1);
-            tapCount = 0;
+        }, DOUBLE_TAP_THRESHOLD);
+    };
+    
+    const toggleControls = () => {
+        if (ui.controls.classList.contains('active')) {
+            hideControls();
+        } else {
+            showControls();
         }
     };
+    
+    const handleDoubleTap = (normalizedTapX) => {
+        const isLeft = normalizedTapX < REGION_THRESHOLD;
+        const isRight = normalizedTapX > (1 - REGION_THRESHOLD);
+        const isCenter = !isLeft && !isRight;
+    
+        if (isCenter) {
+            toggleFullscreen(); // or toggle play/pause if desired
+        } else {
+            const seekSeconds = isLeft ? -SEEK_AMOUNT : SEEK_AMOUNT;
+            const direction = isLeft ? 'left' : 'right';
+    
+            if (isIframeMode && youtubePlayer) {
+                const current = youtubePlayer.getCurrentTime();
+                const duration = youtubePlayer.getDuration();
+                const newTime = Math.min(Math.max(0, current + seekSeconds), duration);
+                youtubePlayer.seekTo(newTime, true);
+            } else {
+                const current = player.currentTime();
+                const duration = player.duration();
+                const newTime = Math.min(Math.max(0, current + seekSeconds), duration);
+                player.currentTime(newTime);
+            }
+    
+            showSeekFeedback(direction, seekSeconds);
+        }
+    };
+    
+    const handleTripleTap = () => {
+        setZoom(1); // Reset zoom level (or any other gesture)
+    };
+    
 
     const handleSwipeStart = (e) => {
         if (!swipeControlsEnabled || isZooming || isSpeedHeld || isLocked) return;
+        if (e.touches.length !== 1) return;
         isSwiping = true;
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
     };
-
+    
     const handleSwipeMove = (e) => {
-        if (!isSwiping || isZooming || !isFullscreenActive() || isLocked || !swipeControlsEnabled) return;
+        if (!isSwiping || isZooming || isLocked || !isFullscreenActive() || !swipeControlsEnabled) return;
+        if (e.touches.length !== 1) return;
+    
         e.preventDefault();
+    
         const touchEndX = e.touches[0].clientX;
         const touchEndY = e.touches[0].clientY;
         const dx = touchEndX - touchStartX;
         const dy = touchEndY - touchStartY;
         const rect = videoPlayer.getBoundingClientRect();
+    
         if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_MIN_DISTANCE) {
+            // Horizontal swipe - Seek
             const seekSeconds = Math.round((dx / rect.width) * 60);
             if (isIframeMode && youtubePlayer) {
                 const currentTime = youtubePlayer.getCurrentTime();
                 const duration = youtubePlayer.getDuration();
-                youtubePlayer.seekTo(Math.max(0, Math.min(duration, currentTime + seekSeconds)), true);
+                const newTime = Math.max(0, Math.min(duration, currentTime + seekSeconds));
+                youtubePlayer.seekTo(newTime, true);
             } else {
                 const newTime = Math.max(0, Math.min(player.duration(), player.currentTime() + seekSeconds));
                 player.currentTime(newTime);
             }
-            showSeekFeedback(seekSeconds < 0 ? 'left' : 'right', seekSeconds);
+            showSeekFeedback(seekSeconds < 0 ? 'left' : 'right', Math.abs(seekSeconds));
         } else if (Math.abs(dy) > SWIPE_MIN_DISTANCE && !isIframeMode) {
+            // Vertical swipe - Volume or Brightness
             const change = (dy / rect.height) * -0.5;
+    
             if (touchStartX < rect.width * REGION_THRESHOLD) {
+                // Left side: Volume
                 const newVol = Math.min(1, Math.max(0, player.volume() + change));
                 setVolume(newVol);
                 showSwipeFeedback('volume', Math.round(newVol * 100));
             } else if (touchStartX > rect.width * (1 - REGION_THRESHOLD)) {
+                // Right side: Brightness
                 const newBrightness = Math.min(2, Math.max(0, brightness + change));
                 setBrightness(newBrightness);
                 showSwipeFeedback('brightness', Math.round(newBrightness * 100));
             }
         }
+    
         touchStartX = touchEndX;
         touchStartY = touchEndY;
     };
-
+    
     const handleSwipeEnd = () => {
         isSwiping = false;
         showControls();
     };
-
+    
     const handlePinchZoom = (e) => {
-        if (e.touches.length < 2 || isLocked || isIframeMode) return;
+        if (e.touches.length !== 2 || isLocked || isIframeMode) return;
+    
         e.preventDefault();
         isZooming = true;
         isSwiping = false;
-        const touch1 = e.touches[0];
-        const touch2 = e.touches[1];
+    
+        const [touch1, touch2] = e.touches;
         const currentDistance = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
-        if (initialPinchDistance === 0) {
+    
+        if (!initialPinchDistance) {
             initialPinchDistance = currentDistance;
             touchStartX = (touch1.clientX + touch2.clientX) / 2;
-        } else {
-            const zoomChange = (currentDistance - initialPinchDistance) / PINCH_SENSITIVITY;
-            const newZoom = Math.max(1, Math.min(3, zoomLevel + zoomChange));
-            setZoom(newZoom);
-            if (newZoom > 1) {
-                const prevX = touchStartX;
-                const prevY = touchStartY;
-                touchStartX = (touch1.clientX + touch2.clientX) / 2;
-                touchStartY = (touch1.clientY + touch2.clientY) / 2;
-                panX += (touchStartX - prevX) / newZoom;
-                panY += (touchStartY - prevY) / newZoom;
-                setZoom(newZoom);
-            }
+            touchStartY = (touch1.clientY + touch2.clientY) / 2;
+            return;
         }
+    
+        const zoomChange = (currentDistance - initialPinchDistance) / PINCH_SENSITIVITY;
+        const newZoom = Math.max(1, Math.min(3, zoomLevel + zoomChange));
+    
+        if (newZoom !== zoomLevel) {
+            const prevX = touchStartX;
+            const prevY = touchStartY;
+            touchStartX = (touch1.clientX + touch2.clientX) / 2;
+            touchStartY = (touch1.clientY + touch2.clientY) / 2;
+            panX += (touchStartX - prevX) / newZoom;
+            panY += (touchStartY - prevY) / newZoom;
+            setZoom(newZoom);
+        }
+    
         initialPinchDistance = currentDistance;
     };
-
+    
     const endPinchZoom = () => {
         if (!isZooming) return;
         isZooming = false;
         initialPinchDistance = 0;
         showControls();
     };
-
+    
     const handleSpeedHold = (e) => {
         if (!isFullscreenActive() || isSpeedHeld || isZooming || isSwiping || isLocked || isIframeMode) return;
+        if (!e.touches || e.touches.length !== 1) return;
+    
         const rect = videoPlayer.getBoundingClientRect();
         const x = e.touches[0].clientX - rect.left;
         const normalizedX = x / rect.width;
+    
         if (normalizedX < REGION_THRESHOLD || normalizedX > 1 - REGION_THRESHOLD) {
             setTimeout(() => {
-                isSpeedHeld = true;
-                const speed = normalizedX < REGION_THRESHOLD ? -2 : 2;
-                player.playbackRate(Math.abs(speed));
-                showSpeedFeedback(speed);
+                if (!isSpeedHeld) {
+                    isSpeedHeld = true;
+                    const speed = normalizedX < REGION_THRESHOLD ? -2 : 2;
+                    player.playbackRate(Math.abs(speed));
+                    showSpeedFeedback(speed);
+                }
             }, SPEED_HOLD_DURATION);
         }
     };
-
+    
     const releaseSpeedHold = () => {
         if (!isSpeedHeld) return;
         player.playbackRate(1);
@@ -1451,7 +1515,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isSpeedHeld = false;
         showControls();
     };
-
+    
     const updateStatsPanel = () => {
         if (!ui.statsPanel || isIframeMode) return;
         const stats = [
