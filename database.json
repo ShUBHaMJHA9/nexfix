@@ -2248,7 +2248,7 @@
       }
     ],
     "timestamp": "2025-05-03T17:46:53.533648",
-    "views": 5,
+    "views": 31,
     "duration": 0,
     "subtitle": "/static/subtitles/english.vtt",
     "thumbnail": "/static/nexfix-logo.jpg",
@@ -2315,6 +2315,578 @@
       }
     ],
     "timestamp": "2025-05-03T17:51:07.123500",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "KY6hjVULURJArWGI",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T17:58:24.846654",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "MSapGEkABX32kPJV",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T17:58:37.893883",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "wOJ5yyFEaPmGOjL0",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:08:07.263911",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "EP4VxVL3KCSs7HRh",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:08:11.742539",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "eFMyT0aYZYtdJ668",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:08:21.224188",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "FgXa6duvFADBk9lx",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:08:25.593110",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "9hmRrtrhOJ2wSdNw",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:10:12.681875",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "ReP5AmAeh-O1yIx7",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:10:44.186736",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "2uToC2upPpLjxpf_",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:13:01.819799",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "tzxOKf_ul5C4K3aS",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:13:25.635023",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "lbbrkEbldMcIFG6I",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:15:23.293078",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "AqLNLwt__FxhMSt8",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:15:52.983035",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "NzD2ZmmQHDkltMum",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:16:36.981726",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "PO7G7Ue43h39sR97",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:21:33.845733",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "PRsC-im0vsXvibPb",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:23:08.825649",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "2XQu67eoHqy8Mt6W",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:23:29.016187",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "x5LfIT9Jz81dbwzf",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:24:45.698934",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "8ZdbI-ESf_Ptm9vl",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:25:36.314203",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "gYY1KJ2eW4KncQCs",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:27:04.591649",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "6ZIiV8k9XGfByDXn",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:27:05.411486",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "DJmyg7DdnvslUZP0",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:27:39.001875",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "iDUxt1zz0LNSSowg",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:27:40.512908",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "HiVvbSe0rlDncxsZ",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:28:22.139142",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "H8GNIyW9eCD_LnV4",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:31:00.629587",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "cnKAtfSnllc-UEkz",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:32:10.458556",
+    "views": 0,
+    "duration": 0,
+    "subtitle": "/static/subtitles/english.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": null,
+    "media_type": "iframe",
+    "audio_options": [],
+    "is_live": false
+  },
+  {
+    "video_id": "K966LyEEmm57qikB",
+    "user_id": "test_user",
+    "title": "Embedded Stream",
+    "description": "Embedded content",
+    "sources": [
+      {
+        "url": "https://sportsipl.vercel.app/star.html",
+        "quality": "Embedded",
+        "type": "iframe"
+      }
+    ],
+    "timestamp": "2025-05-03T18:33:23.219350",
     "views": 0,
     "duration": 0,
     "subtitle": "/static/subtitles/english.vtt",
