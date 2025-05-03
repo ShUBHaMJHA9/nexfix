@@ -317,7 +317,7 @@ async def handle_hls_playlist(playlist_url: str, request: Request):
             
             # Base URL for relative paths
             base_url = playlist_url.rsplit("/", 1)[0] + "/"
-            proxy_url = os.getenv("PROXY_URL")
+            proxy_url = "https://potential-potato-69v64xw9j5wpcgrw-8000.app.github.dev/proxy"
 
             # Process playlist lines
             processed_lines = []
@@ -600,7 +600,9 @@ async def fetch_m3u8_details(url: str) -> tuple[List[dict], Optional[str], List[
         else:
             sources.append({
                 "url": url,
-                "quality": "auto"
+                "quality": "auto",
+                "type": "application/x-mpegURL"
+
             })
 
         for media in m3u8_obj.media:
@@ -609,10 +611,11 @@ async def fetch_m3u8_details(url: str) -> tuple[List[dict], Optional[str], List[
             elif media.type == "AUDIO":
                 audio_url = urljoin(url, media.uri) if media.uri else None
                 audio_options.append({
-                    "name": media.name or "Unknown",
-                    "language": media.language or "und",
-                    "url": audio_url
-                })
+    "name": media.name or "Unknown",
+    "language": media.language or "und",
+    "url": audio_url,
+    "type": "application/x-mpegURL"
+})
 
         print(f"{sources}, {subtitle_url}, {audio_options} else none")
         return sources, subtitle_url, audio_options
@@ -636,13 +639,18 @@ async def request_live_stream(
     title: str = Query("Live Stream"),
     description: str = Query("Live event"),
     thumbnail_url: Optional[str] = Query(None),
+    is_live: bool = Query(True, description="Whether the stream is live"),  # ✅ default set
     _: None = Depends(rate_limit_check)
 ):
     try:
         decoded_url = unquote(url)
 
         sources, subtitle_url, audio_options = await fetch_m3u8_details(decoded_url)
-
+        sources.append({
+                    "url": decoded_url,
+                    "quality": "Auto",
+                    "type": "application/x-mpegURL"
+                })
         return await MediaHandler.create_media_entry(
             media_type=MediaType.LIVE,
             sources=sources,
@@ -651,7 +659,8 @@ async def request_live_stream(
             description=description,
             thumbnail_url=thumbnail_url,
             subtitle_url=subtitle_url,
-            audio_options=audio_options
+            audio_options=audio_options,
+            is_live=is_live  # ✅ match parameter name
         )
 
     except HTTPException:
@@ -729,4 +738,4 @@ def determine_quality(title: str) -> str:
     return "Unknown"
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8002, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

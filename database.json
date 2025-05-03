@@ -1,169 +1,296 @@
 [
   {
-    "video_id": "WirNsaPTWYI2j1E8",
+    "video_id": "NXJ5ExztDi6-cw_l",
     "user_id": "shub",
     "title": "Live Stream",
     "description": "Live event",
     "sources": [
       {
-        "url": "https://starsporthindii.pages.dev/360p.m3u8",
-        "quality": "360p",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8",
+        "quality": "180p",
         "type": "application/x-mpegURL"
       },
       {
-        "url": "https://starsporthindii.pages.dev/480p.m3u8",
-        "quality": "480p",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/500kbit.m3u8",
+        "quality": "272p",
         "type": "application/x-mpegURL"
       },
       {
-        "url": "https://starsporthindii.pages.dev/720p.m3u8",
-        "quality": "720p",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/800kbit.m3u8",
+        "quality": "272p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/1100kbit.m3u8",
+        "quality": "408p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/1500kbit.m3u8",
+        "quality": "554p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/4000kbit.m3u8",
+        "quality": "818p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/6000kbit.m3u8",
+        "quality": "818p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/10000kbit.m3u8",
+        "quality": "1744p",
         "type": "application/x-mpegURL"
       }
     ],
-    "timestamp": "2025-05-01T14:51:04.721151",
-    "views": 8,
+    "timestamp": "2025-05-03T05:16:20.222308",
+    "views": 39,
     "duration": 0,
-    "subtitle": "/static/subtitles/english.vtt",
+    "subtitle": "/static/subtitles/NXJ5ExztDi6-cw_l.vtt",
     "thumbnail": "/static/nexfix-logo.jpg",
-    "subtitle_file_path": null,
+    "subtitle_file_path": "static/subtitles/NXJ5ExztDi6-cw_l.vtt",
     "media_type": "live",
-    "audio_options": []
+    "audio_options": [
+      {
+        "name": "English",
+        "language": "en",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/en/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "Dubbing",
+        "language": "dubbing",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/none/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "English",
+        "language": "en",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/surround/en/320kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "Dubbing",
+        "language": "dubbing",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/none/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      }
+    ],
+    "is_live": true
   },
   {
-    "video_id": "e--O9Dum6KSc7MUT",
+    "video_id": "J_N1x2tq1vUPXRod",
     "user_id": "shub",
-    "title": "Live Stream",
-    "description": "Live event",
-    "sources": [
-      {
-        "url": "https://starsporthindii.pages.dev/360p.m3u8",
-        "quality": "360p",
-        "type": "application/x-mpegURL"
-      },
-      {
-        "url": "https://starsporthindii.pages.dev/480p.m3u8",
-        "quality": "480p",
-        "type": "application/x-mpegURL"
-      },
-      {
-        "url": "https://starsporthindii.pages.dev/720p.m3u8",
-        "quality": "720p",
-        "type": "application/x-mpegURL"
-      }
-    ],
-    "timestamp": "2025-05-01T15:16:36.062733",
-    "views": 4,
-    "duration": 0,
-    "subtitle": "/static/subtitles/english.vtt",
-    "thumbnail": "/static/nexfix-logo.jpg",
-    "subtitle_file_path": null,
-    "media_type": "live",
-    "audio_options": []
-  },
-  {
-    "video_id": "DEmRqke5QiLLxGs-",
-    "user_id": "shub",
-    "title": "Live Stream",
-    "description": "Live event",
-    "sources": [
-      {
-        "url": "https://starsporthindii.pages.dev/360p.m3u8",
-        "quality": "360p",
-        "type": "application/x-mpegURL"
-      },
-      {
-        "url": "https://starsporthindii.pages.dev/480p.m3u8",
-        "quality": "480p",
-        "type": "application/x-mpegURL"
-      },
-      {
-        "url": "https://starsporthindii.pages.dev/720p.m3u8",
-        "quality": "720p",
-        "type": "application/x-mpegURL"
-      }
-    ],
-    "timestamp": "2025-05-01T15:30:05.901507",
-    "views": 34,
-    "duration": 0,
-    "subtitle": "/static/subtitles/english.vtt",
-    "thumbnail": "/static/nexfix-logo.jpg",
-    "subtitle_file_path": null,
-    "media_type": "live",
-    "audio_options": []
-  },
-  {
-    "video_id": "q5BTnXnWQwKXGctO",
-    "user_id": "shub",
-    "title": "Live Stream",
-    "description": "Live event",
-    "sources": [
-      {
-        "url": "https://starsporthindii.pages.dev/360p.m3u8",
-        "quality": "360p",
-        "type": "application/x-mpegURL"
-      },
-      {
-        "url": "https://starsporthindii.pages.dev/480p.m3u8",
-        "quality": "480p",
-        "type": "application/x-mpegURL"
-      },
-      {
-        "url": "https://starsporthindii.pages.dev/720p.m3u8",
-        "quality": "720p",
-        "type": "application/x-mpegURL"
-      }
-    ],
-    "timestamp": "2025-05-01T16:27:24.635280",
-    "views": 22,
-    "duration": 0,
-    "subtitle": "/static/subtitles/english.vtt",
-    "thumbnail": "/static/nexfix-logo.jpg",
-    "subtitle_file_path": null,
-    "media_type": "live",
-    "audio_options": []
-  },
-  {
-    "video_id": "9mWiGM0iROBx-oiN",
-    "user_id": "shu",
     "title": "River of Blood (2024) Hindi Dubbed Movie Download",
     "description": "Four kayakers take the wrong river into a jungle inhabited by a tribe of merciless cannibals.",
     "sources": [
       {
-        "url": "https://dl2.fastxmp4.com/download/46057/River-of-Blood-(2024)-Hindi-Dubbed-Movie--240p-[Orgmovies].mp4?st=yKVR06Dn3baHqt4J3V5x2g&e=1746206682",
+        "url": "https://dl3.fastxmp4.com/download/46057/River-of-Blood-(2024)-Hindi-Dubbed-Movie--240p-[Orgmovies].mp4?st=EjAvhntcNY67JNHqqccylg&e=1746335973",
         "quality": "Low",
         "type": "video/mp4",
         "codecs": "avc1",
         "duration": 0
       },
       {
-        "url": "https://dl2.fastxmp4.com/download/46057/River-of-Blood-(2024)-Hindi-Dubbed-Movie--360p-[Orgmovies].mp4?st=yKVR06Dn3baHqt4J3V5x2g&e=1746206682",
+        "url": "https://dl3.fastxmp4.com/download/46057/River-of-Blood-(2024)-Hindi-Dubbed-Movie--360p-[Orgmovies].mp4?st=EjAvhntcNY67JNHqqccylg&e=1746335973",
         "quality": "HD",
         "type": "video/mp4",
         "codecs": "avc1",
         "duration": 0
       },
       {
-        "url": "https://dl2.fastxmp4.com/download/46057/River-of-Blood-(2024)-Hindi-Dubbed-Movie--480p-[Orgmovies].mp4?st=yKVR06Dn3baHqt4J3V5x2g&e=1746206682",
+        "url": "https://dl3.fastxmp4.com/download/46057/River-of-Blood-(2024)-Hindi-Dubbed-Movie--480p-[Orgmovies].mp4?st=EjAvhntcNY67JNHqqccylg&e=1746335973",
         "quality": "480p",
         "type": "video/mp4",
         "codecs": "avc1",
         "duration": 0
       },
       {
-        "url": "https://dl2.fastxmp4.com/download/46057/River-of-Blood-(2024)-Hindi-Dubbed-Movie--720p-[Orgmovies].mp4?st=yKVR06Dn3baHqt4J3V5x2g&e=1746206682",
+        "url": "https://dl3.fastxmp4.com/download/46057/River-of-Blood-(2024)-Hindi-Dubbed-Movie--720p-[Orgmovies].mp4?st=EjAvhntcNY67JNHqqccylg&e=1746335973",
         "quality": "720p",
         "type": "video/mp4",
         "codecs": "avc1",
         "duration": 0
       }
     ],
-    "timestamp": "2025-05-01T17:24:42.556247",
-    "views": 7,
+    "timestamp": "2025-05-03T05:19:33.342882",
+    "views": 9,
     "duration": 0,
     "subtitle": "/static/subtitles/english.vtt",
     "thumbnail": "/static/nexfix-logo.jpg",
     "subtitle_file_path": null,
     "media_type": "movie"
+  },
+  {
+    "video_id": "vMYmjZtEP3dtIU45",
+    "user_id": "shub",
+    "title": "Live Stream",
+    "description": "Live event",
+    "sources": [
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/250kbit.m3u8",
+        "quality": "180p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/500kbit.m3u8",
+        "quality": "272p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/800kbit.m3u8",
+        "quality": "272p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/1100kbit.m3u8",
+        "quality": "408p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/1500kbit.m3u8",
+        "quality": "554p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/4000kbit.m3u8",
+        "quality": "818p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/6000kbit.m3u8",
+        "quality": "818p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/10000kbit.m3u8",
+        "quality": "1744p",
+        "type": "application/x-mpegURL"
+      }
+    ],
+    "timestamp": "2025-05-03T06:07:15.950148",
+    "views": 2,
+    "duration": 0,
+    "subtitle": "/static/subtitles/vMYmjZtEP3dtIU45.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": "static/subtitles/vMYmjZtEP3dtIU45.vtt",
+    "media_type": "live",
+    "audio_options": [
+      {
+        "name": "English",
+        "language": "en",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/en/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "Dubbing",
+        "language": "dubbing",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/none/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "English",
+        "language": "en",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/surround/en/320kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "Dubbing",
+        "language": "dubbing",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/none/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      }
+    ],
+    "is_live": true
+  },
+  {
+    "video_id": "0JFBaNC3--_dc3MB",
+    "user_id": "shub",
+    "title": "Live Stream",
+    "description": "Live event",
+    "sources": [
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/250kbit.m3u8",
+        "quality": "180p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/500kbit.m3u8",
+        "quality": "272p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/800kbit.m3u8",
+        "quality": "272p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/1100kbit.m3u8",
+        "quality": "408p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/1500kbit.m3u8",
+        "quality": "554p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/4000kbit.m3u8",
+        "quality": "818p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/6000kbit.m3u8",
+        "quality": "818p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/video/10000kbit.m3u8",
+        "quality": "1744p",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8",
+        "quality": "Auto",
+        "type": "application/x-mpegURL"
+      }
+    ],
+    "timestamp": "2025-05-03T06:10:36.658443",
+    "views": 4,
+    "duration": 0,
+    "subtitle": "/static/subtitles/0JFBaNC3--_dc3MB.vtt",
+    "thumbnail": "/static/nexfix-logo.jpg",
+    "subtitle_file_path": "static/subtitles/0JFBaNC3--_dc3MB.vtt",
+    "media_type": "live",
+    "audio_options": [
+      {
+        "name": "English",
+        "language": "en",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/en/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "Dubbing",
+        "language": "dubbing",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/none/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "English",
+        "language": "en",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/surround/en/320kbit.m3u8",
+        "type": "application/x-mpegURL"
+      },
+      {
+        "name": "Dubbing",
+        "language": "dubbing",
+        "url": "https://bitdash-a.akamaihd.net/content/sintel/hls/audio/stereo/none/128kbit.m3u8",
+        "type": "application/x-mpegURL"
+      }
+    ],
+    "is_live": true
   }
 ]

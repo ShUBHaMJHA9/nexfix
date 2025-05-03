@@ -8,7 +8,6 @@
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!-- Local Video.js CSS -->
     <link href="/static/videojs/video-js.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css">
 </head>
@@ -24,7 +23,7 @@
                 <span>Movies</span>
                 <span class="material-icons">arrow_drop_down</span>
             </button>
-            <div class="content-type-dropdown" id="contentTypeDropdown" role="menu">
+            <div class="content-type-dropdown hidden" id="contentTypeDropdown" role="menu">
                 <div class="content-type-item active" data-type="movies" role="menuitem" tabindex="0">
                     <span class="material-icons">movie</span>
                     <span>Movies</span>
@@ -57,59 +56,77 @@
     </div>
 
     <div id="videoPlayer" class="video_player" role="region" aria-label="Video player">
+        <div class="error-overlay hidden" aria-live="assertive">
+            <span class="error-message"></span>
+        </div>
+        <div class="loading-spinner hidden" aria-label="Loading video"></div>
+        <div class="context-menu hidden" aria-hidden="true" style="display: none;">
+            <ul role="menu">
+                <li data-action="play-pause" role="menuitem" tabindex="0">Play/Pause</li>
+                <li data-action="add-bookmark" role="menuitem" tabindex="0">Add Bookmark</li>
+                <li data-action="add-annotation" role="menuitem" tabindex="0">Add Annotation</li>
+                <li data-action="toggle-pip" role="menuitem" tabindex="0">Picture-in-Picture</li>
+                <li data-action="toggle-fullscreen" role="menuitem" tabindex="0">Fullscreen</li>
+                <li data-action="show-shortcuts" role="menuitem" tabindex="0">Keyboard Shortcuts</li>
+                <li data-action="capture-screenshot" role="menuitem" tabindex="0">Capture Screenshot</li>
+                <li data-action="share-video" role="menuitem" tabindex="0">Share Video</li>
+            </ul>
+        </div>
         <video id="mainPlayer" class="video-js vjs-big-play-centered" playsinline preload="auto" aria-label="Main video player">
-            <source id="videoSource" src="" type="application/x-mpegURL">
+            <source src="" type="application/x-mpegURL">
             <p class="vjs-no-js">
                 To view this video please enable JavaScript, and consider upgrading to a web browser that
                 <a href="https://videojs.com/html5-video-support/" target="_blank" rel="noopener noreferrer">supports HTML5 video</a>
             </p>
         </video>
-        <div id="iframePlayerContainer" class="iframe-player-container" style="display: none;" aria-label="Embedded video player">
+        <div id="iframePlayerContainer" class="iframe-player-container hidden" aria-label="Embedded video player">
             <iframe id="iframePlayer" frameborder="0" allowfullscreen aria-label="Embedded video content"></iframe>
         </div>
         <button id="centerControl" class="center-control" aria-label="Play" role="button" tabindex="0">
             <span class="material-icons">play_arrow</span>
         </button>
         <div id="qualityBadge" class="quality-badge" aria-live="polite">Auto</div>
-        <button id="skipAdBtn" class="skip-ad-btn" disabled aria-label="Skip advertisement">
+        <div class="annotation-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100;"></div>
+        <button id="skipAdBtn" class="skip-ad-btn hidden" disabled aria-label="Skip advertisement">
             <span class="skip-ad-text" id="skipAdTimer">Skip in 5s</span>
             <span class="skip-ad-active">Skip Ad</span>
         </button>
-        <div id="volumeOverlay" class="swipe-overlay" aria-hidden="true">
+        <div id="volumeOverlay" class="swipe-overlay hidden" aria-hidden="true">
             <div id="volumeIndicator" class="swipe-indicator">
                 <span class="material-icons" id="volumeIcon">volume_up</span>
                 <span id="volumeValue">80%</span>
             </div>
             <div class="volume-bar"></div>
         </div>
-        <div id="brightnessOverlay" class="swipe-overlay" aria-hidden="true">
+        <div id="brightnessOverlay" class="swipe-overlay hidden" aria-hidden="true">
             <div id="brightnessIndicator" class="swipe-indicator">
                 <span class="material-icons" id="brightnessIcon">brightness_5</span>
                 <span id="brightnessValue">100%</span>
             </div>
             <div class="brightness-bar"></div>
         </div>
-        <div id="rewindIndicator" class="tap-indicator left" aria-hidden="true">
+        <div id="rewindIndicator" class="tap-indicator left hidden" aria-hidden="true">
             <div class="tap-indicator-content">
                 <span class="material-icons">fast_rewind</span>
                 <span id="rewindValue">-10s</span>
             </div>
         </div>
-        <div id="forwardIndicator" class="tap-indicator right" aria-hidden="true">
+        <div id="forwardIndicator" class="tap-indicator right hidden" aria-hidden="true">
             <div class="tap-indicator-content">
                 <span class="material-icons">fast_forward</span>
                 <span id="forwardValue">+10s</span>
             </div>
         </div>
-        <div id="seekFeedbackLeft" class="seek-feedback left" aria-hidden="true"></div>
-        <div id="seekFeedbackRight" class="seek-feedback right" aria-hidden="true"></div>
-        <div id="speedFeedback" class="speed-feedback" aria-hidden="true"></div>
-        <div id="lockOverlay" class="lock-overlay" aria-hidden="true"></div>
-        <div id="adOverlay" class="ad-overlay" aria-hidden="true">
+        <div id="seekFeedbackLeft" class="seek-feedback left hidden" aria-hidden="true"></div>
+        <div id="seekFeedbackRight" class="seek-feedback right hidden" aria-hidden="true"></div>
+        <div id="speedFeedback" class="speed-feedback hidden" aria-hidden="true"></div>
+        <div id="lockOverlay" class="lock-overlay hidden" aria-hidden="true"></div>
+        <div id="adOverlay" class="ad-overlay hidden" aria-hidden="true">
             <span id="adText" class="ad-label">Advertisement</span>
             <span id="adTimer" class="ad-timer">5s</span>
         </div>
-        <div class="controls" role="toolbar">
+        <div id="orientationFeedback" class="orientation-feedback hidden" aria-hidden="true"></div>
+        <div class="controls hidden" role="toolbar">
             <div id="progressArea" class="progress-area" role="slider" aria-valuemin="0" aria-label="Video progress">
                 <div class="bufferedBar"></div>
                 <div class="progress-bar"><span></span></div>
@@ -122,7 +139,7 @@
                     <div class="timer" aria-live="polite">
                         <span class="current" aria-label="Current time">0:00</span>/<span class="duration" aria-label="Total duration">0:00</span>
                     </div>
-                    <div class="live-indicator" id="liveBtn" role="status">
+                    <div class="live-indicator hidden" id="liveBtn" role="status">
                         <span class="material-icons">sensors</span>
                         LIVE <span id="liveTimer" aria-label="Live duration">0:00</span>
                     </div>
@@ -155,14 +172,23 @@
                     <button class="icon fullscreen" aria-label="Enter fullscreen" role="button" tabindex="0">
                         <span class="material-icons">fullscreen</span>
                     </button>
+                    <button class="icon screenshot-btn" id="screenshotBtn" aria-label="Capture screenshot" role="button" tabindex="0">
+                        <span class="material-icons">camera_alt</span>
+                    </button>
+                    <button class="icon share-btn" id="shareBtn" aria-label="Share video" role="button" tabindex="0">
+                        <span class="material-icons">share</span>
+                    </button>
                     <button class="icon" id="lockBtn" aria-label="Lock controls" role="button" tabindex="0">
                         <span class="material-icons">lock_open</span>
+                    </button>
+                    <button class="icon" id="orientationBtn" aria-label="Lock orientation" role="button" tabindex="0">
+                        <span class="material-icons">screen_rotation</span>
                     </button>
                 </div>
             </div>
         </div>
-        <div id="settingsPanel" class="settings" role="dialog" aria-label="Settings panel">
-            <div class="settings-panel active" data-label="settingHome">
+        <div id="settingsPanel" class="settings hidden" role="dialog" aria-label="Settings panel">
+            <div class="settings-panel active" data-label="settingHome" aria-expanded="true">
                 <div class="settings-header">Settings</div>
                 <ul role="menu">
                     <li data-label="playbackSpeed" role="menuitem" tabindex="0">Playback Speed</li>
@@ -172,28 +198,29 @@
                     <li id="swipeControlsToggle" class="active" role="menuitem" tabindex="0">Swipe Controls <span class="material-icons">check</span></li>
                     <li id="autoQualityToggle" class="active" role="menuitem" tabindex="0">Auto Quality <span class="material-icons">check</span></li>
                     <li id="orientationLockToggle" role="menuitem" tabindex="0">Orientation Lock</li>
+                    <li id="loopToggle" role="menuitem" tabindex="0">Loop Playback</li>
                 </ul>
             </div>
-            <div class="settings-panel" data-label="playbackSpeed">
+            <div class="settings-panel" data-label="playbackSpeed" aria-expanded="false">
                 <div class="settings-header">
                     <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Playback Speed
                 </div>
                 <ul role="menu">
-                    <li data-speed="0.25" role="menuitem" tabindex="0">0.25x</li>
-                    <li data-speed="0.5" role="menuitem" tabindex="0">0.5x</li>
-                    <li data-speed="0.75" role="menuitem" tabindex="0">0.75x</li>
-                    <li data-speed="1" class="active" role="menuitem" tabindex="0">1x <span class="material-icons">check</span></li>
-                    <li data-speed="1.25" role="menuitem" tabindex="0">1.25x</li>
-                    <li data-speed="1.5" role="menuitem" tabindex="0">1.5x</li>
-                    <li data-speed="1.75" role="menuitem" tabindex="0">1.75x</li>
-                    <li data-speed="2" role="menuitem" tabindex="0">2x</li>
+                    <li data-speed="0.25" role="button" tabindex="0">0.25x</li>
+                    <li data-speed="0.5" role="button" tabindex="0">0.5x</li>
+                    <li data-speed="0.75" role="button" tabindex="0">0.75x</li>
+                    <li data-speed="1" class="active" role="button" tabindex="0">1x <span class="material-icons">check</span></li>
+                    <li data-speed="1.25" role="button" tabindex="0">1.25x</li>
+                    <li data-speed="1.5" role="button" tabindex="0">1.5x</li>
+                    <li data-speed="1.75" role="button" tabindex="0">1.75x</li>
+                    <li data-speed="2" role="button" tabindex="0">2x</li>
                     <li class="custom-speed-input" role="menuitem" tabindex="0">
                         <input type="number" id="customSpeedInput" step="0.1" min="0.1" max="8" placeholder="Custom speed" aria-label="Custom playback speed">
                         <button id="saveCustomSpeedBtn" aria-label="Apply custom speed"><span class="material-icons">check</span></button>
                     </li>
                 </ul>
             </div>
-            <div class="settings-panel" data-label="qualityMenu">
+            <div class="settings-panel" data-label="qualityMenu" aria-expanded="false">
                 <div class="settings-header">
                     <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Video Quality
                 </div>
@@ -202,21 +229,37 @@
                 </ul>
             </div>
         </div>
-        <div class="captions" id="captionsPanel" role="dialog" aria-label="Subtitles panel">
+        <div class="captions hidden" id="captionsPanel" role="dialog" aria-label="Subtitles panel">
             <div class="settings-header">Subtitles</div>
             <ul id="captionMenu" role="menu"></ul>
         </div>
-        <div class="audio-tracks" id="audioTracksPanel" role="dialog" aria-label="Audio tracks panel">
+        <div class="audio-tracks hidden" id="audioTracksPanel" role="dialog" aria-label="Audio tracks panel">
             <div class="settings-header">Audio Tracks</div>
             <ul id="audioTrackMenu" role="menu"></ul>
         </div>
-        <div class="bookmarks" id="bookmarkPanel" role="dialog" aria-label="Bookmarks panel">
-            <div class="settings-header">Bookmarks</div>
-            <ul id="bookmarkMenu" role="menu"></ul>
+        <div id="keyboardShortcutsOverlay" class="keyboard-shortcuts-overlay hidden" role="dialog" aria-label="Keyboard shortcuts" aria-hidden="true" style="display: none;">
+            <div class="shortcuts-content">
+                <h3>Keyboard Shortcuts</h3>
+                <ul>
+                    <li><strong>Space</strong>: Play/Pause</li>
+                    <li><strong>M</strong>: Mute/Unmute</li>
+                    <li><strong>F</strong>: Toggle Fullscreen</li>
+                    <li><strong>T</strong>: Toggle Theater Mode</li>
+                    <li><strong>L</strong>: Lock/Unlock Controls</li>
+                    <li><strong>Left Arrow</strong>: Rewind 5s</li>
+                    <li><strong>Right Arrow</strong>: Forward 5s</li>
+                    <li><strong>Up Arrow</strong>: Volume Up</li>
+                    <li><strong>Down Arrow</strong>: Volume Down</li>
+                    <li><strong>B</strong>: Add Bookmark</li>
+                    <li><strong>S</strong>: Show Shortcuts</li>
+                    <li><strong>C</strong>: Capture Screenshot</li>
+                    <li><strong>H</strong>: Share Video</li>
+                </ul>
+            </div>
         </div>
     </div>
 
-    <div class="stats-panel" id="statsPanel" role="complementary" aria-label="Technical statistics">
+    <div class="stats-panel hidden" id="statsPanel" role="complementary" aria-label="Technical statistics">
         <div class="stat-item"><span class="material-icons">play_arrow</span> Playback: <span id="playbackRate">1x</span></div>
         <div class="stat-item"><span class="material-icons">volume_up</span> Volume: <span id="currentVolume">80%</span></div>
         <div class="stat-item"><span class="material-icons">brightness_5</span> Brightness: <span id="currentBrightness">100%</span></div>
@@ -230,19 +273,20 @@
     <div class="downloader" id="downloader_button" role="region" aria-label="Download options">
         <div class="download-btn-container">
             <button id="hdDownloadBtn" aria-label="Download in HD quality">HD Downloader</button>
-            <div class="download-queue" id="downloadQueueMenu" role="menu" aria-live="polite"></div>
         </div>
         <div class="download-btn-container">
             <button id="fastDownloadBtn" aria-label="Download quickly">Fast Downloader</button>
-            <div class="download-queue" id="fastDownloadQueueMenu" role="menu" aria-live="polite"></div>
         </div>
     </div>
 
     <div class="description-section" role="complementary">
         <h2 class="description-title" id="videoTitle">Loading...</h2>
         <p class="description-content" id="videoDescription">Loading video description...</p>
+        <div class="error-message hidden" id="persistentError" aria-live="assertive"></div>
     </div>
+
     <script src="/static/videojs/video.min.js"></script>
+    <script src="/static/videojs/videojs-contrib-hls.min.js"></script>
     <script src="/static/videojs/videojs-contrib-quality-levels.min.js"></script>
     <script src="/static/videojs/videojs-http-source-selector.min.js"></script>
     <script src="/static/scripts.js" defer></script>

@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const isInIframe = window.self !== window.top;
 
-    // Initialize Video.js with enhanced HLS support
+    // Initialize Video.js with default controls disabled
     const player = videojs('mainPlayer', {
         fluid: true,
         responsive: true,
@@ -18,10 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html5: {
             vhs: {
                 overrideNative: true,
-                withCredentials: false,
-                enableLowInitialPlaylist: true,
-                smoothQualityChange: true,
-                bandwidth: 5000000
+                withCredentials: false
             },
             nativeVideoTracks: false,
             nativeAudioTracks: false
@@ -29,25 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
         liveui: false
     });
 
-    // Inject CSS for new features
+    // Inject CSS to ensure default control bar is hidden and add transitions
     const style = document.createElement('style');
     style.textContent = `
         .vjs-control-bar { display: none !important; visibility: hidden !important; }
         .controls, .center-control, .quality-badge { transition: opacity 0.3s ease, visibility 0.3s ease; }
         .controls.hidden, .center-control.hidden, .quality-badge.hidden { opacity: 0; visibility: hidden; }
-        .zoom-feedback, .speed-feedback, .seek-feedback, .volume-overlay, .brightness-overlay, .screenshot-feedback, .share-feedback { 
+        .zoom-feedback, .speed-feedback, .seek-feedback, .volume-overlay, .brightness-overlay { 
             position: absolute; z-index: 100; background: rgba(0,0,0,0.7); color: white; padding: 8px; border-radius: 4px; }
         .annotation { cursor: pointer; transition: opacity 0.3s; }
         .annotation.active { opacity: 1; }
         .context-menu, .keyboard-shortcuts-overlay { z-index: 200; }
         .pulse { animation: pulse 0.5s; }
-        .screenshot-btn, .share-btn { transition: transform 0.2s; }
-        .screenshot-btn:hover, .share-btn:hover { transform: scale(1.1); }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
     `;
     document.head.appendChild(style);
 
-    // Reload source on error plugin with enhanced retry logic
+    // Reload source on error plugin
     if (!videojs.getPlugin('reloadSourceOnError')) {
         videojs.registerPlugin('reloadSourceOnError', function() {
             this.on('error', () => {
@@ -56,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nextSource = sources.find(s => s.src !== currentSrc);
                 if (nextSource && retryCount < MAX_RETRIES) {
                     retryCount++;
-                    console.log(`Retrying with source: ${nextSource.src}, attempt ${retryCount}`);
+                    console.log(`Retrying with source: ${nextSource.src}`);
                     this.src(nextSource);
                     this.load();
                     this.play().catch(err => console.error('Retry play error:', err));
@@ -157,11 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         autoQualityToggle: document.getElementById('autoQualityToggle'),
         addAnnotationBtn: document.getElementById('addAnnotationBtn'),
         customSpeedInput: document.getElementById('customSpeedInput'),
-        saveCustomSpeedBtn: document.getElementById('saveCustomSpeedBtn'),
-        screenshotBtn: document.getElementById('screenshotBtn'),
-        shareBtn: document.getElementById('shareBtn'),
-        screenshotFeedback: document.createElement('div'),
-        shareFeedback: document.createElement('div')
+        saveCustomSpeedBtn: document.getElementById('saveCustomSpeedBtn')
     };
 
     // State variables
@@ -185,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let chapters = [], annotations = [], playlist = [], downloadQueue = [];
     let showChapterMarkers = true, swipeControlsEnabled = true, isLooping = false, autoQualityEnabled = true;
     let bookmarks = [], isIframeMode = false, youtubePlayer = null;
-    let manualQualitySelected = true;
+    let manualQualitySelected = false; // Track manual quality selection
 
     // Initialize feedback elements
     ui.zoomFeedback.className = 'zoom-feedback';
@@ -195,14 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ui.autoQualityFeedback.className = 'speed-feedback';
     ui.autoQualityFeedback.setAttribute('aria-live', 'polite');
     videoPlayer.appendChild(ui.autoQualityFeedback);
-
-    ui.screenshotFeedback.className = 'screenshot-feedback';
-    ui.screenshotFeedback.setAttribute('aria-live', 'polite');
-    videoPlayer.appendChild(ui.screenshotFeedback);
-
-    ui.shareFeedback.className = 'share-feedback';
-    ui.shareFeedback.setAttribute('aria-live', 'polite');
-    videoPlayer.appendChild(ui.shareFeedback);
 
     // Load YouTube IFrame API
     const loadYouTubeAPI = () => {
@@ -360,97 +343,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    
     const toggleOrientationLock = async () => {
-        // Prevent orientation lock in iframe mode
-        if (isIframeMode) {
-            displayError('Orientation lock is unavailable in iframe mode');
-            return;
-        }
-    
+        if (isIframeMode) return;
         try {
-            // Check for orientation API support
-            if (!screen.orientation || typeof screen.orientation.lock !== 'function' || typeof screen.orientation.unlock !== 'function') {
-                displayError('Orientation lock is not supported in this browser');
-                if (ui.orientationBtn) {
-                    ui.orientationBtn.disabled = true;
-                    ui.orientationBtn.setAttribute('aria-label', 'Orientation lock not supported');
+            if (!isOrientationLocked && screen.orientation && screen.orientation.lock) {
+                await screen.orientation.lock('landscape');
+                isOrientationLocked = true;
+                if (ui.orientationFeedback) {
+                    ui.orientationFeedback.textContent = 'Orientation Locked';
+                    ui.orientationFeedback.classList.add('active');
+                    setTimeout(() => ui.orientationFeedback.classList.remove('active'), FEEDBACK_DURATION);
                 }
-                return;
-            }
-    
-            // Check for fullscreen mode (required by some browsers)
-            const isFullscreen = !!(
-                document.fullscreenElement ||
-                document.webkitFullscreenElement ||
-                document.mozFullScreenElement ||
-                document.msFullscreenElement
-            );
-            if (!isFullscreen) {
-                displayError('Please enter fullscreen mode to lock orientation');
-                return;
-            }
-    
-            if (!isOrientationLocked) {
-                // Lock orientation to landscape
-                try {
-                    await screen.orientation.lock('landscape');
-                    isOrientationLocked = true;
-                    if (ui.orientationFeedback) {
-                        clearTimeout(feedbackTimeout);
-                        ui.orientationFeedback.textContent = 'Orientation Locked';
-                        ui.orientationFeedback.classList.add('active');
-                        feedbackTimeout = setTimeout(
-                            () => ui.orientationFeedback.classList.remove('active'),
-                            FEEDBACK_DURATION || 3000
-                        );
-                    }
-                } catch (lockErr) {
-                    throw new Error(`Failed to lock orientation: ${lockErr.message}`);
-                }
-            } else {
-                // Unlock orientation
-                try {
-                    await screen.orientation.unlock();
-                    isOrientationLocked = false;
-                    if (ui.orientationFeedback) {
-                        clearTimeout(feedbackTimeout);
-                        ui.orientationFeedback.textContent = 'Orientation Unlocked';
-                        ui.orientationFeedback.classList.add('active');
-                        feedbackTimeout = setTimeout(
-                            () => ui.orientationFeedback.classList.remove('active'),
-                            FEEDBACK_DURATION || 3000
-                        );
-                    }
-                } catch (unlockErr) {
-                    throw new Error(`Failed to unlock orientation: ${unlockErr.message}`);
+            } else if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+                isOrientationLocked = false;
+                if (ui.orientationFeedback) {
+                    ui.orientationFeedback.textContent = 'Orientation Unlocked';
+                    ui.orientationFeedback.classList.add('active');
+                    setTimeout(() => ui.orientationFeedback.classList.remove('active'), FEEDBACK_DURATION);
                 }
             }
-    
-            // Update button UI
             if (ui.orientationBtn) {
-                ui.orientationBtn.innerHTML = `<span class="material-icons">${
-                    isOrientationLocked ? 'screen_lock_rotation' : 'screen_rotation'
-                }</span>`;
-                ui.orientationBtn.setAttribute(
-                    'aria-label',
-                    isOrientationLocked ? 'Unlock orientation' : 'Lock orientation'
-                );
+                ui.orientationBtn.innerHTML = `<span class="material-icons">${isOrientationLocked ? 'screen_lock_rotation' : 'screen_rotation'}</span>`;
+                ui.orientationBtn.setAttribute('aria-label', isOrientationLocked ? 'Unlock orientation' : 'Lock orientation');
             }
-    
-            // Show player controls
             showControls();
         } catch (err) {
             console.error('Orientation lock error:', err);
-            let errorMessage = 'Failed to toggle orientation lock';
-            if (err.name === 'NotSupportedError') {
-                errorMessage = 'Orientation lock is not supported on this device';
-            } else if (err.name === 'SecurityError') {
-                errorMessage = 'Orientation lock requires fullscreen mode';
-            }
-            displayError(errorMessage);
+            displayError('Failed to toggle orientation lock');
         }
     };
+
     const toggleTheaterMode = () => {
         if (isLocked || isIframeMode) return;
         isTheaterMode = !isTheaterMode;
@@ -559,106 +482,6 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => ui.zoomFeedback.classList.remove('active'), FEEDBACK_DURATION);
         }
         showControls();
-    };
-
-    const captureScreenshot = () => {
-        if (isLocked || isIframeMode) return;
-        try {
-            const video = player.el().querySelector('video');
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = `screenshot-${Date.now()}.png`;
-            link.click();
-            if (ui.screenshotFeedback) {
-                ui.screenshotFeedback.textContent = 'Screenshot captured!';
-                ui.screenshotFeedback.classList.add('active');
-                setTimeout(() => ui.screenshotFeedback.classList.remove('active'), FEEDBACK_DURATION);
-            }
-        } catch (err) {
-            console.error('Screenshot capture failed:', err);
-            displayError('Failed to capture screenshot');
-        }
-        showControls();
-    };
-
-    const shareVideo = () => {
-        if (isLocked) return;
-        const videoId = new URLSearchParams(window.location.search).get('video_id');
-        const shareUrl = `${window.location.origin}/video?video_id=${videoId}`;
-        const shareData = {
-            title: ui.videoTitle?.textContent || 'Video',
-            text: ui.videoDescription?.textContent || 'Check out this video!',
-            url: shareUrl
-        };
-        try {
-            if (navigator.share && !isInIframe) {
-                navigator.share(shareData).catch(err => {
-                    console.error('Native share failed:', err);
-                    fallbackShare(shareData);
-                });
-            } else {
-                fallbackShare(shareData);
-            }
-            if (ui.shareFeedback) {
-                ui.shareFeedback.textContent = 'Share options opened';
-                ui.shareFeedback.classList.add('active');
-                setTimeout(() => ui.shareFeedback.classList.remove('active'), FEEDBACK_DURATION);
-            }
-        } catch (err) {
-            console.error('Share failed:', err);
-            displayError('Failed to share video');
-        }
-        showControls();
-    };
-
-    const fallbackShare = (shareData) => {
-        const encodedUrl = encodeURIComponent(shareData.url);
-        const encodedTitle = encodeURIComponent(shareData.title);
-        const shareOptions = [
-            { name: 'Twitter', url: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}` },
-            { name: 'Facebook', url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
-            { name: 'Copy Link', action: () => {
-                navigator.clipboard.writeText(shareData.url).then(() => {
-                    if (ui.shareFeedback) {
-                        ui.shareFeedback.textContent = 'Link copied to clipboard';
-                        ui.shareFeedback.classList.add('active');
-                        setTimeout(() => ui.shareFeedback.classList.remove('active'), FEEDBACK_DURATION);
-                    }
-                });
-            }}
-        ];
-        const menu = document.createElement('div');
-        menu.className = 'share-menu';
-        menu.style.cssText = 'position: absolute; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 4px; z-index: 200;';
-        menu.innerHTML = shareOptions.map(opt => `
-            <button class="share-option" data-action="${opt.name}" style="display: block; color: white; background: none; border: none; padding: 5px 10px; cursor: pointer;">
-                ${opt.name}
-            </button>
-        `).join('');
-        videoPlayer.appendChild(menu);
-        const rect = ui.shareBtn.getBoundingClientRect();
-        menu.style.top = `${rect.bottom + 5}px`;
-        menu.style.left = `${rect.left}px`;
-        const closeMenu = () => {
-            menu.remove();
-            document.removeEventListener('click', closeMenu);
-        };
-        menu.addEventListener('click', (e) => {
-            const btn = e.target.closest('.share-option');
-            if (!btn) return;
-            const action = btn.dataset.action;
-            const option = shareOptions.find(opt => opt.name === action);
-            if (option.url) window.open(option.url, '_blank');
-            else if (option.action) option.action();
-            closeMenu();
-        });
-        setTimeout(() => document.addEventListener('click', closeMenu), 0);
     };
 
     const showSwipeFeedback = (type, value) => {
@@ -882,8 +705,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <li data-action="toggle-pip">Toggle Picture-in-Picture</li>
                 <li data-action="toggle-fullscreen">Toggle Fullscreen</li>
                 <li data-action="show-shortcuts">Show Keyboard Shortcuts</li>
-                <li data-action="capture-screenshot">Capture Screenshot</li>
-                <li data-action="share-video">Share Video</li>
             </ul>
         `;
         ui.contextMenu.classList.add('active');
@@ -910,8 +731,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <li><span>Volume Up</span><kbd>↑</kbd></li>
                 <li><span>Volume Down</span><kbd>↓</kbd></li>
                 <li><span>Show Shortcuts</span><kbd>S</kbd></li>
-                <li><span>Screenshot</span><kbd>C</kbd></li>
-                <li><span>Share</span><kbd>H</kbd></li>
             </ul>
         `;
         ui.keyboardShortcutsOverlay.classList.add('active');
@@ -922,7 +741,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type) return type;
         const url = sourceUrl.toLowerCase();
         if (url.includes('.m3u8')) return 'application/x-mpegURL';
-        if (url.includes('.ts')) return 'video/mp2t';
         if (url.includes('.mpd')) return 'application/dash+xml';
         if (url.includes('.webm')) return 'video/webm';
         if (url.includes('.mp4')) return 'video/mp4';
@@ -1147,6 +965,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ui.centerControl.innerHTML = '<span class="material-icons">play_arrow</span>';
                                 ui.centerControl.setAttribute('aria-label', 'Play');
                             }
+                            // Update progress bar for YouTube
                             setInterval(() => {
                                 if (youtubePlayer && ui.progressBar && ui.current && ui.totalDuration) {
                                     const currentTime = youtubePlayer.getCurrentTime();
@@ -1185,6 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 });
+                // Disable incompatible features
                 if (ui.qualityMenu) ui.qualityMenu.innerHTML = '<li role="menuitem">Quality not available</li>';
                 if (ui.captionMenu) ui.captionMenu.innerHTML = '<li role="menuitem">Subtitles not available</li>';
                 if (ui.audioTrackMenu) ui.audioTrackMenu.innerHTML = '<li role="menuitem">Audio tracks not available</li>';
@@ -1203,6 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 iframe.setAttribute('aria-label', meta.title || 'Embedded video');
                 ui.iframePlayerContainer.appendChild(iframe);
                 updateMeta(meta);
+                // Disable incompatible features
                 if (ui.qualityMenu) ui.qualityMenu.innerHTML = '<li role="menuitem">Quality not available</li>';
                 if (ui.captionMenu) ui.captionMenu.innerHTML = '<li role="menuitem">Subtitles not available</li>';
                 if (ui.audioTrackMenu) ui.audioTrackMenu.innerHTML = '<li role="menuitem">Audio tracks not available</li>';
@@ -1230,6 +1051,110 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const setupVideoJsPlayer = (source, thumbnail, subtitles, audio_tracks, meta, isLive, videoId) => {
+        if (isIframeMode) {
+            isIframeMode = false;
+            videoPlayer.classList.remove('iframe-active');
+            ui.iframePlayerContainer.innerHTML = '';
+            if (youtubePlayer) {
+                youtubePlayer.destroy();
+                youtubePlayer = null;
+            }
+        }
+        let rawUrl = source.url;
+        try {
+        // Avoid nested proxy URLs
+        if (rawUrl.includes('/proxy?url=')) {
+            const urlParams = new URLSearchParams(rawUrl.split('?')[1]);
+            rawUrl = decodeURIComponent(urlParams.get('url'));
+        } else {
+            rawUrl = decodeURIComponent(rawUrl);
+        }
+    } catch (e) {
+        console.warn('URL decoding failed:', rawUrl, e);
+    }
+        const sourceUrl = `/proxy?url=${encodeURIComponent(rawUrl)}`;
+        showLoadingSpinner();
+        try {
+            player.src({
+                src: sourceUrl,
+                type: getSourceType(rawUrl, source.type)
+            });
+        } catch (err) {
+            console.error('Error setting source:', err);
+            displayError('Failed to load video source');
+            hideLoadingSpinner();
+            return;
+        }
+        player.poster(thumbnail || '/static/nexfix-logo.jpg');
+        player.playbackRates([0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4]);
+        if (subtitles.length && ui.captionMenu) {
+            ui.captionMenu.innerHTML = `<li data-track="OFF" class="active" role="menuitem">OFF <span class="material-icons">check</span></li>` +
+                subtitles.map(sub => {
+                    console.log('Loading subtitle:', sub.url);
+                    return `
+                        <li data-track="${sub.url}" data-label="${sub.name}" data-lang="${sub.language}" role="menuitem">
+                            ${sub.name} (${sub.language})
+                        </li>
+                    `;
+                }).join('');
+            subtitles.forEach(sub => {
+                try {
+                    player.addRemoteTextTrack({
+                        kind: 'subtitles',
+                        src: sub.url,
+                        label: sub.name,
+                        language: sub.language,
+                        default: sub.default || false
+                    }, false);
+                } catch (err) {
+                    console.error('Error loading subtitle:', sub.url, err);
+                    displayError(`Failed to load subtitle: ${sub.name}`);
+                }
+            });
+        } else if (ui.captionMenu) {
+            ui.captionMenu.innerHTML = '<li data-track="OFF" class="active" role="menuitem">No subtitles <span class="material-icons">check</span></li>';
+        }
+        if (audio_tracks.length && ui.audioTrackMenu) {
+            ui.audioTrackMenu.innerHTML = audio_tracks.map(track => `
+                <li data-track="${track.url}" data-label="${track.name}" data-lang="${track.language}" role="menuitem">
+                    ${track.name} (${track.language})
+                    ${track.default ? '<span class="material-icons">check</span>' : ''}
+                </li>
+            `).join('');
+            audio_tracks.forEach(track => {
+                try {
+                    player.audioTracks().addTrack(new videojs.AudioTrack({
+                        id: track.url,
+                        kind: 'alternative',
+                        label: track.name,
+                        language: track.language,
+                        enabled: track.default || false
+                    }));
+                } catch (err) {
+                    console.error('Error loading audio track:', track.url, err);
+                    displayError(`Failed to load audio track: ${track.name}`);
+                }
+            });
+        } else if (ui.audioTrackMenu) {
+            ui.audioTrackMenu.innerHTML = '<li data-track="default" class="active" role="menuitem">Default Audio <span class="material-icons">check</span></li>';
+        }
+        updateMeta(meta);
+        chapters = meta.chapters || [];
+        annotations = meta.annotations || [];
+        showLiveIndicator(isLive);
+        if (isLive) {
+            player.liveTracker.on('liveedgechange', () => {
+                if (ui.liveBtn) ui.liveBtn.classList.toggle('live-edge', player.liveTracker.atLiveEdge());
+            });
+            if (ui.progressArea) ui.progressArea.style.pointerEvents = 'none';
+            if (ui.fastRewind) ui.fastRewind.disabled = true;
+            if (ui.fastForward) ui.fastForward.disabled = true;
+        }
+        if (ui.qualityBadge) ui.qualityBadge.textContent = source.quality || 'Auto';
+        manageAnnotations();
+        hideLoadingSpinner();
+    };
 
     const handleIframeRestrictions = () => {
         if (isInIframe) {
@@ -1269,14 +1194,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('message', messageHandler);
             window._messageHandler = messageHandler;
         }
-    };
-
-    const debounce = (func, wait) => {
-        let timeout;
-        return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
     };
 
     const handleTap = (e) => {
@@ -1475,141 +1392,81 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const initializePlayer = async (overrideVideoId = null) => {
-        let retryCount = 0;
-        const MAX_RETRIES = 3;
-    
         try {
-            // Extract video ID from URL or override
             const videoId = overrideVideoId || new URLSearchParams(window.location.search).get('video_id');
             if (!videoId) throw new Error('Missing video_id parameter');
-    
             console.log('Initializing player for video ID:', videoId);
             showLoadingSpinner();
-    
-            // Fetch video data
             const response = await fetch(`/stream/${videoId}`, {
                 credentials: isInIframe ? 'same-origin' : 'include',
                 headers: { 'Accept': 'application/json' }
             });
-    
-            // Handle HTTP errors
             if (!response.ok) {
                 if (response.status === 404) throw new Error('Content not found or expired');
                 if (response.status === 403) throw new Error('Stream expired or unauthorized');
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-    
             const data = await response.json();
-            console.log('Data received from backend:', data);
-    
-            // Destructure response with defaults
-            const {
-                sources = [],
-                subtitle = null,
-                subtitles = [],
-                meta = {},
-                thumbnail = '',
-                audio_options = [],
-                is_live = false
-            } = data;
-    
+            console.log("data recived from bckend :",data)
+            const { sources = [], subtitle, subtitles = [], meta = {}, thumbnail = '', audio_tracks = [], is_live = false } = data;
             if (!sources.length) throw new Error('No valid video sources provided');
-    
-            // Define valid source types
-            const validSourceTypes = [
-                'video/mp4',
-                'application/x-mpegURL',
-                'application/dash+xml',
-                'video/webm',
-                'video/ogg',
-                'video/x-flv',
-                'iframe'
-            ];
-    
-            // Filter valid sources
-            const validSources = sources.filter(src => src?.type && validSourceTypes.includes(src.type));
+            const validSourceTypes = ['video/mp4', 'application/x-mpegURL', 'application/dash+xml', 'video/webm', 'video/ogg', 'video/x-flv', 'iframe'];
+            const validSources = sources.filter(src => validSourceTypes.includes(src.type));
             if (!validSources.length) throw new Error('No playable sources found');
-    
-            // Separate MP4 and iframe sources
             const mp4Sources = validSources.filter(src => src.type !== 'iframe');
             const iframeSources = validSources.filter(src => src.type === 'iframe');
-    
-            // Sort MP4 sources by quality
             const qualityOrder = ['1080p', '720p', '480p', '360p', '240p'];
             mp4Sources.sort((a, b) => {
                 const aIndex = qualityOrder.indexOf(a.quality) === -1 ? qualityOrder.length : qualityOrder.indexOf(a.quality);
                 const bIndex = qualityOrder.indexOf(b.quality) === -1 ? qualityOrder.length : qualityOrder.indexOf(b.quality);
                 return aIndex - bIndex;
             });
-    
-            // Select initial source
+        
             const initialSource = mp4Sources[0] || iframeSources[0];
             if (!initialSource) throw new Error('No initial source selected');
-    
-            // Prepare subtitles
-            const subtitleList = subtitle
-                ? [{ url: subtitle, name: 'English', language: 'en', default: true }, ...subtitles]
-                : subtitles;
-    
-            // Initialize player based on source type
+            const subtitleList = subtitle ? [{ url: subtitle, name: 'English', language: 'en', default: true }, ...subtitles] : subtitles;
             if (initialSource.type === 'iframe') {
                 console.log('Setting up iframe player for source:', initialSource.url);
                 await setupIframePlayer(initialSource, meta, videoId);
             } else {
                 console.log('Setting up Video.js player for source:', initialSource.url);
-                await setupVideoJsPlayer(initialSource, thumbnail, subtitleList, audio_options, meta, is_live, videoId);
+                setupVideoJsPlayer(initialSource, thumbnail, subtitleList, audio_tracks, meta, is_live, videoId);
             }
-    
             // Setup quality menu
-            if (ui.qualityMenu && mp4Sources.length > 0) {
+            if (ui.qualityMenu && mp4Sources.length) {
                 if (initialSource.type === 'application/x-mpegURL') {
                     // HLS quality levels
                     try {
-                        // Ensure the http-source-selector plugin is registered
-                        if (!videojs.getPlugin('httpSourceSelector')) {
-                            videojs.registerPlugin('httpSourceSelector', videojsHttpSourceSelector);
-                        }
-                        player.httpSourceSelector({ default: 'auto' });
+                        player.httpSourceSelector();
                         console.log('Initialized httpSourceSelector');
                         const qualityLevels = player.qualityLevels();
-    
                         qualityLevels.on('addqualitylevel', () => {
                             console.log('Quality levels detected:', qualityLevels.levels_);
-                            ui.qualityMenu.innerHTML = qualityLevels.levels_
-                                .map((level, index) => `
-                                    <li data-level="${index}" data-quality="${level.height ? `${level.height}p` : 'Auto'}" role="menuitem">
-                                        <span>${level.height ? `${level.height}p` : 'Auto'}</span>
-                                        ${index === qualityLevels.selectedIndex ? '<span class="material-icons">check</span>' : ''}
-                                    </li>
-                                `)
-                                .concat(`
-                                    <li data-level="-1" data-quality="Auto" role="menuitem">
-                                        <span>Auto</span>
-                                        ${qualityLevels.selectedIndex === -1 ? '<span class="material-icons">check</span>' : ''}
-                                    </li>
-                                `)
-                                .join('');
-    
+                            ui.qualityMenu.innerHTML = qualityLevels.levels_.map((level, index) => `
+                                <li data-level="${index}" data-quality="${level.height ? `${level.height}p` : 'Auto'}" role="menuitem">
+                                    <span>${level.height ? `${level.height}p` : 'Auto'}</span>
+                                    ${index === qualityLevels.selectedIndex ? '<span class="material-icons">check</span>' : ''}
+                                </li>
+                            `).concat(`
+                                <li data-level="-1" data-quality="Auto" role="menuitem">
+                                    <span>Auto</span>
+                                    ${qualityLevels.selectedIndex === -1 ? '<span class="material-icons">check</span>' : ''}
+                                </li>
+                            `).join('');
                             ui.qualityMenu.querySelectorAll('li').forEach(li => {
                                 li.addEventListener('click', () => {
                                     if (isLocked || isIframeMode) return;
                                     const levelIndex = parseInt(li.dataset.level);
-    
                                     try {
-                                        qualityLevels.levels_.forEach((level, idx) => {
-                                            level.enabled = (levelIndex === -1 || idx === levelIndex);
-                                        });
-                                        manualQualitySelected = true;
+                                        qualityLevels.selectedIndex = levelIndex;
+                                        manualQualitySelected = true; // Disable auto-quality
                                         console.log('Selected quality level:', levelIndex, li.dataset.quality);
-    
-                                        // Update UI
                                         ui.qualityMenu.querySelectorAll('li').forEach(el => {
                                             el.classList.remove('active');
                                             el.querySelector('.material-icons')?.remove();
                                         });
                                         li.classList.add('active');
                                         li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
-    
                                         if (ui.qualityBadge) {
                                             ui.qualityBadge.textContent = li.dataset.quality;
                                             ui.qualityBadge.classList.add('pulse');
@@ -1623,11 +1480,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 });
                             });
                         });
-    
                         qualityLevels.on('change', () => {
                             const selectedLevel = qualityLevels.levels_[qualityLevels.selectedIndex];
-                            if (ui.qualityBadge && !manualQualitySelected) {
-                                ui.qualityBadge.textContent = selectedLevel?.height ? `${selectedLevel.height}p` : 'Auto';
+                            if (ui.qualityBadge) {
+                                ui.qualityBadge.textContent = selectedLevel && selectedLevel.height ? `${selectedLevel.height}p` : 'Auto';
                                 console.log('Quality changed:', ui.qualityBadge.textContent);
                             }
                         });
@@ -1637,41 +1493,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     // MP4 or other sources
-                    ui.qualityMenu.innerHTML = mp4Sources
-                        .map(s => `
-                            <li data-url="/proxy?url=${encodeURIComponent(s.url)}" data-quality="${s.quality || 'Unknown'}" data-type="${s.type}" role="menuitem">
-                                <span>${s.quality || 'Unknown'}</span>
-                                ${s.quality === initialSource.quality ? '<span class="material-icons">check</span>' : ''}
-                            </li>
-                        `)
-                        .join('');
-    
+                    ui.qualityMenu.innerHTML = mp4Sources.map(s => `
+                        <li data-url="/proxy?url=${encodeURIComponent(s.url)}" data-quality="${s.quality || 'Unknown'}" data-type="${s.type}" role="menuitem">
+                            <span>${s.quality || 'Unknown'}</span>
+                            ${s.quality === initialSource.quality ? '<span class="material-icons">check</span>' : ''}
+                        </li>
+                    `).join('');
                     ui.qualityMenu.querySelectorAll('li').forEach(li => {
                         li.addEventListener('click', async () => {
                             if (isLocked || isIframeMode) return;
                             const { quality, url, type } = li.dataset;
                             const currentTime = player.currentTime();
-    
                             try {
                                 showLoadingSpinner();
                                 console.log('Switching to quality:', quality, url, type);
                                 player.src({ src: url, type: getSourceType(url, type) });
                                 await player.load();
                                 player.currentTime(currentTime);
-                                await player.play().catch(err => {
+                                player.play().catch(err => {
                                     console.error('Playback failed after quality switch:', err);
                                     displayError('Failed to play video');
                                 });
-                                manualQualitySelected = true;
-    
-                                // Update UI
+                                manualQualitySelected = true; // Disable auto-quality
                                 ui.qualityMenu.querySelectorAll('li').forEach(el => {
                                     el.classList.remove('active');
                                     el.querySelector('.material-icons')?.remove();
                                 });
                                 li.classList.add('active');
                                 li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
-    
                                 if (ui.qualityBadge) {
                                     ui.qualityBadge.textContent = quality;
                                     ui.qualityBadge.classList.add('pulse');
@@ -1682,7 +1531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 console.error('Quality switch failed:', err);
                                 if (retryCount < MAX_RETRIES) {
                                     retryCount++;
-                                    setTimeout(() => initializePlayer(videoId), 1000 * retryCount);
+                                    setTimeout(() => initializePlayer(), 1000 * retryCount);
                                 } else {
                                     displayError('Failed to switch quality after retries');
                                 }
@@ -1695,8 +1544,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (ui.qualityMenu) {
                 ui.qualityMenu.innerHTML = '<li role="menuitem">No quality options available</li>';
             }
-    
-            // Player event listeners
             player.on('loadedmetadata', () => {
                 if (!isIframeMode) {
                     const duration = player.duration();
@@ -1706,33 +1553,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 hideLoadingSpinner();
             });
-    
             player.on('error', () => {
                 const error = player.error();
                 if (retryCount < MAX_RETRIES) {
                     retryCount++;
-                    setTimeout(() => initializePlayer(videoId), 1000 * retryCount);
+                    setTimeout(() => initializePlayer(), 1000 * retryCount);
                 } else {
                     displayError(`Playback failed: ${error?.message || 'Unknown error'}`);
                 }
             });
-    
             player.on('waiting', showLoadingSpinner);
             player.on('playing', () => {
                 hideLoadingSpinner();
                 videoPlayer.classList.add('playing');
                 videoPlayer.classList.remove('paused');
             });
-    
-            // Restore saved playback position
             const savedTime = localStorage.getItem(`playback_${videoId}`);
-            if (savedTime && !isIframeMode && !is_live) {
-                player.currentTime(parseFloat(savedTime));
-            }
-    
-            // Load bookmarks
+            if (savedTime && !isIframeMode) player.currentTime(parseFloat(savedTime));
             loadBookmarks(videoId);
-    
         } catch (err) {
             console.error('Initialization failed:', err);
             displayError(err.message);
@@ -1740,300 +1578,129 @@ document.addEventListener('DOMContentLoaded', () => {
             hideLoadingSpinner();
         }
     };
-    
-    const setupVideoJsPlayer = async (source, thumbnail, subtitles, audio_options, meta, isLive, videoId) => {
-        if (isIframeMode) {
-            isIframeMode = false;
-            videoPlayer.classList.remove('iframe-active');
-            ui.iframePlayerContainer.innerHTML = '';
-            if (youtubePlayer) {
-                youtubePlayer.destroy();
-                youtubePlayer = null;
+
+        // Event Listeners
+        const setupEventListeners = () => {
+            // Play/Pause
+            if (ui.centerControl) {
+                ui.centerControl.addEventListener('click', togglePlay);
             }
-        }
     
-        let rawUrl = source.url;
-        try {
-            // Avoid nested proxy URLs
-            if (rawUrl.includes('/proxy?url=')) {
-                const urlParams = new URLSearchParams(rawUrl.split('?')[1]);
-                rawUrl = decodeURIComponent(urlParams.get('url'));
-            } else {
-                rawUrl = decodeURIComponent(rawUrl);
-            }
-        } catch (e) {
-            console.warn('URL decoding failed:', rawUrl, e);
-        }
-    
-        const sourceUrl = `/proxy?url=${encodeURIComponent(rawUrl)}`;
-        showLoadingSpinner();
-    
-        try {
-            player.src({
-                src: sourceUrl,
-                type: getSourceType(rawUrl, source.type)
-            });
-            await player.load();
-        } catch (err) {
-            console.error('Error setting source:', err);
-            displayError('Failed to load video source');
-            hideLoadingSpinner();
-            return;
-        }
-    
-        player.poster(thumbnail || '/static/nexfix-logo.jpg');
-        player.playbackRates([0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4]);
-    
-        // Setup subtitles
-        if (subtitles.length && ui.captionMenu) {
-            ui.captionMenu.innerHTML = `<li data-track="OFF" class="active" role="menuitem">OFF <span class="material-icons">check</span></li>` +
-                subtitles.map(sub => `
-                    <li data-track="${sub.url}" data-label="${sub.name}" data-lang="${sub.language}" role="menuitem">
-                        ${sub.name} (${sub.language})
-                    </li>
-                `).join('');
-    
-            subtitles.forEach(sub => {
-                try {
-                    player.addRemoteTextTrack({
-                        kind: 'subtitles',
-                        src: sub.url,
-                        label: sub.name,
-                        language: sub.language,
-                        default: sub.default || false
-                    }, false);
-                } catch (err) {
-                    console.error('Error loading subtitle:', sub.url, err);
-                    displayError(`Failed to load subtitle: ${sub.name}`);
-                }
-            });
-        } else if (ui.captionMenu) {
-            ui.captionMenu.innerHTML = '<li data-track="OFF" class="active" role="menuitem">No subtitles <span class="material-icons">check</span></li>';
-        }
-    
-        // Deduplicate audio options
-        const uniqueAudioOptions = audio_options.reduce((acc, track) => {
-            const key = `${track.name}-${track.language}-${track.url}`;
-            if (!acc.seen.has(key)) {
-                acc.seen.add(key);
-                acc.tracks.push({
-                    ...track,
-                    default: track.default || acc.tracks.length === 0
-                });
-            }
-            return acc;
-        }, { seen: new Set(), tracks: [] }).tracks;
-    
-        // Setup audio tracks for HLS
-        if (uniqueAudioOptions.length && ui.audioTrackMenu && source.type === 'application/x-mpegURL') {
-            // Initialize audio tracks menu
-            ui.audioTrackMenu.innerHTML = uniqueAudioOptions.map((track, index) => `
-                <li data-track="${track.url}" data-label="${track.name}" data-lang="${track.language}" role="menuitem">
-                    ${track.name} (${track.language})
-                    ${track.default || index === 0 ? '<span class="material-icons">check</span>' : ''}
-                </li>
-            `).join('');
-    
-            // Add audio tracks to player
-            const audioTracks = player.audioTracks();
-            uniqueAudioOptions.forEach((track, index) => {
-                try {
-                    audioTracks.addTrack(new videojs.AudioTrack({
-                        id: track.url,
-                        kind: 'alternative',
-                        label: `${track.name} (${track.language})`,
-                        language: track.language,
-                        enabled: track.default || index === 0
-                    }));
-                } catch (err) {
-                    console.error('Error adding audio track:', track.url, err);
-                    displayError(`Failed to load audio track: ${track.name}`);
-                }
-            });
-    
-            // Handle audio track selection
-            ui.audioTrackMenu.querySelectorAll('li').forEach(li => {
-                li.addEventListener('click', async () => {
+            // Fast Forward/Rewind
+            if (ui.fastRewind) {
+                ui.fastRewind.addEventListener('click', () => {
                     if (isLocked || isIframeMode) return;
-                    const trackUrl = li.dataset.track;
-                    const trackLabel = li.dataset.label;
-                    const currentTime = player.currentTime();
-    
-                    try {
-                        showLoadingSpinner();
-                        console.log('Switching to audio track:', trackLabel, trackUrl);
-    
-                        // Update audio track in HLS manifest
-                        const hls = player.tech(true).hls;
-                        if (hls) {
-                            hls.audioTracks().forEach(track => {
-                                track.enabled = track.id === trackUrl;
-                            });
-                        }
-    
-                        // Update UI
-                        ui.audioTrackMenu.querySelectorAll('li').forEach(el => {
-                            el.classList.remove('active');
-                            el.querySelector('.material-icons')?.remove();
-                        });
-                        li.classList.add('active');
-                        li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
-    
-                        // Update audio track selection
-                        audioTracks.forEach(track => {
-                            track.enabled = track.id === trackUrl;
-                        });
-    
-                        togglePanel(ui.settings, false);
-                    } catch (err) {
-                        console.error('Audio track switch failed:', err);
-                        displayError('Failed to switch audio track');
-                    } finally {
-                        hideLoadingSpinner();
-                    }
+                    const newTime = Math.max(0, player.currentTime() - SEEK_AMOUNT);
+                    player.currentTime(newTime);
+                    showSeekFeedback('left', -SEEK_AMOUNT);
                 });
-            });
-    
-            // Handle audio track changes
-            audioTracks.addEventListener('change', () => {
-                const enabledTrack = Array.from(audioTracks).find(track => track.enabled);
-                console.log('Audio track changed:', enabledTrack?.label);
-            });
-        } else if (ui.audioTrackMenu) {
-            ui.audioTrackMenu.innerHTML = '<li data-track="default" class="active" role="menuitem">Default Audio <span class="material-icons">check</span></li>';
-        }
-    
-        // Update meta and live indicator
-        updateMeta(meta);
-        chapters = meta.chapters || [];
-        annotations = meta.annotations || [];
-        showLiveIndicator(isLive);
-    
-        // Handle live stream behavior
-        if (isLive) {
-            player.liveTracker.on('liveedgechange', () => {
-                if (ui.liveBtn) {
-                    ui.liveBtn.classList.toggle('live-edge', player.liveTracker.atLiveEdge());
-                    ui.liveBtn.disabled = player.liveTracker.atLiveEdge();
-                }
-            });
-    
-            if (ui.liveBtn) {
-                ui.liveBtn.addEventListener('click', () => {
-                    if (!player.liveTracker.atLiveEdge()) {
-                        player.liveTracker.seekToLiveEdge();
-                        console.log('Seeking to live edge');
-                    }
+            }
+            if (ui.fastForward) {
+                ui.fastForward.addEventListener('click', () => {
+                    if (isLocked || isIframeMode) return;
+                    const newTime = Math.min(player.duration(), player.currentTime() + SEEK_AMOUNT);
+                    player.currentTime(newTime);
+                    showSeekFeedback('right', SEEK_AMOUNT);
                 });
             }
     
-            if (ui.progressArea) ui.progressArea.style.pointerEvents = 'none';
-            if (ui.fastRewind) ui.fastRewind.disabled = true;
-            if (ui.fastForward) ui.fastForward.disabled = true;
-        }
+            // Volume Control
+            if (ui.volumeSlider) {
+                ui.volumeSlider.addEventListener('input', () => {
+                    setVolume(ui.volumeSlider.value / 100);
+                });
+            }
+            if (ui.volume) {
+                ui.volume.addEventListener('click', () => {
+                    if (isLocked || isIframeMode) return;
+                    setVolume(player.volume() === 0 ? 1 : 0);
+                });
+            }
     
-        if (ui.qualityBadge) ui.qualityBadge.textContent = source.quality || 'Auto';
-        manageAnnotations();
-        hideLoadingSpinner();
-    };
-    // Event listeners
-    const setupEventListeners = () => {
-        if (ui.centerControl) {
-            ui.centerControl.addEventListener('click', togglePlay);
-        }
-        if (ui.fastRewind) {
-            ui.fastRewind.addEventListener('click', () => {
-                if (isLocked || isIframeMode) return;
-                const newTime = Math.max(0, player.currentTime() - SEEK_AMOUNT);
-                player.currentTime(newTime);
-                showSeekFeedback('left', -SEEK_AMOUNT);
-            });
-        }
-        if (ui.fastForward) {
-            ui.fastForward.addEventListener('click', () => {
-                if (isLocked || isIframeMode) return;
-                const newTime = Math.min(player.duration(), player.currentTime() + SEEK_AMOUNT);
-                player.currentTime(newTime);
-                showSeekFeedback('right', SEEK_AMOUNT);
-            });
-        }
-        if (ui.volumeSlider) {
-            ui.volumeSlider.addEventListener('input', () => setVolume(ui.volumeSlider.value / 100));
-        }
-        if (ui.volume) {
-            ui.volume.addEventListener('click', () => setVolume(player.volume() === 0 ? 1 : 0));
-        }
-        if (ui.fullscreen) {
-            ui.fullscreen.addEventListener('click', toggleFullscreen);
-        }
-        if (ui.pictureInPicture) {
-            ui.pictureInPicture.addEventListener('click', togglePipMode);
-        }
-        if (ui.theaterMode) {
-            ui.theaterMode.addEventListener('click', toggleTheaterMode);
-        }
-        if (ui.progressArea) {
-            ui.progressArea.addEventListener('click', (e) => {
-                if (isLocked || isIframeMode) return;
-                const rect = ui.progressArea.getBoundingClientRect();
-                const pos = (e.clientX - rect.left) / rect.width;
-                const newTime = pos * player.duration();
-                player.currentTime(newTime);
-                showControls();
-            });
-        }
-        if (ui.autoPlay) {
-            ui.autoPlay.addEventListener('click', () => {
-                ui.autoPlay.classList.toggle('active');
-                localStorage.setItem('autoplay', ui.autoPlay.classList.contains('active'));
-            });
-        }
-        
-        document.querySelectorAll('.settings li').forEach(item => {
-            item.addEventListener('click', (e) => {
-                if (isLocked) return;
-                const li = e.target.closest('li');
-                if (!li || !li.dataset.label) return;
-                document.querySelectorAll('.settings-panel').forEach(panel => panel.classList.remove('active'));
-                const panel = document.querySelector(`.settings-panel[data-label="${li.dataset.label}"]`);
-                if (panel) panel.classList.add('active');
-            });
-        });
-        if (ui.settingsBtn) {
-            ui.settings.querySelectorAll('.back-arrow').forEach(arrow => {
-                arrow.addEventListener('click', (e) => {
+            // Fullscreen
+            if (ui.fullscreen) {
+                ui.fullscreen.addEventListener('click', toggleFullscreen);
+            }
+    
+            // Picture-in-Picture
+            if (ui.pictureInPicture) {
+                ui.pictureInPicture.addEventListener('click', togglePipMode);
+            }
+    
+            // Theater Mode
+            if (ui.theaterMode) {
+                ui.theaterMode.addEventListener('click', toggleTheaterMode);
+            }
+    
+            // Progress Bar
+            if (ui.progressArea) {
+                ui.progressArea.addEventListener('click', (e) => {
+                    if (isLocked || isIframeMode) return;
+                    const rect = ui.progressArea.getBoundingClientRect();
+                    const pos = (e.clientX - rect.left) / rect.width;
+                    if (isIframeMode && youtubePlayer) {
+                        youtubePlayer.seekTo(pos * youtubePlayer.getDuration(), true);
+                    } else {
+                        player.currentTime(pos * player.duration());
+                    }
+                    showControls();
+                });
+            }
+
+            document.querySelectorAll('.settings li').forEach(item => {
+                item.addEventListener('click', (e) => {
                     if (isLocked) return;
-                    e.stopPropagation();
+                    const li = e.target.closest('li');
+                    if (!li || !li.dataset.label) return;
                     document.querySelectorAll('.settings-panel').forEach(panel => panel.classList.remove('active'));
-                    const target = document.querySelector(`[data-label="${e.target.dataset.label}"]`);
-                    if (target) target.classList.add('active');
+                    const panel = document.querySelector(`.settings-panel[data-label="${li.dataset.label}"]`);
+                    if (panel) panel.classList.add('active');
                 });
             });
-            ui.settingsBtn.addEventListener('click', () => {
-                if (isLocked) return;
-                togglePanel(ui.settings, !ui.settings.classList.contains('active'));
-            });
-        }
-        if (ui.captionsBtn) {
-            ui.captionsBtn.addEventListener('click', () => togglePanel(ui.captions, !ui.captions.classList.contains('active')));
-        }
-        if (ui.audioTrackBtn) {
-            ui.audioTrackBtn.addEventListener('click', () => togglePanel(ui.audioTracks, !ui.audioTracks.classList.contains('active')));
-        }
-        if (ui.captionMenu) {
-            ui.captionMenu.addEventListener('click', (e) => {
-                if (isLocked || isIframeMode) return;
-                const li = e.target.closest('li');
-                if (!li) return;
-                const trackUrl = li.dataset.track;
-                try {
-                    const tracks = player.remoteTextTracks();
-                    for (let i = 0; i < tracks.length; i++) {
-                        tracks[i].mode = tracks[i].src === trackUrl ? 'showing' : 'disabled';
-                    }
-                    if (trackUrl === 'OFF') {
-                        for (let i = 0; i < tracks.length; i++) tracks[i].mode = 'disabled';
-                    }
+
+            // Settings
+            if (ui.settingsBtn) {
+                ui.settings.querySelectorAll('.back-arrow').forEach(arrow => {
+                    arrow.addEventListener('click', (e) => {
+                        if (isLocked) return;
+                        e.stopPropagation();
+                        document.querySelectorAll('.settings-panel').forEach(panel => panel.classList.remove('active'));
+                        const target = document.querySelector(`[data-label="${e.target.dataset.label}"]`);
+                        if (target) target.classList.add('active');
+                    });
+                });
+                ui.settingsBtn.addEventListener('click', () => {
+                    if (isLocked) return;
+                    togglePanel(ui.settings, !ui.settings.classList.contains('active'));
+                });
+            }
+    
+            // Captions
+            if (ui.captionsBtn) {
+                ui.captionsBtn.addEventListener('click', () => {
+                    if (isLocked) return;
+                    togglePanel(ui.captions, !ui.captions.classList.contains('active'));
+                });
+            }
+    
+            // Audio Tracks
+            if (ui.audioTrackBtn) {
+                ui.audioTrackBtn.addEventListener('click', () => {
+                    if (isLocked) return;
+                    togglePanel(ui.audioTracks, !ui.audioTracks.classList.contains('active'));
+                });
+            }
+    
+            // Caption Selection
+            if (ui.captionMenu) {
+                ui.captionMenu.addEventListener('click', (e) => {
+                    if (isLocked || isIframeMode) return;
+                    const li = e.target.closest('li');
+                    if (!li) return;
+                    const trackUrl = li.dataset.track;
+                    player.textTracks().tracks_.forEach(track => {
+                        track.mode = trackUrl === track.src ? 'showing' : 'disabled';
+                    });
                     ui.captionMenu.querySelectorAll('li').forEach(el => {
                         el.classList.remove('active');
                         el.querySelector('.material-icons')?.remove();
@@ -2041,23 +1708,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     li.classList.add('active');
                     li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
                     togglePanel(ui.captions, false);
-                } catch (err) {
-                    console.error('Error switching subtitle:', err);
-                    displayError('Failed to switch subtitle');
-                }
-            });
-        }
-        if (ui.audioTrackMenu) {
-            ui.audioTrackMenu.addEventListener('click', (e) => {
-                if (isLocked || isIframeMode) return;
-                const li = e.target.closest('li');
-                if (!li) return;
-                const trackId = li.dataset.track;
-                try {
-                    const tracks = player.audioTracks();
-                    for (let i = 0; i < tracks.length; i++) {
-                        tracks[i].enabled = tracks[i].id === trackId;
-                    }
+                    showControls();
+                });
+            }
+    
+            // Audio Track Selection
+            if (ui.audioTrackMenu) {
+                ui.audioTrackMenu.addEventListener('click', (e) => {
+                    if (isLocked || isIframeMode) return;
+                    const li = e.target.closest('li');
+                    if (!li) return;
+                    const trackLabel = li.dataset.label;
+                    player.audioTracks().tracks_.forEach(track => {
+                        track.enabled = track.label === trackLabel;
+                    });
                     ui.audioTrackMenu.querySelectorAll('li').forEach(el => {
                         el.classList.remove('active');
                         el.querySelector('.material-icons')?.remove();
@@ -2065,289 +1729,420 @@ document.addEventListener('DOMContentLoaded', () => {
                     li.classList.add('active');
                     li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
                     togglePanel(ui.audioTracks, false);
-                } catch (err) {
-                    console.error('Error switching audio track:', err);
-                    displayError('Failed to switch audio track');
-                }
-            });
-        }
-        if (ui.bookmarkMenu) {
-            ui.bookmarkMenu.addEventListener('click', (e) => {
-                if (isLocked) return;
-                const li = e.target.closest('li');
-                const icon = e.target.closest('.material-icons');
-                if (!li && !icon) return;
-                if (icon?.dataset.action === 'delete') {
+                    showControls();
+                });
+            }
+    
+            // Autoplay
+            if (ui.autoPlay) {
+                ui.autoPlay.addEventListener('click', () => {
+                    if (isLocked) return;
+                    ui.autoPlay.classList.toggle('active');
+                    const isAutoPlay = ui.autoPlay.classList.contains('active');
+                    localStorage.setItem('autoplay', isAutoPlay);
+                    if (isAutoPlay && !isIframeMode) {
+                        player.play().catch(() => {});
+                    }
+                    showControls();
+                });
+            }
+    
+            // Lock Controls
+            if (ui.lockBtn) {
+                ui.lockBtn.addEventListener('click', toggleLock);
+            }
+    
+            // Orientation Lock
+            if (ui.orientationBtn) {
+                ui.orientationBtn.addEventListener('click', toggleOrientationLock);
+            }
+    
+            // Skip Ad
+            if (ui.skipAdBtn) {
+                ui.skipAdBtn.addEventListener('click', () => {
+                    if (ui.skipAdBtn.disabled) return;
+                    // Handled in startAd
+                });
+            }
+    
+            // Stats Toggle
+            if (ui.statsToggle) {
+                ui.statsToggle.addEventListener('click', () => {
+                    ui.statsToggle.classList.toggle('active');
+                    updateStatsPanel();
+                    showControls();
+                });
+            }
+    
+            // Chapter Markers Toggle
+            if (ui.chapterMarkersToggle) {
+                ui.chapterMarkersToggle.addEventListener('click', () => {
+                    showChapterMarkers = !showChapterMarkers;
+                    ui.chapterMarkersToggle.classList.toggle('active', showChapterMarkers);
+                    addChapterMarkers();
+                    showControls();
+                });
+            }
+    
+            // Swipe Controls Toggle
+            if (ui.swipeControlsToggle) {
+                ui.swipeControlsToggle.addEventListener('click', () => {
+                    swipeControlsEnabled = !swipeControlsEnabled;
+                    ui.swipeControlsToggle.classList.toggle('active', swipeControlsEnabled);
+                    showControls();
+                });
+            }
+    
+            // Loop Toggle
+            if (ui.loopToggle) {
+                ui.loopToggle.addEventListener('click', () => {
+                    isLooping = !isLooping;
+                    if (!isIframeMode) player.loop(isLooping);
+                    ui.loopToggle.classList.toggle('active', isLooping);
+                    showControls();
+                });
+            }
+    
+            // Auto Quality Toggle
+            if (ui.autoQualityToggle) {
+                ui.autoQualityToggle.addEventListener('click', () => {
+                    autoQualityEnabled = !autoQualityEnabled;
+                    ui.autoQualityToggle.classList.toggle('active', autoQualityEnabled);
+                    if (autoQualityEnabled) manualQualitySelected = false;
+                    showControls();
+                });
+            }
+    
+            // Add Annotation
+            if (ui.addAnnotationBtn) {
+                ui.addAnnotationBtn.addEventListener('click', () => {
+                    if (isLocked || isIframeMode) return;
+                    const time = player.currentTime();
+                    addAnnotation(time, 'New Annotation');
+                    togglePanel(ui.annotationPanel, true);
+                    showControls();
+                });
+            }
+    
+            // Custom Playback Speed
+            if (ui.saveCustomSpeedBtn && ui.customSpeedInput) {
+                ui.saveCustomSpeedBtn.addEventListener('click', () => {
+                    if (isLocked || isIframeMode) return;
+                    const speed = parseFloat(ui.customSpeedInput.value);
+                    if (speed >= 0.25 && speed <= 4) {
+                        player.playbackRate(speed);
+                        showSpeedFeedback(speed);
+                    }
+                    showControls();
+                });
+            }
+    
+            // Annotation Menu
+            if (ui.annotationMenu) {
+                ui.annotationMenu.addEventListener('click', (e) => {
+                    if (isLocked || isIframeMode) return;
+                    const li = e.target.closest('li');
+                    if (!li) return;
                     const index = parseInt(li.dataset.index);
-                    deleteBookmark(index);
-                } else if (li) {
+                    const action = e.target.dataset.action;
+                    if (action === 'edit') {
+                        const newText = prompt('Edit annotation text:', annotations[index].text);
+                        if (newText) editAnnotation(index, { text: newText });
+                    } else if (action === 'delete') {
+                        deleteAnnotation(index);
+                    }
+                    showControls();
+                });
+            }
+    
+            // Bookmark Menu
+            if (ui.bookmarkMenu) {
+                ui.bookmarkMenu.addEventListener('click', (e) => {
+                    if (isLocked) return;
+                    const li = e.target.closest('li');
+                    if (!li) return;
                     const time = parseFloat(li.dataset.time);
-                    if (isIframeMode && youtubePlayer) {
-                        youtubePlayer.seekTo(time, true);
+                    const index = parseInt(li.dataset.index);
+                    const action = e.target.dataset.action;
+                    if (action === 'delete') {
+                        deleteBookmark(index);
                     } else {
-                        player.currentTime(time);
+                        if (isIframeMode && youtubePlayer) {
+                            youtubePlayer.seekTo(time, true);
+                        } else {
+                            player.currentTime(time);
+                        }
                     }
-                    togglePanel(ui.bookmarkPanel, false);
-                }
-            });
-        }
-        if (ui.annotationMenu) {
-            ui.annotationMenu.addEventListener('click', (e) => {
-                if (isLocked) return;
-                const li = e.target.closest('li');
-                const icon = e.target.closest('.material-icons');
-                if (!li && !icon) return;
-                const index = parseInt(li.dataset.index);
-                if (icon?.dataset.action === 'edit') {
-                    const newText = prompt('Edit annotation text:', annotations[index].text);
-                    if (newText) editAnnotation(index, { text: newText });
-                } else if (icon?.dataset.action === 'delete') {
-                    deleteAnnotation(index);
-                } else if (li) {
-                    if (isIframeMode && youtubePlayer) {
-                        youtubePlayer.seekTo(annotations[index].startTime, true);
-                    } else {
-                        player.currentTime(annotations[index].startTime);
+                    showControls();
+                });
+            }
+    
+            // Playlist Menu
+            if (ui.playlistMenu) {
+                ui.playlistMenu.addEventListener('click', (e) => {
+                    if (isLocked) return;
+                    const li = e.target.closest('li');
+                    if (!li) return;
+                    const index = parseInt(li.dataset.index);
+                    const action = e.target.dataset.action;
+                    if (action === 'play') {
+                        playPlaylistItem(index);
+                    } else if (action === 'remove') {
+                        removeFromPlaylist(index);
                     }
-                    togglePanel(ui.annotationPanel, false);
+                    showControls();
+                });
+            }
+    
+            // Download Queue Menu
+            if (ui.downloadQueueMenu) {
+                ui.downloadQueueMenu.addEventListener('click', (e) => {
+                    if (isLocked) return;
+                    const li = e.target.closest('li');
+                    if (!li) return;
+                    const index = parseInt(li.dataset.index);
+                    const action = e.target.dataset.action;
+                    if (action === 'cancel') {
+                        cancelDownload(index);
+                    }
+                    showControls();
+                });
+            }
+    
+            // Context Menu
+            videoPlayer.addEventListener('contextmenu', showContextMenu);
+            if (ui.contextMenu) {
+                ui.contextMenu.addEventListener('click', (e) => {
+                    const action = e.target.dataset.action;
+                    if (action === 'play-pause') togglePlay();
+                    else if (action === 'add-bookmark') saveBookmark(player.currentTime());
+                    else if (action === 'add-annotation') addAnnotation(player.currentTime(), 'New Annotation');
+                    else if (action === 'toggle-pip') togglePipMode();
+                    else if (action === 'toggle-fullscreen') toggleFullscreen();
+                    else if (action === 'show-shortcuts') showKeyboardShortcuts();
+                    hideContextMenu();
+                });
+            }
+            document.addEventListener('click', (e) => {
+                if (!ui.contextMenu?.contains(e.target)) hideContextMenu();
+            });
+    
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (isLocked) {
+                    if (e.key === 'l' || e.key === 'L') toggleLock();
+                    return;
+                }
+                switch (e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        togglePlay();
+                        break;
+                    case 'm':
+                    case 'M':
+                        setVolume(player.volume() === 0 ? 1 : 0);
+                        break;
+                    case 'f':
+                    case 'F':
+                        toggleFullscreen();
+                        break;
+                    case 't':
+                    case 'T':
+                        toggleTheaterMode();
+                        break;
+                    case 'b':
+                    case 'B':
+                        saveBookmark(player.currentTime());
+                        break;
+                    case 'l':
+                    case 'L':
+                        toggleLock();
+                        break;
+                    case 'ArrowLeft':
+                        if (isIframeMode && youtubePlayer) {
+                            youtubePlayer.seekTo(youtubePlayer.getCurrentTime() - SEEK_AMOUNT, true);
+                        } else {
+                            player.currentTime(player.currentTime() - SEEK_AMOUNT);
+                        }
+                        showSeekFeedback('left', -SEEK_AMOUNT);
+                        break;
+                    case 'ArrowRight':
+                        if (isIframeMode && youtubePlayer) {
+                            youtubePlayer.seekTo(youtubePlayer.getCurrentTime() + SEEK_AMOUNT, true);
+                        } else {
+                            player.currentTime(player.currentTime() + SEEK_AMOUNT);
+                        }
+                        showSeekFeedback('right', SEEK_AMOUNT);
+                        break;
+                    case 'ArrowUp':
+                        setVolume(player.volume() + 0.1);
+                        break;
+                    case 'ArrowDown':
+                        setVolume(player.volume() - 0.1);
+                        break;
+                    case 's':
+                    case 'S':
+                        showKeyboardShortcuts();
+                        break;
                 }
             });
-        }
-        if (ui.playlistMenu) {
-            ui.playlistMenu.addEventListener('click', (e) => {
-                if (isLocked) return;
-                const li = e.target.closest('li');
-                const icon = e.target.closest('.material-icons');
-                if (!li && !icon) return;
-                const index = parseInt(li.dataset.index);
-                if (icon?.dataset.action === 'play') {
-                    playPlaylistItem(index);
-                } else if (icon?.dataset.action === 'remove') {
-                    removeFromPlaylist(index);
+    
+            // Touch Events
+            videoPlayer.addEventListener('touchstart', (e) => {
+                handleTap(e);
+                handleSwipeStart(e);
+                handleSpeedHold(e);
+                handlePinchZoom(e);
+            }, { passive: false });
+            videoPlayer.addEventListener('touchmove', (e) => {
+                handleSwipeMove(e);
+                handlePinchZoom(e);
+            }, { passive: false });
+            videoPlayer.addEventListener('touchend', () => {
+                handleSwipeEnd();
+                endPinchZoom();
+                releaseSpeedHold();
+            }, { passive: true });
+    
+            // Mouse Events
+            videoPlayer.addEventListener('click', handleTap);
+            videoPlayer.addEventListener('mousemove', () => {
+                if (!isLocked) showControls();
+            });
+            videoPlayer.addEventListener('mouseleave', () => {
+                if (!player.paused() && !isLocked) hideControls();
+            });
+    
+            // Player Events
+            player.on('timeupdate', () => {
+                if (isIframeMode) return;
+                const currentTime = player.currentTime();
+                const duration = player.duration();
+                if (ui.current) ui.current.textContent = formatTime(currentTime);
+                if (ui.progressBar && duration > 0) {
+                    ui.progressBar.style.width = `${(currentTime / duration) * 100}%`;
                 }
-            });
-        }
-        if (ui.downloadQueueMenu) {
-            ui.downloadQueueMenu.addEventListener('click', (e) => {
-                if (isLocked) return;
-                const li = e.target.closest('li');
-                const icon = e.target.closest('.material-icons');
-                if (!li || !icon || icon.dataset.action !== 'cancel') return;
-                const index = parseInt(li.dataset.index);
-                cancelDownload(index);
-            });
-        }
-        if (ui.statsToggle) {
-            ui.statsToggle.addEventListener('click', () => {
-                ui.statsToggle.classList.toggle('active');
+                if (ui.bufferedBar && player.buffered().length) {
+                    const bufferedEnd = player.buffered().end(player.buffered().length - 1);
+                    ui.bufferedBar.style.width = `${(bufferedEnd / duration) * 100}%`;
+                }
+                const videoId = new URLSearchParams(window.location.search).get('video_id');
+                localStorage.setItem(`playback_${videoId}`, currentTime);
+                manageAnnotations();
                 updateStatsPanel();
             });
-        }
-        if (ui.chapterMarkersToggle) {
-            ui.chapterMarkersToggle.addEventListener('click', () => {
-                showChapterMarkers = !showChapterMarkers;
-                ui.chapterMarkersToggle.classList.toggle('active', showChapterMarkers);
-                addChapterMarkers();
+    
+            player.on('ended', () => {
+                if (isIframeMode) return;
+                videoPlayer.classList.remove('playing');
+                videoPlayer.classList.add('paused');
+                if (ui.centerControl) {
+                    ui.centerControl.innerHTML = '<span class="material-icons">replay</span>';
+                    ui.centerControl.setAttribute('aria-label', 'Replay');
+                }
+                if (ui.autoPlay?.classList.contains('active')) {
+                    const currentIndex = playlist.findIndex(item => item.active);
+                    if (currentIndex < playlist.length - 1) {
+                        playPlaylistItem(currentIndex + 1);
+                    }
+                }
+                showControls();
             });
-        }
-        if (ui.swipeControlsToggle) {
-            ui.swipeControlsToggle.addEventListener('click', () => {
-                swipeControlsEnabled = !swipeControlsEnabled;
-                ui.swipeControlsToggle.classList.toggle('active', swipeControlsEnabled);
+    
+            player.on('volumechange', () => {
+                if (isIframeMode) return;
+                setVolume(player.volume());
             });
-        }
-        if (ui.loopToggle) {
-            ui.loopToggle.addEventListener('click', () => {
-                isLooping = !isLooping;
-                ui.loopToggle.classList.toggle('active', isLooping);
-                player.loop(isLooping);
+    
+            // Fullscreen Change
+            document.addEventListener('fullscreenchange', () => {
+                isFullscreen = isFullscreenActive();
+                videoPlayer.classList.toggle('fullscreen-mode', isFullscreen);
+                if (ui.fullscreen) {
+                    ui.fullscreen.innerHTML = `<span class="material-icons">${isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>`;
+                    ui.fullscreen.setAttribute('aria-label', isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen');
+                }
+                showControls();
             });
-        }
-        if (ui.autoQualityToggle) {
-            ui.autoQualityToggle.addEventListener('click', () => {
-                autoQualityEnabled = !autoQualityEnabled;
-                manualQualitySelected = !autoQualityEnabled;
-                ui.autoQualityToggle.classList.toggle('active', autoQualityEnabled);
-            });
-        }
-        if (ui.addAnnotationBtn) {
-            ui.addAnnotationBtn.addEventListener('click', () => {
-                if (isLocked || isIframeMode) return;
-                const text = prompt('Enter annotation text:');
-                if (text) {
-                    addAnnotation(player.currentTime(), text);
-                    togglePanel(ui.annotationPanel, true);
+    
+            // Network Status
+            if (navigator.connection) {
+                navigator.connection.addEventListener('change', () => {
+                    updateNetworkStatus();
+                    adjustQualityBasedOnNetwork(player.options_.sources);
+                });
+            }
+    
+            // Picture-in-Picture Events
+            player.on('enterpictureinpicture', () => {
+                isPipMode = true;
+                videoPlayer.classList.add('pip-mode');
+                if (ui.pictureInPicture) {
+                    ui.pictureInPicture.innerHTML = '<span class="material-icons">picture_in_picture_alt_off</span>';
+                    ui.pictureInPicture.setAttribute('aria-label', 'Exit Picture-in-Picture');
                 }
             });
-        }
-        if (ui.customSpeedInput && ui.saveCustomSpeedBtn) {
-            ui.saveCustomSpeedBtn.addEventListener('click', () => {
-                if (isLocked || isIframeMode) return;
-                const speed = parseFloat(ui.customSpeedInput.value);
-                if (speed >= 0.25 && speed <= 4) {
-                    player.playbackRate(speed);
-                    showSpeedFeedback(speed);
+            player.on('leavepictureinpicture', () => {
+                isPipMode = false;
+                videoPlayer.classList.remove('pip-mode');
+                if (ui.pictureInPicture) {
+                    ui.pictureInPicture.innerHTML = '<span class="material-icons">picture_in_picture_alt</span>';
+                    ui.pictureInPicture.setAttribute('aria-label', 'Enter Picture-in-Picture');
                 }
             });
-        }
-        if (ui.screenshotBtn) {
-            ui.screenshotBtn.addEventListener('click', captureScreenshot);
-        }
-        if (ui.shareBtn) {
-            ui.shareBtn.addEventListener('click', shareVideo);
-        }
-        if (ui.lockBtn) {
-            ui.lockBtn.addEventListener('click', toggleLock);
-        }
-        if (ui.orientationBtn) {
-            ui.orientationBtn.addEventListener('click', toggleOrientationLock);
-        }
-        if (ui.hdDownloadBtn) {
-            ui.hdDownloadBtn.addEventListener('click', () => {
-                const videoId = new URLSearchParams(window.location.search).get('video_id');
-                addToDownloadQueue(videoId, `${ui.videoTitle?.textContent || 'Video'} (HD)`);
-            });
-        }
-        if (ui.fastDownloadBtn) {
-            ui.fastDownloadBtn.addEventListener('click', () => {
-                const videoId = new URLSearchParams(window.location.search).get('video_id');
-                addToDownloadQueue(videoId, `${ui.videoTitle?.textContent || 'Video'} (Fast)`);
-            });
-        }
-        videoPlayer.addEventListener('click', handleTap);
-        videoPlayer.addEventListener('contextmenu', showContextMenu);
-        videoPlayer.addEventListener('touchstart', (e) => {
-            handleSwipeStart(e);
-            handleSpeedHold(e);
-        });
-        videoPlayer.addEventListener('touchmove', (e) => {
-            handleSwipeMove(e);
-            handlePinchZoom(e);
-        });
-        videoPlayer.addEventListener('touchend', () => {
-            handleSwipeEnd();
-            endPinchZoom();
-            releaseSpeedHold();
-        });
-        videoPlayer.addEventListener('mouseenter', showControls);
-        videoPlayer.addEventListener('mouseleave', hideControls);
-        videoPlayer.addEventListener('mousemove', debounce(showControls, 200));
-        document.addEventListener('fullscreenchange', () => {
-            isFullscreen = isFullscreenActive();
-            videoPlayer.classList.toggle('fullscreen-mode', isFullscreen);
-            if (ui.fullscreen) {
-                ui.fullscreen.innerHTML = `<span class="material-icons">${isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>`;
-                ui.fullscreen.setAttribute('aria-label', isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen');
+    
+            // Download Buttons
+            if (ui.hdDownloadBtn) {
+                ui.hdDownloadBtn.addEventListener('click', () => {
+                    const videoId = new URLSearchParams(window.location.search).get('video_id');
+                    addToDownloadQueue(videoId, `HD Download - ${ui.videoTitle?.textContent || 'Video'}`);
+                });
             }
-            showControls();
-        });
-        document.addEventListener('click', (e) => {
-            if (!ui.contextMenu || !ui.contextMenu.classList.contains('active')) return;
-            if (!e.target.closest('.context-menu')) hideContextMenu();
-        });
-        ui.contextMenu?.addEventListener('click', (e) => {
-            const li = e.target.closest('li');
-            if (!li) return;
-            const action = li.dataset.action;
-            if (action === 'play-pause') togglePlay();
-            else if (action === 'add-bookmark') saveBookmark(player.currentTime());
-            else if (action === 'add-annotation') addAnnotation(player.currentTime(), 'New Annotation');
-            else if (action === 'toggle-pip') togglePipMode();
-            else if (action === 'toggle-fullscreen') toggleFullscreen();
-            else if (action === 'show-shortcuts') showKeyboardShortcuts();
-            else if (action === 'capture-screenshot') captureScreenshot();
-            else if (action === 'share-video') shareVideo();
-            hideContextMenu();
-        });
-        ui.keyboardShortcutsOverlay?.addEventListener('click', () => {
-            ui.keyboardShortcutsOverlay.classList.remove('active');
-        });
-        document.addEventListener('keydown', (e) => {
-            if (isLocked && e.key !== 'l') return;
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            switch (e.key.toLowerCase()) {
-                case ' ':
-                    e.preventDefault();
-                    togglePlay();
-                    break;
-                case 'm':
-                    setVolume(player.volume() === 0 ? 1 : 0);
-                    break;
-                case 'f':
-                    toggleFullscreen();
-                    break;
-                case 't':
-                    toggleTheaterMode();
-                    break;
-                case 'l':
-                    toggleLock();
-                    break;
-                case 'arrowleft':
-                    if (isIframeMode && youtubePlayer) {
-                        youtubePlayer.seekTo(Math.max(0, youtubePlayer.getCurrentTime() - 5), true);
-                    } else {
-                        player.currentTime(Math.max(0, player.currentTime() - 5));
-                    }
-                    showSeekFeedback('left', -5);
-                    break;
-                case 'arrowright':
-                    if (isIframeMode && youtubePlayer) {
-                        youtubePlayer.seekTo(Math.min(youtubePlayer.getDuration(), youtubePlayer.getCurrentTime() + 5), true);
-                    } else {
-                        player.currentTime(Math.min(player.duration(), player.currentTime() + 5));
-                    }
-                    showSeekFeedback('right', 5);
-                    break;
-                case 'arrowup':
-                    setVolume(player.volume() + 0.1);
-                    break;
-                case 'arrowdown':
-                    setVolume(player.volume() - 0.1);
-                    break;
-                case 'b':
-                    saveBookmark(player.currentTime());
-                    break;
-                case 's':
-                    showKeyboardShortcuts();
-                    break;
-                case 'c':
-                    captureScreenshot();
-                    break;
-                case 'h':
-                    shareVideo();
-                    break;
+            if (ui.fastDownloadBtn) {
+                ui.fastDownloadBtn.addEventListener('click', () => {
+                    const videoId = new URLSearchParams(window.location.search).get('video_id');
+                    addToDownloadQueue(videoId, `Fast Download - ${ui.videoTitle?.textContent || 'Video'}`);
+                });
             }
-        });
-        window.addEventListener('resize', () => {
-            addChapterMarkers();
-            manageAnnotations();
-        });
-        window.addEventListener('orientationchange', () => {
-            if (!isOrientationLocked) {
-                addChapterMarkers();
-                manageAnnotations();
+        };
+    
+        // Initialize
+        const init = async () => {
+            // Load saved settings
+            const savedVolume = localStorage.getItem('volume');
+            if (savedVolume && !isIframeMode) setVolume(parseFloat(savedVolume));
+            
+            const savedBrightness = localStorage.getItem('brightness');
+            if (savedBrightness && !isIframeMode) setBrightness(parseFloat(savedBrightness));
+            
+            const savedAutoPlay = localStorage.getItem('autoplay');
+            if (savedAutoPlay === 'true' && ui.autoPlay) ui.autoPlay.classList.add('active');
+    
+            // Setup player
+            await initializePlayer();
+            setupEventListeners();
+            handleIframeRestrictions();
+            updateNetworkStatus();
+    
+            // Start ad if applicable
+            if (!isInIframe && !isIframeMode) {
+                startAd();
             }
+        };
+    
+        init().catch(err => {
+            console.error('Player initialization failed:', err);
+            displayError('Failed to initialize player');
         });
-    };
-
-    // Initialize stored settings
-    const initSettings = () => {
-        const savedVolume = localStorage.getItem('volume');
-        if (savedVolume !== null) setVolume(parseFloat(savedVolume));
-        const savedBrightness = localStorage.getItem('brightness');
-        if (savedBrightness !== null) setBrightness(parseFloat(savedBrightness));
-        const savedAutoplay = localStorage.getItem('autoplay');
-        if (savedAutoplay === 'true' && ui.autoPlay) ui.autoPlay.classList.add('active');
-        if (ui.chapterMarkersToggle) ui.chapterMarkersToggle.classList.toggle('active', showChapterMarkers);
-        if (ui.swipeControlsToggle) ui.swipeControlsToggle.classList.toggle('active', swipeControlsEnabled);
-        if (ui.autoQualityToggle) ui.autoQualityToggle.classList.toggle('active', autoQualityEnabled);
-    };
-
-    // Start ad after 5 seconds (for demo)
-    setTimeout(startAd, 5000);
-
-    // Initialize
-    initSettings();
-    setupEventListeners();
-    initializePlayer();
-});
+    
+        // Cleanup on unload
+        window.addEventListener('beforeunload', () => {
+            if (isIframeMode && youtubePlayer) {
+                youtubePlayer.destroy();
+            }
+            if (isInIframe && window._messageHandler) {
+                window.removeEventListener('message', window._messageHandler);
+            }
+            clearInterval(adCountdownInterval);
+        });
+    });
