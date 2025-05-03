@@ -289,6 +289,26 @@
     <script src="/static/videojs/videojs-contrib-hls.min.js"></script>
     <script src="/static/videojs/videojs-contrib-quality-levels.min.js"></script>
     <script src="/static/videojs/videojs-http-source-selector.min.js"></script>
-    <script src="/static/scripts.js" defer></script>
+    <script src="/static/scripts.js"></script>
+    <script>
+        // Request embed and initialize iframe player
+        async function initIframePlayer() {
+            try {
+                const response = await fetch('/request-embed?iframe_url=https%3A%2F%2Fsportsipl.vercel.app%2Fstar.html&user_id=test_user');
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || 'Failed to request embed');
+                setupIframePlayer(
+                    { url: data.sources[0].url },
+                    { title: data.title, description: data.description },
+                    data.video_id
+                );
+            } catch (err) {
+                console.error('Embed request failed:', err);
+                document.querySelector('.error-message').textContent = 'Failed to load embedded video: ' + err.message;
+                document.querySelector('.error-overlay').classList.remove('hidden');
+            }
+        }
+        initIframePlayer();
+    </script>
 </body>
 </html>

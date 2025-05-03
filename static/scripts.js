@@ -44,6 +44,22 @@ document.addEventListener('DOMContentLoaded', () => {
         .screenshot-btn, .share-btn { transition: transform 0.2s; }
         .screenshot-btn:hover, .share-btn:hover { transform: scale(1.1); }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .iframe-player-container { 
+            width: 100%; 
+            height: 100%; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            z-index: 10; 
+        }
+        .iframe-player-container iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+        .iframe-active video { 
+            display: none; 
+        }
     `;
     document.head.appendChild(style);
 
@@ -72,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // UI elements
     const ui = {
+        videoPlayer: document.querySelector('#videoPlayer'),
         centerControl: document.getElementById('centerControl'),
         controls: videoPlayer.querySelector('.controls'),
         fastRewind: videoPlayer.querySelector('.fast-rewind'),
@@ -138,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bookmarkPanel: document.getElementById('bookmarkPanel'),
         bookmarkMenu: document.getElementById('bookmarkMenu'),
         autoQualityFeedback: document.createElement('div'),
+        mainPlayer: document.querySelector('#mainPlayer'),
         iframePlayerContainer: document.getElementById('iframePlayerContainer'),
         annotationPanel: document.getElementById('annotationPanel'),
         annotationMenu: document.getElementById('annotationMenu'),
@@ -966,7 +984,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (url.includes('.mp4')) return 'video/mp4';
         if (url.includes('.ogv')) return 'video/ogg';
         if (url.includes('.flv')) return 'video/x-flv';
-        if (url.includes('embed') || url.includes('youtube.com') || url.includes('youtu.be')) return 'iframe';
+        if (url.includes('embed') || url.includes('youtube.com') || url.includes('youtu.be') || url.includes('twitch.tv')) return 'iframe';
         return 'video/mp4';
     };
 
@@ -1136,39 +1154,79 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     };
 
-    const extractYouTubeVideoId = (url) => {
-        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-        const match = url.match(regex);
-        return match ? match[1] : null;
-    };
-
     const setupIframePlayer = async (iframeSource, meta, videoId) => {
         if (!ui.iframePlayerContainer) {
             console.error('Iframe player container not found');
             displayError('Cannot load iframe video: container missing');
             return;
         }
+    
         isIframeMode = true;
-        videoPlayer.classList.add('iframe-active');
+        ui.videoPlayer.classList.add('iframe-active');
+        ui.mainPlayer.classList.add('hidden');
+        ui.iframePlayerContainer.classList.remove('hidden');
         player.pause();
-        player.reset();
+        player.src([]);
         ui.iframePlayerContainer.innerHTML = '';
+    
         if (youtubePlayer) {
             youtubePlayer.destroy();
             youtubePlayer = null;
         }
-        if (iframeSource.url.includes('youtube.com') || iframeSource.url.includes('youtu.be')) {
+    
+        const disableUIElements = () => {
+            if (ui.qualityMenu) ui.qualityMenu.innerHTML = '<li role="menuitem">Quality not available</li>';
+            if (ui.captionMenu) ui.captionMenu.innerHTML = '<li role="menuitem">Subtitles not available</li>';
+            if (ui.audioTrackMenu) ui.audioTrackMenu.innerHTML = '<li role="menuitem">Audio tracks not available</li>';
+            if (ui.settings) ui.settings.classList.remove('active');
+            if (ui.captions) ui.captions.classList.remove('active');
+            if (ui.audioTracks) ui.audioTracks.classList.remove('active');
+            if (ui.annotationPanel) ui.annotationPanel.classList.remove('active');
+        };
+    
+        try {
+            console.log('Input URL:', iframeSource.url);
+            let iframeUrl;
             try {
+                const response = await fetch(`/embed?url=${encodeURIComponent(iframeSource.url)}`);
+                console.log('Backend response status:', response.status);
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error('Backend error response:', errorData);
+                    let errorDetail;
+                    try {
+                        errorDetail = JSON.parse(errorData).detail;
+                    } catch {
+                        errorDetail = errorData || response.statusText;
+                    }
+                    throw new Error(`Backend error: ${errorDetail}`);
+                }
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const videoUrl = doc.querySelector('iframe')?.src || iframeSource.url;
+                iframeUrl = new URL(videoUrl);
+                console.log('Sanitized URL:', iframeUrl.href);
+                if (!['https:', 'http:'].includes(iframeUrl.protocol)) {
+                    throw new Error('Invalid URL protocol (must be http or https)');
+                }
+            } catch (err) {
+                throw new Error(`Invalid iframe URL: ${err.message}`);
+            }
+    
+            if (iframeUrl.hostname.includes('youtube.com') || iframeUrl.hostname.includes('youtu.be')) {
                 await loadYouTubeAPI();
-                const youtubeVideoId = extractYouTubeVideoId(iframeSource.url);
+                const youtubeVideoId = extractYouTubeVideoId(iframeUrl.href);
                 if (!youtubeVideoId) throw new Error('Invalid YouTube URL');
+    
                 const iframeContainer = document.createElement('div');
                 iframeContainer.id = `youtube-player-${videoId}`;
                 ui.iframePlayerContainer.appendChild(iframeContainer);
+    
                 youtubePlayer = new YT.Player(iframeContainer.id, {
                     videoId: youtubeVideoId,
                     playerVars: {
-                        autoplay: ui.autoPlay?.classList.contains('active') ? 1 : 0,
+                        autoplay: 0,
                         controls: 0,
                         modestbranding: 1,
                         rel: 0,
@@ -1180,11 +1238,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         onReady: () => {
                             console.log('YouTube player ready:', youtubeVideoId);
                             updateMeta(meta);
-                            videoPlayer.classList.add('paused');
+                            ui.videoPlayer.classList.add('paused');
                             if (ui.centerControl) {
                                 ui.centerControl.innerHTML = '<span class="material-icons">play_arrow</span>';
                                 ui.centerControl.setAttribute('aria-label', 'Play');
                             }
+    
                             setInterval(() => {
                                 if (youtubePlayer && ui.progressBar && ui.current && ui.totalDuration) {
                                     const currentTime = youtubePlayer.getCurrentTime();
@@ -1196,20 +1255,21 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                 }
                             }, 1000);
+    
                             hideLoadingSpinner();
                         },
                         onStateChange: (event) => {
                             console.log('YouTube player state:', event.data);
                             if (event.data === YT.PlayerState.PLAYING) {
-                                videoPlayer.classList.remove('paused');
-                                videoPlayer.classList.add('playing');
+                                ui.videoPlayer.classList.remove('paused');
+                                ui.videoPlayer.classList.add('playing');
                                 if (ui.centerControl) {
                                     ui.centerControl.innerHTML = '<span class="material-icons">pause</span>';
                                     ui.centerControl.setAttribute('aria-label', 'Pause');
                                 }
                             } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-                                videoPlayer.classList.remove('playing');
-                                videoPlayer.classList.add('paused');
+                                ui.videoPlayer.classList.remove('playing');
+                                ui.videoPlayer.classList.add('paused');
                                 if (ui.centerControl) {
                                     ui.centerControl.innerHTML = '<span class="material-icons">play_arrow</span>';
                                     ui.centerControl.setAttribute('aria-label', 'Play');
@@ -1223,39 +1283,113 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 });
-                if (ui.qualityMenu) ui.qualityMenu.innerHTML = '<li role="menuitem">Quality not available</li>';
-                if (ui.captionMenu) ui.captionMenu.innerHTML = '<li role="menuitem">Subtitles not available</li>';
-                if (ui.audioTrackMenu) ui.audioTrackMenu.innerHTML = '<li role="menuitem">Audio tracks not available</li>';
-            } catch (err) {
-                console.error('YouTube player setup failed:', err);
-                displayError('Failed to load YouTube video');
-                hideLoadingSpinner();
-            }
-        } else {
-            try {
+    
+                if (ui.centerControl) {
+                    ui.centerControl.onclick = () => {
+                        const isPlaying = ui.videoPlayer.classList.contains('playing');
+                        if (isPlaying) {
+                            youtubePlayer.pauseVideo();
+                        } else {
+                            youtubePlayer.playVideo();
+                        }
+                    };
+                }
+            } else if (iframeUrl.hostname.includes('twitch.tv') || iframeUrl.search.includes('channel=') || iframeUrl.pathname.includes('videos')) {
+                let channel = iframeUrl.searchParams.get('channel');
+                if (!channel) {
+                    const pathParts = iframeUrl.pathname.split('/').filter(p => p);
+                    channel = pathParts[pathParts[0] === 'videos' ? 1 : 0];
+                }
+                if (!channel) throw new Error('Invalid or missing Twitch channel');
+    
+                const parent = window.location.hostname || 'localhost';
+                const embedUrl = `https://player.twitch.tv/?channel=${encodeURIComponent(channel)}&parent=${encodeURIComponent(parent)}&muted=false`;
+    
                 const iframe = document.createElement('iframe');
-                iframe.src = iframeSource.url;
+                iframe.src = embedUrl;
                 iframe.setAttribute('frameborder', '0');
                 iframe.setAttribute('allowfullscreen', '');
-                iframe.setAttribute('allow', 'autoplay; encrypted-media');
+                iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+                iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups');
+                iframe.setAttribute('aria-label', meta.title || 'Twitch stream');
+                ui.iframePlayerContainer.appendChild(iframe);
+    
+                updateMeta(meta);
+                ui.videoPlayer.classList.add('playing');
+                if (ui.centerControl) {
+                    ui.centerControl.innerHTML = '<span class="material-icons">pause</span>';
+                    ui.centerControl.setAttribute('aria-label', 'Pause');
+                }
+    
+                let liveTime = 0;
+                const progressInterval = setInterval(() => {
+                    if (!isIframeMode || !ui.iframePlayerContainer.contains(iframe)) {
+                        clearInterval(progressInterval);
+                        return;
+                    }
+                    liveTime += 1;
+                    if (ui.current) ui.current.textContent = formatTime(liveTime);
+                    if (ui.totalDuration) ui.totalDuration.textContent = 'LIVE';
+                    if (ui.progressBar) ui.progressBar.style.width = '100%';
+                }, 1000);
+    
+                const toggleTwitchPlay = () => {
+                    const isPlaying = ui.videoPlayer.classList.contains('playing');
+                    iframe.contentWindow.postMessage(
+                        { event: isPlaying ? 'pause' : 'play' },
+                        'https://player.twitch.tv'
+                    );
+                    ui.videoPlayer.classList.toggle('playing', !isPlaying);
+                    ui.videoPlayer.classList.toggle('paused', isPlaying);
+                    if (ui.centerControl) {
+                        ui.centerControl.innerHTML = `<span class="material-icons">${isPlaying ? 'play_arrow' : 'pause'}</span>`;
+                        ui.centerControl.setAttribute('aria-label', isPlaying ? 'Play' : 'Pause');
+                    }
+                };
+                if (ui.centerControl) ui.centerControl.onclick = toggleTwitchPlay;
+    
+                hideLoadingSpinner();
+            } else {
+                const iframe = document.createElement('iframe');
+                iframe.src = iframeUrl.href;
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allowfullscreen', '');
+                iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+                iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups');
                 iframe.setAttribute('aria-label', meta.title || 'Embedded video');
                 ui.iframePlayerContainer.appendChild(iframe);
+    
                 updateMeta(meta);
-                if (ui.qualityMenu) ui.qualityMenu.innerHTML = '<li role="menuitem">Quality not available</li>';
-                if (ui.captionMenu) ui.captionMenu.innerHTML = '<li role="menuitem">Subtitles not available</li>';
-                if (ui.audioTrackMenu) ui.audioTrackMenu.innerHTML = '<li role="menuitem">Audio tracks not available</li>';
-                hideLoadingSpinner();
-            } catch (err) {
-                console.error('Iframe setup failed:', err);
-                displayError('Failed to load iframe video');
+                ui.videoPlayer.classList.add('playing');
+                if (ui.centerControl) {
+                    ui.centerControl.innerHTML = '<span class="material-icons">pause</span>';
+                    ui.centerControl.setAttribute('aria-label', 'Pause');
+                }
+    
+                if (ui.current) ui.current.textContent = '--:--';
+                if (ui.totalDuration) ui.totalDuration.textContent = '--:--';
+                if (ui.progressBar) ui.progressBar.style.width = '0%';
+    
+                ui.centerControl.onclick = () => {
+                    const isPlaying = ui.videoPlayer.classList.contains('playing');
+                    ui.videoPlayer.classList.toggle('playing', !isPlaying);
+                    ui.videoPlayer.classList.toggle('paused', isPlaying);
+                    ui.centerControl.innerHTML = `<span class="material-icons">${isPlaying ? 'play_arrow' : 'pause'}</span>`;
+                    ui.centerControl.setAttribute('aria-label', isPlaying ? 'Play' : 'Pause');
+                };
+    
                 hideLoadingSpinner();
             }
+    
+            disableUIElements();
+        } catch (err) {
+            console.error('Iframe setup failed:', err);
+            displayError(`Failed to load iframe video: ${err.message}`);
+            disableUIElements();
+            hideLoadingSpinner();
+            ui.iframePlayerContainer.classList.add('hidden');
+            ui.mainPlayer.classList.remove('hidden');
         }
-        if (ui.settings) ui.settings.classList.remove('active');
-        if (ui.captions) ui.captions.classList.remove('active');
-        if (ui.audioTracks) ui.audioTracks.classList.remove('active');
-        if (ui.annotationPanel) ui.annotationPanel.classList.remove('active');
-        if (ui.downloadQueuePanel) ui.downloadQueuePanel.classList.remove('active');
     };
 
     const updateMeta = (meta) => {
@@ -1541,6 +1675,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const initializePlayer = async (overrideVideoId = null) => {
         let retryCount = 0;
         const MAX_RETRIES = 3;
+        const RETRY_DELAY_BASE = 1000;
     
         try {
             // Extract video ID from URL or override
@@ -1550,17 +1685,24 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Initializing player for video ID:', videoId);
             showLoadingSpinner();
     
-            // Fetch video data
+            // Fetch video data with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
             const response = await fetch(`/stream/${videoId}`, {
                 credentials: isInIframe ? 'same-origin' : 'include',
-                headers: { 'Accept': 'application/json' }
+                headers: { 'Accept': 'application/json' },
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
     
             // Handle HTTP errors
             if (!response.ok) {
-                if (response.status === 404) throw new Error('Content not found or expired');
-                if (response.status === 403) throw new Error('Stream expired or unauthorized');
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorMap = {
+                    404: 'Content not found or expired',
+                    403: 'Stream expired or unauthorized',
+                    500: 'Server error occurred'
+                };
+                throw new Error(errorMap[response.status] || `HTTP ${response.status}: ${response.statusText}`);
             }
     
             const data = await response.json();
@@ -1571,8 +1713,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 sources = [],
                 subtitle = null,
                 subtitles = [],
-                meta = {},
-                thumbnail = '',
+                meta = { title: 'Untitled Video', description: 'No description available' },
+                thumbnail = '/static/nexfix-logo.jpg',
                 audio_options = [],
                 is_live = false
             } = data;
@@ -1590,221 +1732,209 @@ document.addEventListener('DOMContentLoaded', () => {
                 'iframe'
             ];
     
-            // Filter valid sources
-            const validSources = sources.filter(src => src?.type && validSourceTypes.includes(src.type));
+            // Filter and validate sources
+            const validSources = sources.filter(src => src?.url && src?.type && validSourceTypes.includes(src.type));
             if (!validSources.length) throw new Error('No playable sources found');
     
-            // Separate MP4 and iframe sources
-            const mp4Sources = validSources.filter(src => src.type !== 'iframe');
+            // Separate iframe and non-iframe sources
             const iframeSources = validSources.filter(src => src.type === 'iframe');
+            const nonIframeSources = validSources.filter(src => src.type !== 'iframe');
     
-            // Sort MP4 sources by quality
+            // Sort non-iframe sources by quality
             const qualityOrder = ['1080p', '720p', '480p', '360p', '240p'];
-            mp4Sources.sort((a, b) => {
+            nonIframeSources.sort((a, b) => {
                 const aIndex = qualityOrder.indexOf(a.quality) === -1 ? qualityOrder.length : qualityOrder.indexOf(a.quality);
                 const bIndex = qualityOrder.indexOf(b.quality) === -1 ? qualityOrder.length : qualityOrder.indexOf(b.quality);
                 return aIndex - bIndex;
             });
     
-            // Select initial source
-            const initialSource = mp4Sources[0] || iframeSources[0];
+            // Prefer the "Auto" HLS source (master playlist) for HLS
+            const initialSource = iframeSources[0] || nonIframeSources.find(src => src.quality === 'Auto' && src.type === 'application/x-mpegURL') || nonIframeSources[0];
             if (!initialSource) throw new Error('No initial source selected');
+    
+            // Decode and prepare source URL
+            let sourceUrl = initialSource.url;
+            try {
+                if (sourceUrl.includes('/proxy?url=')) {
+                    const urlParams = new URLSearchParams(sourceUrl.split('?')[1]);
+                    sourceUrl = decodeURIComponent(urlParams.get('url'));
+                }
+                sourceUrl = `/proxy?url=${encodeURIComponent(sourceUrl)}`;
+            } catch (e) {
+                console.warn('URL decoding failed:', sourceUrl, e);
+            }
+    
+            // Log playlist content for HLS sources
+            if (initialSource.type === 'application/x-mpegURL') {
+                try {
+                    const playlistResponse = await fetch(sourceUrl, {
+                        headers: { 'Accept': 'application/vnd.apple.mpegurl' }
+                    });
+                    if (!playlistResponse.ok) {
+                        throw new Error(`Failed to fetch playlist: HTTP ${playlistResponse.status}`);
+                    }
+                    const playlistContent = await playlistResponse.text();
+                    console.log('Master .m3u8 playlist content:', playlistContent);
+                } catch (err) {
+                    console.error('Failed to fetch .m3u8 playlist:', err);
+                }
+            }
     
             // Prepare subtitles
             const subtitleList = subtitle
                 ? [{ url: subtitle, name: 'English', language: 'en', default: true }, ...subtitles]
                 : subtitles;
     
+            // Deduplicate and label audio options
+            const uniqueAudioOptions = audio_options.reduce((acc, track) => {
+                const key = `${track.url}-${track.language}`;
+                if (!acc.seen.has(key)) {
+                    let label = track.name;
+                    if (track.url.includes('b256000')) label += ' (High)';
+                    else if (track.url.includes('b128000')) label += ' (Low)';
+                    else if (track.url.includes('b56000')) label += ' (Medium)';
+                    acc.seen.add(key);
+                    acc.tracks.push({
+                        ...track,
+                        name: label,
+                        default: track.default === 'YES' || acc.tracks.length === 0
+                    });
+                }
+                return acc;
+            }, { seen: new Set(), tracks: [] }).tracks;
+    
             // Initialize player based on source type
             if (initialSource.type === 'iframe') {
                 console.log('Setting up iframe player for source:', initialSource.url);
                 await setupIframePlayer(initialSource, meta, videoId);
             } else {
-                console.log('Setting up Video.js player for source:', initialSource.url);
-                await setupVideoJsPlayer(initialSource, thumbnail, subtitleList, audio_options, meta, is_live, videoId);
+                console.log('Setting up Video.js player for source:', sourceUrl);
+                await setupVideoJsPlayer(initialSource, thumbnail, subtitleList, uniqueAudioOptions, meta, is_live, videoId);
             }
     
-            // Setup quality menu
-            if (ui.qualityMenu && mp4Sources.length > 0) {
-                if (initialSource.type === 'application/x-mpegURL') {
-                    // HLS quality levels
-                    try {
-                        // Ensure the http-source-selector plugin is registered
-                        if (!videojs.getPlugin('httpSourceSelector')) {
-                            videojs.registerPlugin('httpSourceSelector', videojsHttpSourceSelector);
-                        }
-                        player.httpSourceSelector({ default: 'auto' });
-                        console.log('Initialized httpSourceSelector');
-                        const qualityLevels = player.qualityLevels();
+            // Setup quality menu for non-HLS sources (e.g., MP4)
+            if (ui.qualityMenu && nonIframeSources.length > 0 && !isIframeMode && initialSource.type !== 'application/x-mpegURL') {
+                ui.qualityMenu.innerHTML = nonIframeSources
+                    .map(s => `
+                        <li data-url="/proxy?url=${encodeURIComponent(s.url)}" data-quality="${s.quality || 'Unknown'}" data-type="${s.type}" role="menuitem">
+                            <span>${s.quality || 'Unknown'}</span>
+                            ${s.quality === initialSource.quality ? '<span class="material-icons">check</span>' : ''}
+                        </li>
+                    `)
+                    .join('');
     
-                        qualityLevels.on('addqualitylevel', () => {
-                            console.log('Quality levels detected:', qualityLevels.levels_);
-                            ui.qualityMenu.innerHTML = qualityLevels.levels_
-                                .map((level, index) => `
-                                    <li data-level="${index}" data-quality="${level.height ? `${level.height}p` : 'Auto'}" role="menuitem">
-                                        <span>${level.height ? `${level.height}p` : 'Auto'}</span>
-                                        ${index === qualityLevels.selectedIndex ? '<span class="material-icons">check</span>' : ''}
-                                    </li>
-                                `)
-                                .concat(`
-                                    <li data-level="-1" data-quality="Auto" role="menuitem">
-                                        <span>Auto</span>
-                                        ${qualityLevels.selectedIndex === -1 ? '<span class="material-icons">check</span>' : ''}
-                                    </li>
-                                `)
-                                .join('');
+                ui.qualityMenu.querySelectorAll('li').forEach(li => {
+                    li.addEventListener('click', async () => {
+                        if (isLocked || isIframeMode) return;
+                        const { quality, url, type } = li.dataset;
+                        const currentTime = player.currentTime();
     
-                            ui.qualityMenu.querySelectorAll('li').forEach(li => {
-                                li.addEventListener('click', () => {
-                                    if (isLocked || isIframeMode) return;
-                                    const levelIndex = parseInt(li.dataset.level);
-    
-                                    try {
-                                        qualityLevels.levels_.forEach((level, idx) => {
-                                            level.enabled = (levelIndex === -1 || idx === levelIndex);
-                                        });
-                                        manualQualitySelected = true;
-                                        console.log('Selected quality level:', levelIndex, li.dataset.quality);
-    
-                                        // Update UI
-                                        ui.qualityMenu.querySelectorAll('li').forEach(el => {
-                                            el.classList.remove('active');
-                                            el.querySelector('.material-icons')?.remove();
-                                        });
-                                        li.classList.add('active');
-                                        li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
-    
-                                        if (ui.qualityBadge) {
-                                            ui.qualityBadge.textContent = li.dataset.quality;
-                                            ui.qualityBadge.classList.add('pulse');
-                                            setTimeout(() => ui.qualityBadge.classList.remove('pulse'), 500);
-                                        }
-                                        togglePanel(ui.settings, false);
-                                    } catch (err) {
-                                        console.error('Error selecting quality:', err);
-                                        displayError('Failed to switch quality');
-                                    }
-                                });
+                        try {
+                            showLoadingSpinner();
+                            console.log('Switching to quality:', quality, url, type);
+                            player.src({ src: url, type: getSourceType(url, type) });
+                            await player.load();
+                            player.currentTime(currentTime);
+                            await player.play().catch(err => {
+                                console.error('Playback failed after quality switch:', err);
+                                displayError('Failed to play video');
                             });
-                        });
+                            manualQualitySelected = true;
     
-                        qualityLevels.on('change', () => {
-                            const selectedLevel = qualityLevels.levels_[qualityLevels.selectedIndex];
-                            if (ui.qualityBadge && !manualQualitySelected) {
-                                ui.qualityBadge.textContent = selectedLevel?.height ? `${selectedLevel.height}p` : 'Auto';
-                                console.log('Quality changed:', ui.qualityBadge.textContent);
+                            ui.qualityMenu.querySelectorAll('li').forEach(el => {
+                                el.classList.remove('active');
+                                el.querySelector('.material-icons')?.remove();
+                            });
+                            li.classList.add('active');
+                            li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
+    
+                            if (ui.qualityBadge) {
+                                ui.qualityBadge.textContent = quality;
+                                ui.qualityBadge.classList.add('pulse');
+                                setTimeout(() => ui.qualityBadge.classList.remove('pulse'), 500);
                             }
-                        });
-                    } catch (err) {
-                        console.error('Error initializing quality selector:', err);
-                        ui.qualityMenu.innerHTML = '<li role="menuitem">Quality selection unavailable</li>';
-                    }
-                } else {
-                    // MP4 or other sources
-                    ui.qualityMenu.innerHTML = mp4Sources
-                        .map(s => `
-                            <li data-url="/proxy?url=${encodeURIComponent(s.url)}" data-quality="${s.quality || 'Unknown'}" data-type="${s.type}" role="menuitem">
-                                <span>${s.quality || 'Unknown'}</span>
-                                ${s.quality === initialSource.quality ? '<span class="material-icons">check</span>' : ''}
-                            </li>
-                        `)
-                        .join('');
-    
-                    ui.qualityMenu.querySelectorAll('li').forEach(li => {
-                        li.addEventListener('click', async () => {
-                            if (isLocked || isIframeMode) return;
-                            const { quality, url, type } = li.dataset;
-                            const currentTime = player.currentTime();
-    
-                            try {
-                                showLoadingSpinner();
-                                console.log('Switching to quality:', quality, url, type);
-                                player.src({ src: url, type: getSourceType(url, type) });
-                                await player.load();
-                                player.currentTime(currentTime);
-                                await player.play().catch(err => {
-                                    console.error('Playback failed after quality switch:', err);
-                                    displayError('Failed to play video');
-                                });
-                                manualQualitySelected = true;
-    
-                                // Update UI
-                                ui.qualityMenu.querySelectorAll('li').forEach(el => {
-                                    el.classList.remove('active');
-                                    el.querySelector('.material-icons')?.remove();
-                                });
-                                li.classList.add('active');
-                                li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
-    
-                                if (ui.qualityBadge) {
-                                    ui.qualityBadge.textContent = quality;
-                                    ui.qualityBadge.classList.add('pulse');
-                                    setTimeout(() => ui.qualityBadge.classList.remove('pulse'), 500);
-                                }
-                                togglePanel(ui.settings, false);
-                            } catch (err) {
-                                console.error('Quality switch failed:', err);
-                                if (retryCount < MAX_RETRIES) {
-                                    retryCount++;
-                                    setTimeout(() => initializePlayer(videoId), 1000 * retryCount);
-                                } else {
-                                    displayError('Failed to switch quality after retries');
-                                }
-                            } finally {
-                                hideLoadingSpinner();
+                            togglePanel(ui.settings, false);
+                        } catch (err) {
+                            console.error('Quality switch failed:', err);
+                            if (retryCount < MAX_RETRIES) {
+                                retryCount++;
+                                setTimeout(() => initializePlayer(videoId), RETRY_DELAY_BASE * retryCount);
+                            } else {
+                                displayError('Failed to switch quality after retries');
                             }
-                        });
+                        } finally {
+                            hideLoadingSpinner();
+                        }
                     });
-                }
-            } else if (ui.qualityMenu) {
+                });
+            } else if (ui.qualityMenu && initialSource.type !== 'application/x-mpegURL') {
                 ui.qualityMenu.innerHTML = '<li role="menuitem">No quality options available</li>';
             }
     
-            // Player event listeners
-            player.on('loadedmetadata', () => {
-                if (!isIframeMode) {
+            // Setup player event listeners
+            if (!isIframeMode) {
+                player.on('loadedmetadata', () => {
                     const duration = player.duration();
                     if (ui.totalDuration) ui.totalDuration.textContent = formatTime(duration);
                     addChapterMarkers();
                     updateStatsPanel();
-                }
-                hideLoadingSpinner();
-            });
+                    hideLoadingSpinner();
+                });
     
-            player.on('error', () => {
-                const error = player.error();
-                if (retryCount < MAX_RETRIES) {
-                    retryCount++;
-                    setTimeout(() => initializePlayer(videoId), 1000 * retryCount);
-                } else {
-                    displayError(`Playback failed: ${error?.message || 'Unknown error'}`);
-                }
-            });
+                player.on('error', () => {
+                    const error = player.error();
+                    console.error('Player error:', error);
+                    if (retryCount < MAX_RETRIES) {
+                        retryCount++;
+                        setTimeout(() => initializePlayer(videoId), RETRY_DELAY_BASE * retryCount);
+                    } else {
+                        displayError(`Playback failed: ${error?.message || 'Unknown error'}`);
+                    }
+                });
     
-            player.on('waiting', showLoadingSpinner);
-            player.on('playing', () => {
-                hideLoadingSpinner();
-                videoPlayer.classList.add('playing');
-                videoPlayer.classList.remove('paused');
-            });
+                player.on('waiting', showLoadingSpinner);
+                player.on('playing', () => {
+                    hideLoadingSpinner();
+                    videoPlayer.classList.add('playing');
+                    videoPlayer.classList.remove('paused');
+                });
+    
+                // Save playback position
+                player.on('timeupdate', () => {
+                    if (!is_live) {
+                        localStorage.setItem(`playback_${videoId}`, player.currentTime());
+                    }
+                });
+            }
     
             // Restore saved playback position
-            const savedTime = localStorage.getItem(`playback_${videoId}`);
-            if (savedTime && !isIframeMode && !is_live) {
-                player.currentTime(parseFloat(savedTime));
+            if (!isIframeMode && !is_live) {
+                const savedTime = localStorage.getItem(`playback_${videoId}`);
+                if (savedTime) {
+                    player.currentTime(parseFloat(savedTime));
+                }
             }
     
             // Load bookmarks
             loadBookmarks(videoId);
     
+            // Update network status for quality adjustment
+            updateNetworkStatus();
+            if (nonIframeSources.length > 0) {
+                adjustQualityBasedOnNetwork(nonIframeSources);
+            }
+    
         } catch (err) {
             console.error('Initialization failed:', err);
-            displayError(err.message);
+            displayError(err.message || 'Failed to initialize player');
+            if (retryCount < MAX_RETRIES && err.name !== 'AbortError') {
+                retryCount++;
+                setTimeout(() => initializePlayer(videoId), RETRY_DELAY_BASE * retryCount);
+            }
         } finally {
             hideLoadingSpinner();
         }
     };
-    
     const setupVideoJsPlayer = async (source, thumbnail, subtitles, audio_options, meta, isLive, videoId) => {
         if (isIframeMode) {
             isIframeMode = false;
@@ -1818,7 +1948,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
         let rawUrl = source.url;
         try {
-            // Avoid nested proxy URLs
             if (rawUrl.includes('/proxy?url=')) {
                 const urlParams = new URLSearchParams(rawUrl.split('?')[1]);
                 rawUrl = decodeURIComponent(urlParams.get('url'));
@@ -1833,20 +1962,138 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoadingSpinner();
     
         try {
+            // Set source based on type
             player.src({
                 src: sourceUrl,
-                type: getSourceType(rawUrl, source.type)
+                type: source.type
             });
-            await player.load();
+    
+            // Wait for player to be ready
+            await new Promise((resolve, reject) => {
+                player.ready(() => {
+                    console.log('Player ready for source:', sourceUrl);
+                    resolve();
+                });
+                player.on('error', () => {
+                    const error = player.error();
+                    console.error('Source load error:', error);
+                    reject(error);
+                });
+            });
+    
+            // For HLS sources, verify HLS tech and log playlist details
+            let hls = null;
+            if (source.type === 'application/x-mpegURL') {
+                hls = player.tech(true).hls;
+                if (!hls) {
+                    console.warn('HLS tech not available. Attempting native playback.');
+                } else {
+                    // Log HLS playlist details
+                    hls.on('loadedmetadata', () => {
+                        console.log('HLS playlist loaded:', {
+                            playlists: hls.playlists.master?.playlists?.map(p => ({
+                                resolution: p.attributes.RESOLUTION,
+                                bandwidth: p.attributes.BANDWIDTH,
+                                uri: p.uri
+                            })),
+                            audioTracks: hls.audioTracks()?.map(t => ({
+                                id: t.id,
+                                label: t.label,
+                                enabled: t.enabled
+                            }))
+                        });
+                    });
+                    hls.on('error', (err) => {
+                        console.error('HLS error:', err);
+                    });
+                    // Configure CMAF support
+                    hls.xhr.beforeRequest = (options) => {
+                        console.log('HLS request:', options.uri);
+                        return options;
+                    };
+                }
+            }
         } catch (err) {
             console.error('Error setting source:', err);
-            displayError('Failed to load video source');
+            displayError(`Failed to load video source: ${err.message || 'Unknown error'}`);
             hideLoadingSpinner();
             return;
         }
     
         player.poster(thumbnail || '/static/nexfix-logo.jpg');
         player.playbackRates([0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4]);
+    
+        // Setup quality levels for HLS sources
+        if (source.type === 'application/x-mpegURL') {
+            const qualityLevels = player.qualityLevels();
+            if (!qualityLevels) {
+                console.warn('Quality levels plugin not available');
+            } else if (ui.qualityMenu) {
+                ui.qualityMenu.innerHTML = '<li data-quality="auto" class="active" role="menuitem">Auto <span class="material-icons">check</span></li>';
+    
+                qualityLevels.on('addqualitylevel', () => {
+                    console.log('Quality levels detected:', qualityLevels.levels_);
+                    ui.qualityMenu.innerHTML = '<li data-quality="auto" class="active" role="menuitem">Auto <span class="material-icons">check</span></li>';
+    
+                    for (let i = 0; i < qualityLevels.length; i++) {
+                        const level = qualityLevels[i];
+                        const height = level.height || 'Unknown';
+                        ui.qualityMenu.insertAdjacentHTML('beforeend', `
+                            <li data-quality="${i}" role="menuitem">
+                                ${height}p
+                            </li>
+                        `);
+                    }
+    
+                    ui.qualityMenu.querySelectorAll('li').forEach(li => {
+                        li.addEventListener('click', () => {
+                            if (isLocked || isIframeMode) return;
+                            const qualityIndex = li.dataset.quality;
+                            showLoadingSpinner();
+    
+                            try {
+                                if (qualityIndex === 'auto') {
+                                    for (let i = 0; i < qualityLevels.length; i++) {
+                                        qualityLevels[i].enabled = true;
+                                    }
+                                } else {
+                                    for (let i = 0; i < qualityLevels.length; i++) {
+                                        qualityLevels[i].enabled = i === parseInt(qualityIndex);
+                                    }
+                                }
+    
+                                ui.qualityMenu.querySelectorAll('li').forEach(el => {
+                                    el.classList.remove('active');
+                                    el.querySelector('.material-icons')?.remove();
+                                });
+                                li.classList.add('active');
+                                li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
+    
+                                if (ui.qualityBadge) {
+                                    ui.qualityBadge.textContent = qualityIndex === 'auto' ? 'Auto' : `${qualityLevels[parseInt(qualityIndex)].height}p`;
+                                    ui.qualityBadge.classList.add('pulse');
+                                    setTimeout(() => ui.qualityBadge.classList.remove('pulse'), 500);
+                                }
+                                togglePanel(ui.settings, false);
+                            } catch (err) {
+                                console.error('Quality switch failed:', err);
+                                displayError('Failed to switch quality');
+                            } finally {
+                                hideLoadingSpinner();
+                            }
+                        });
+                    });
+                });
+    
+                qualityLevels.on('change', () => {
+                    const selectedLevel = qualityLevels.selectedIndex !== -1 ? qualityLevels[qualityLevels.selectedIndex] : null;
+                    if (ui.qualityBadge) {
+                        ui.qualityBadge.textContent = selectedLevel ? `${selectedLevel.height}p` : 'Auto';
+                    }
+                    console.log('Quality changed:', selectedLevel ? `${selectedLevel.height}p` : 'Auto');
+                });
+            }
+        }
     
         // Setup subtitles
         if (subtitles.length && ui.captionMenu) {
@@ -1861,9 +2108,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     player.addRemoteTextTrack({
                         kind: 'subtitles',
-                        src: sub.url,
+                        src: sub.url.startsWith('/static/') ? sub.url : `/proxy?url=${encodeURIComponent(sub.url)}`,
                         label: sub.name,
-                        language: sub.language,
+                        srclang: sub.language,
                         default: sub.default || false
                     }, false);
                 } catch (err) {
@@ -1875,47 +2122,26 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.captionMenu.innerHTML = '<li data-track="OFF" class="active" role="menuitem">No subtitles <span class="material-icons">check</span></li>';
         }
     
-        // Deduplicate audio options
-        const uniqueAudioOptions = audio_options.reduce((acc, track) => {
-            const key = `${track.name}-${track.language}-${track.url}`;
-            if (!acc.seen.has(key)) {
-                acc.seen.add(key);
-                acc.tracks.push({
-                    ...track,
-                    default: track.default || acc.tracks.length === 0
-                });
-            }
-            return acc;
-        }, { seen: new Set(), tracks: [] }).tracks;
+        // Setup audio tracks for HLS sources
+        const hls = source.type === 'application/x-mpegURL' ? player.tech(true).hls : null;
+        if (audio_options.length && ui.audioTrackMenu && hls && source.type === 'application/x-mpegURL') {
+            console.log('Audio tracks provided:', audio_options);
     
-        // Setup audio tracks for HLS
-        if (uniqueAudioOptions.length && ui.audioTrackMenu && source.type === 'application/x-mpegURL') {
-            // Initialize audio tracks menu
-            ui.audioTrackMenu.innerHTML = uniqueAudioOptions.map((track, index) => `
+            ui.audioTrackMenu.innerHTML = audio_options.map((track, index) => `
                 <li data-track="${track.url}" data-label="${track.name}" data-lang="${track.language}" role="menuitem">
-                    ${track.name} (${track.language})
+                    ${track.name}
                     ${track.default || index === 0 ? '<span class="material-icons">check</span>' : ''}
                 </li>
             `).join('');
     
-            // Add audio tracks to player
-            const audioTracks = player.audioTracks();
-            uniqueAudioOptions.forEach((track, index) => {
-                try {
-                    audioTracks.addTrack(new videojs.AudioTrack({
-                        id: track.url,
-                        kind: 'alternative',
-                        label: `${track.name} (${track.language})`,
-                        language: track.language,
-                        enabled: track.default || index === 0
-                    }));
-                } catch (err) {
-                    console.error('Error adding audio track:', track.url, err);
-                    displayError(`Failed to load audio track: ${track.name}`);
-                }
-            });
+            const audioTracks = hls.audioTracks();
+            console.log('HLS audio tracks detected:', audioTracks.map(track => ({
+                id: track.id,
+                label: track.label,
+                language: track.language,
+                enabled: track.enabled
+            })));
     
-            // Handle audio track selection
             ui.audioTrackMenu.querySelectorAll('li').forEach(li => {
                 li.addEventListener('click', async () => {
                     if (isLocked || isIframeMode) return;
@@ -1927,15 +2153,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         showLoadingSpinner();
                         console.log('Switching to audio track:', trackLabel, trackUrl);
     
-                        // Update audio track in HLS manifest
-                        const hls = player.tech(true).hls;
-                        if (hls) {
-                            hls.audioTracks().forEach(track => {
-                                track.enabled = track.id === trackUrl;
-                            });
-                        }
+                        audioTracks.forEach(track => {
+                            track.enabled = track.id === trackUrl;
+                        });
     
-                        // Update UI
                         ui.audioTrackMenu.querySelectorAll('li').forEach(el => {
                             el.classList.remove('active');
                             el.querySelector('.material-icons')?.remove();
@@ -1943,11 +2164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         li.classList.add('active');
                         li.insertAdjacentHTML('beforeend', '<span class="material-icons">check</span>');
     
-                        // Update audio track selection
-                        audioTracks.forEach(track => {
-                            track.enabled = track.id === trackUrl;
-                        });
-    
+                        player.currentTime(currentTime);
                         togglePanel(ui.settings, false);
                     } catch (err) {
                         console.error('Audio track switch failed:', err);
@@ -1958,12 +2175,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
     
-            // Handle audio track changes
             audioTracks.addEventListener('change', () => {
-                const enabledTrack = Array.from(audioTracks).find(track => track.enabled);
+                const enabledTrack = audioTracks.find(track => track.enabled);
                 console.log('Audio track changed:', enabledTrack?.label);
             });
         } else if (ui.audioTrackMenu) {
+            console.warn('No audio tracks available or HLS tech not loaded');
             ui.audioTrackMenu.innerHTML = '<li data-track="default" class="active" role="menuitem">Default Audio <span class="material-icons">check</span></li>';
         }
     
@@ -1999,6 +2216,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ui.qualityBadge) ui.qualityBadge.textContent = source.quality || 'Auto';
         manageAnnotations();
         hideLoadingSpinner();
+    
+        // Attempt to play with error handling
+        try {
+            await player.play();
+            console.log('Playback started successfully');
+        } catch (err) {
+            console.error('Initial playback failed:', err);
+            displayError(`Failed to start playback: ${err.message || 'Unknown error'}`);
+        }
     };
     // Event listeners
     const setupEventListeners = () => {

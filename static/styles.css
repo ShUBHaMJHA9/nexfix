@@ -32,6 +32,59 @@
     --scrollbar-width: 8px;
 }
 
+/*video js player */
+
+.vjs-play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(10, 25, 47, 0.8), rgba(0, 180, 255, 0.4));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    cursor: pointer;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.vjs-play-overlay:hover {
+    opacity: 0.9;
+}
+
+.vjs-play-button {
+    background: linear-gradient(45deg, #e91e63, #9c27b0);
+    border: none;
+    border-radius: 50%;
+    width: 90px;
+    height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(233, 30, 99, 0.6), 0 0 25px rgba(156, 39, 176, 0.4);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.vjs-play-button:hover {
+    transform: scale(1.2);
+    box-shadow: 0 8px 25px rgba(233, 30, 99, 0.8), 0 0 30px rgba(156, 39, 176, 0.6);
+    background: linear-gradient(45deg, #9c27b0, #e91e63);
+}
+
+.vjs-play-button:active {
+    transform: scale(1.05);
+    box-shadow: 0 3px 15px rgba(233, 30, 99, 0.5);
+}
+
+.vjs-play-button .material-icons {
+    font-size: 50px;
+    color: #ffffff;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+/*error -overlay */
+
 .error-overlay {
     position: fixed;
     top: 20px;
