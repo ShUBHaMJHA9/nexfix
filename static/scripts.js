@@ -2217,14 +2217,73 @@ document.addEventListener('DOMContentLoaded', () => {
         manageAnnotations();
         hideLoadingSpinner();
     
-        // Attempt to play with error handling
-        try {
-            await player.play();
-            console.log('Playback started successfully');
-        } catch (err) {
-            console.error('Initial playback failed:', err);
-            displayError(`Failed to start playback: ${err.message || 'Unknown error'}`);
+        // Attempt to play with user interaction check
+        const attemptPlayback = async () => {
+            try {
+                await player.play();
+                console.log('Playback started successfully');
+            } catch (err) {
+                console.error('Initial playback failed:', err);
+                if (err.name === 'NotAllowedError') {
+                    // Autoplay blocked; prompt user interaction
+                    displayPlaybackPrompt();
+                } else {
+                    displayError(`Failed to start playback: ${err.message || 'Unknown error'}`);
+                }
+            }
+        };
+    
+        // Check if the document has been interacted with
+        const hasUserInteracted = () => {
+            return document.hasFocus() && (
+                document.activeElement !== document.body ||
+                ['click', 'touchstart', 'keydown', 'mousedown'].some(event => 
+                    document.addEventListener(event, () => true, { once: true })
+                )
+            );
+        };
+    
+        if (hasUserInteracted()) {
+            await attemptPlayback();
+        } else {
+            // Add a play button or prompt for user interaction
+            displayPlaybackPrompt();
         }
+    };
+    
+    // Helper function to display a play button or prompt
+    const displayPlaybackPrompt = () => {
+        const promptDiv = document.createElement('div');
+        promptDiv.className = 'playback-prompt';
+        promptDiv.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 1000;
+        `;
+        promptDiv.innerHTML = `
+            <p>Click to start playback</p>
+            <button id="startPlaybackBtn" style="padding: 10px 20px; cursor: pointer;">Play</button>
+        `;
+        videoPlayer.appendChild(promptDiv);
+    
+        const playButton = document.getElementById('startPlaybackBtn');
+        playButton.addEventListener('click', async () => {
+            promptDiv.remove();
+            try {
+                await player.play();
+                console.log('Playback started after user interaction');
+            } catch (err) {
+                console.error('Playback failed after user interaction:', err);
+                displayError(`Failed to start playback: ${err.message || 'Unknown error'}`);
+            }
+        });
     };
     // Event listeners
     const setupEventListeners = () => {
