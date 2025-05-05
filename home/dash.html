@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Stream movies and series on Nexfix, your ultimate entertainment platform.">
+    <meta property="og:title" content="Nexfix - Movies & Series">
+    <meta property="og:description" content="Explore a vast collection of Hollywood, Bollywood, and more on Nexfix.">
+    <meta property="og:image" content="/assets/images/logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nexfix.example.com">
+    <title>Nexfix</title>
+    <!-- GOOGLE FONTS -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;700;900&display=swap" rel="stylesheet">
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- OWL CAROUSEL -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" integrity="sha512-tS3S5qG0BlhnQROyJXvNjeEM4UpMXHrQfTGmbQ1gKmelCxlSEBUaxhRBj/EFTzpbP4RVSrpEikbmdJobCvhE3g==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" integrity="sha512-sMXtMNL1zRzolHYKEujM2AqCLUR9F2C4/05cdbxjjLSRvMQIciEPCQZo++nk7go3BtSuK9kfa/s+a4f4i5pLkw==" crossorigin="anonymous" />
+    <!-- BOX ICONS -->
+    <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+    <!-- APP CSS -->
+    <link rel="stylesheet" href="/assets/css/grid.css">
+    <link rel="stylesheet" href="/assets/css/dash.css">
+    <link rel="stylesheet" href="/assets/css/dash_2.css">
+    <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+    <!-- NAV -->
+    <div class="nav-wrapper">
+        <div class="container">
+            <div class="nav">
+                <a href="#" class="logo">
+                    <i class="bx bx-movie-play bx-tada main-color"></i>Nexf<span class="main-color">i</span>x
+                </a>
+                <!-- SEARCH BAR -->
+                <div class="search-bar">
+                    <div class="search-input-wrapper">
+                        <input type="text" placeholder="Search movies..." id="search-input">
+                    </div>
+                    <button type="submit" id="search-button"><i class="bx bx-search"></i></button>
+                    <div class="search-popup" id="search-popup"></div>
+                </div>
+                <!-- END SEARCH BAR -->
+                <ul class="nav-menu" id="nav-menu">
+                    <li><a href="#">Home</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle">Genre</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" data-category="hollywood">Hollywood</a></li>
+                            <li><a href="#" data-category="bollywood">Bollywood</a></li>
+                            <li><a href="#" data-category="hindi dubbed">Hindi Dubbed</a></li>
+                            <li><a href="#" data-category="hindi dubbed south">Hindi Dubbed South</a></li>
+                            <li><a href="#" data-category="bengali">Bengali</a></li>
+                            <li><a href="#" data-category="marathi">Marathi</a></li>
+                            <li><a href="#" data-category="punjabi">Punjabi</a></li>
+                            <li><a href="#" data-category="tamil">Tamil</a></li>
+                            <li><a href="#" data-category="telugu">Telugu</a></li>
+                            <li><a href="#" data-category="kannada">Kannada</a></li>
+                            <li><a href="#" data-category="web series">Web Series</a></li>
+                            <li><a href="#" data-category="tv show">TV Shows</a></li>
+                            <li><a href="#" data-category="documentary">Documentary</a></li>
+                            <li><a href="#" data-category="anime">Anime</a></li>
+                            <li><a href="#" data-category="kids">Kids</a></li>
+                            <li><a href="#" data-category="action">Action</a></li>
+                            <li><a href="#" data-category="comedy">Comedy</a></li>
+                            <li><a href="#" data-category="drama">Drama</a></li>
+                            <li><a href="#" data-category="thriller">Thriller</a></li>
+                            <li><a href="#" data-category="horror">Horror</a></li>
+                            <li><a href="#" data-category="romance">Romance</a></li>
+                            <li><a href="#" data-category="international">International</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#">Movies</a></li>
+                    <li><a href="#">Series</a></li>
+                    <li><a href="#">About</a></li>
+                    <li>
+                        <a href="#" class="btn btn-hover">
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                </ul>
+                <!-- MOBILE MENU TOGGLE -->
+                <div class="hamburger-menu" id="hamburger-menu" role="button" aria-label="Toggle navigation" aria-expanded="false">
+                    <div class="hamburger"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END NAV -->
+
+    <!-- SEARCH BACKDROP -->
+    <div class="search-backdrop" id="search-backdrop"></div>
+
+    <!-- MOVIE MODAL -->
+    <div class="movie-modal" id="movie-modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-content">
+            <i class="bx bx-x modal-close" id="modal-close" role="button" aria-label="Close modal"></i>
+            <div class="modal-header">
+                <img id="modal-poster" src="" alt="">
+            </div>
+            <div class="modal-details">
+                <h2 class="modal-title" id="modal-title"></h2>
+                <div class="modal-info" id="modal-info"></div>
+                <div class="modal-description" id="modal-description"></div>
+                <div class="modal-actions">
+                    <a href="#" class="btn btn-hover">
+                        <i class="bx bxs-right-arrow"></i>
+                        <span>Watch now</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END MOVIE MODAL -->
+
+    <!-- HERO SECTION -->
+    <div class="hero-section">
+        <div class="hero-slide">
+            <div class="owl-carousel carousel-nav-center" id="hero-carousel"></div>
+        </div>
+        <div class="top-movies-slide">
+            <div class="owl-carousel" id="top-movies-slide"></div>
+        </div>
+    </div>
+    <!-- END HERO SECTION -->
+
+    <!-- LATEST HOLLYWOOD SECTION -->
+    <div class="section" id="hollywood-section">
+        <div class="container">
+            <div class="section-header">Latest Hollywood</div>
+            <div class="movies-slide carousel-nav-center owl-carousel" id="latest-hollywood"></div>
+        </div>
+    </div>
+    <!-- END LATEST HOLLYWOOD SECTION -->
+
+    <!-- LATEST BOLLYWOOD SECTION -->
+    <div class="section" id="bollywood-section">
+        <div class="container">
+            <div class="section-header">Latest Bollywood</div>
+            <div class="movies-slide carousel-nav-center owl-carousel" id="latest-bollywood"></div>
+        </div>
+    </div>
+    <!-- END LATEST BOLLYWOOD SECTION -->
+
+    <!-- LATEST WEB SERIES SECTION -->
+    <div class="section" id="web-series-section">
+        <div class="container">
+            <div class="section-header">Latest Web Series</div>
+            <div class="movies-slide carousel-nav-center owl-carousel" id="latest-web-series"></div>
+        </div>
+    </div>
+    <!-- END LATEST WEB SERIES SECTION -->
+
+    <!-- LATEST TAMIL SECTION -->
+    <div class="section" id="tamil-section">
+        <div class="container">
+            <div class="section-header">Latest Tamil</div>
+            <div class="movies-slide carousel-nav-center owl-carousel" id="latest-tamil"></div>
+        </div>
+    </div>
+    <!-- END LATEST TAMIL SECTION -->
+
+    <!-- LATEST ACTION SECTION -->
+    <div class="section" id="action-section">
+        <div class="container">
+            <div class="section-header">Latest Action</div>
+            <div class="movies-slide carousel-nav-center owl-carousel" id="latest-action"></div>
+        </div>
+    </div>
+    <!-- END LATEST ACTION SECTION -->
+
+    <!-- LATEST KIDS SECTION -->
+    <div class="section" id="kids-section">
+        <div class="container">
+            <div class="section-header">Latest Kids</div>
+            <div class="movies-slide carousel-nav-center owl-carousel" id="latest-kids"></div>
+        </div>
+    </div>
+    <!-- END LATEST KIDS SECTION -->
+
+    <!-- SPECIAL MOVIE SECTION -->
+    <div class="section" id="special-movie-section">
+        <div class="hero-slide-item" id="special-movie"></div>
+    </div>
+    <!-- END SPECIAL MOVIE SECTION -->
+
+    <!-- PRICING SECTION -->
+    <div class="section">
+        <div class="container">
+            <div class="pricing">
+                <div class="pricing-header">
+                    Nexf<span class="main-color">i</span>x pricing
+                </div>
+                <div class="pricing-list">
+                    <div class="row">
+                        <div class="col-4 col-md-12 col-sm-12">
+                            <div class="pricing-box">
+                                <div class="pricing-box-header">
+                                    <div class="pricing-name">Basic</div>
+                                    <div class="pricing-price">Free</div>
+                                </div>
+                                <div class="pricing-box-content">
+                                    <p>Originals</p>
+                                    <p>Switch plans anytime</p>
+                                    <p><del>65+ top Live</del></p>
+                                    <p><del>TV Channels</del></p>
+                                </div>
+                                <div class="pricing-box-action">
+                                    <a href="#" class="btn btn-hover">
+                                        <span>Register now</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4 col-md-12 col-sm-12">
+                            <div class="pricing-box highlight">
+                                <div class="pricing-box-header">
+                                    <div class="pricing-name">Premium</div>
+                                    <div class="pricing-price">$35.99 <span>/month</span></div>
+                                </div>
+                                <div class="pricing-box-content">
+                                    <p>Originals</p>
+                                    <p>Switch plans anytime</p>
+                                    <p><del>65+ top Live</del></p>
+                                    <p><del>TV Channels</del></p>
+                                </div>
+                                <div class="pricing-box-action">
+                                    <a href="#" class="btn btn-hover">
+                                        <span>Register now</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4 col-md-12 col-sm-12">
+                            <div class="pricing-box">
+                                <div class="pricing-box-header">
+                                    <div class="pricing-name">VIP</div>
+                                    <div class="pricing-price">$65.99 <span>/month</span></div>
+                                </div>
+                                <div class="pricing-box-content">
+                                    <p>Originals</p>
+                                    <p>Switch plans anytime</p>
+                                    <p><del>65+ top Live</del></p>
+                                    <p><del>TV Channels</del></p>
+                                </div>
+                                <div class="pricing-box-action">
+                                    <a href="#" class="btn btn-hover">
+                                        <span>Register now</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END PRICING SECTION -->
+
+    <!-- FOOTER SECTION -->
+    <footer class="section">
+        <div class="container">
+            <div class="row">
+                <div class="col-4 col-md-6 col-sm-12">
+                    <div class="content">
+                        <a href="#" class="logo">
+                            <i class="bx bx-movie-play bx-tada main-color"></i>Nexf<span class="main-color">i</span>x
+                        </a>
+                        <p>
+                            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut veniam ex quos hic id nobis beatae earum sapiente! Quod ipsa exercitationem officiis non error illum minima iusto et. Dolores, quibusdam?
+                        </p>
+                        <div class="social-list">
+                            <a href="#" class="social-item">
+                                <i class="bx bxl-facebook"></i>
+                            </a>
+                            <a href="#" class="social-item">
+                                <i class="bx bxl-twitter"></i>
+                            </a>
+                            <a href="#" class="social-item">
+                                <i class="bx bxl-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-8 col-md-6 col-sm-12">
+                    <div class="row">
+                        <div class="col-3 col-md-6 col-sm-6">
+                            <div class="content">
+                                <p><b>Nexfix</b></p>
+                                <ul class="footer-menu">
+                                    <li><a href="#">About us</a></li>
+                                    <li><a href="#">My profile</a></li>
+                                    <li><a href="#">Pricing plans</a></li>
+                                    <li><a href="#">Contacts</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-3 col-md-6 col-sm-6">
+                            <div class="content">
+                                <p><b>Browse</b></p>
+                                <ul class="footer-menu">
+                                    <li><a href="#">About us</a></li>
+                                    <li><a href="#">My profile</a></li>
+                                    <li><a href="#">Pricing plans</a></li>
+                                    <li><a href="#">Contacts</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-3 col-md-6 col-sm-6">
+                            <div class="content">
+                                <p><b>Help</b></p>
+                                <ul class="footer-menu">
+                                    <li><a href="#">About us</a></li>
+                                    <li><a href="#">My profile</a></li>
+                                    <li><a href="#">Pricing plans</a></li>
+                                    <li><a href="#">Contacts</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-3 col-md-6 col-sm-6">
+                            <div class="content">
+                                <p><b>Download app</b></p>
+                                <ul class="footer-menu">
+                                    <li>
+                                        <a href="#">
+                                            <img src="/assets/images/google-play.png" alt="Google Play">
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="#">
+                                            <img src="/assets/images/app-store.png" alt="App Store">
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- END FOOTER SECTION -->
+
+    <!-- COPYRIGHT SECTION -->
+    <div class="copyright">
+        Copyright 2025 <a href="https://www.youtube.com/channel/UCnNgtK4tGlWcceXVzoyTg8Q" target="_blank">
+            Tuat Tran Anh
+        </a>
+    </div>
+    <!-- END COPYRIGHT SECTION -->
+
+    <!-- SCRIPT -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw==" crossorigin="anonymous"></script>
+    <script src="/assets/js/app.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Function to initialize Owl Carousel
+            function initCarousel(selector, options) {
+                try {
+                    const $carousel = $(selector);
+                    if ($carousel.length === 0) {
+                        console.error(`Carousel element ${selector} not found`);
+                        return;
+                    }
+                    $carousel.owlCarousel(options);
+                    $carousel.trigger('refresh.owl.carousel');
+                } catch (error) {
+                    console.error(`Error initializing carousel ${selector}:`, error);
+                }
+            }
+
+            // Function to fetch data from backend API
+            async function fetchData(url, sectionId) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}, URL: ${url}`);
+                    }
+                    const text = await response.text();
+                    if (!text) {
+                        throw new Error(`Empty response from ${url}`);
+                    }
+                    const data = JSON.parse(text);
+                    if (!Array.isArray(data)) {
+                        console.error(`Expected array, got:`, data, `from ${url}`);
+                        if (sectionId) {
+                            $(`#${sectionId}`).html(`
+                                <div class="section-error">Failed to load content. Please try again later.</div>
+                            `);
+                        }
+                        return [];
+                    }
+                    return data;
+                } catch (error) {
+                    console.error(`Error fetching ${url}:`, error);
+                    if (sectionId) {
+                        $(`#${sectionId}`).html(`
+                            <div class="section-error">Failed to load content. Please try again later.</div>
+                        `);
+                    }
+                    return [];
+                }
+            }
+
+            // Function to populate hero slide
+            function populateHeroSlide(data) {
+                const carousel = $('#hero-carousel');
+                carousel.empty();
+                if (!data || data.length === 0) {
+                    carousel.append(`
+                        <div class="hero-slide-item">
+                            <img src="https://via.placeholder.com/1280x720?text=No+Movies" alt="No Movies">
+                            <div class="overlay"></div>
+                            <div class="hero-slide-item-content">
+                                <div class="item-content-wraper">
+                                    <div class="item-content-title top-down">No Movies Found</div>
+                                    <div class="item-content-description top-down delay-4">Try a different category or search term.</div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    data.forEach(movie => {
+                        const slideItem = `
+                            <div class="hero-slide-item" data-movie='${JSON.stringify(movie)}'>
+                                <img src="${movie.posterUrl || 'https://via.placeholder.com/1280x720?text=No+Image'}" alt="${movie.title}">
+                                <div class="overlay"></div>
+                                <div class="hero-slide-item-content">
+                                    <div class="item-content-wraper">
+                                        <div class="item-content-title top-down">${movie.title}</div>
+                                        <div class="movie-infos top-down delay-2">
+                                            <div class="movie-info"><i class="bx bxs-star"></i><span>${movie.rating || 'N/A'}</span></div>
+                                            <div class="movie-info"><i class="bx bxs-video"></i><span>${movie.quality || 'Unknown'}</span></div>
+                                            <div class="movie-info"><i class="bx bxs-category"></i><span>${movie.category || 'Unknown'}</span></div>
+                                            <div class="movie-info"><i class="bx bxs-calendar"></i><span>${movie.release_year || 'N/A'}</span></div>
+                                            <div class="movie-info"><i class="bx bxs-time"></i><span>${movie.duration || 'N/A'}</span></div>
+                                        </div>
+                                        <div class="item-content-description top-down delay-4">${movie.description || 'No description available.'}</div>
+                                        <div class="item-action top-down delay-6">
+                                            <a href="#" class="btn btn-hover"><i class="bx bxs-right-arrow"></i><span>Watch now</span></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        carousel.append(slideItem);
+                    });
+                }
+                initCarousel('#hero-carousel', {
+                    items: 1,
+                    loop: true,
+                    nav: true,
+                    dots: true,
+                    autoplay: true,
+                    autoplayTimeout: 5000,
+                    smartSpeed: 1000,
+                    navText: ['<i class="bx bx-chevron-left"></i>', '<i class="bx bx-chevron-right"></i>']
+                });
+            }
+
+            // Function to populate movie items
+            function populateMovieItems(selector, data, sectionId) {
+                const carousel = $(selector);
+                const section = sectionId === 'hero-section' ? $('.hero-section') : $(`#${sectionId}`);
+                carousel.empty();
+                if (!data || data.length === 0) {
+                    section.remove();
+                    return;
+                }
+                data.forEach(movie => {
+                    const movieItem = `
+                        <a href="#" class="movie-item" data-movie='${JSON.stringify(movie)}'>
+                            <img src="${movie.posterUrl || 'https://via.placeholder.com/200x300?text=No+Image'}" alt="${movie.title}">
+                            <div class="movie-item-content">
+                                <div class="movie-item-title">${movie.title}</div>
+                                <div class="movie-infos">
+                                    <div class="movie-info"><i class="bx bxs-star"></i><span>${movie.rating || 'N/A'}</span></div>
+                                    <div class="movie-info"><i class="bx bxs-video"></i><span>${movie.quality || 'Unknown'}</span></div>
+                                    <div class="movie-info"><i class="bx bxs-category"></i><span>${movie.category || 'Unknown'}</span></div>
+                                    <div class="movie-info"><i class="bx bxs-time"></i><span>${movie.duration || 'N/A'}</span></div>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                    carousel.append(movieItem);
+                });
+                initCarousel(selector, {
+                    items: 4,
+                    loop: true,
+                    nav: true,
+                    dots: true,
+                    responsive: {
+                        0: { items: 1 },
+                        600: { items: 2 },
+                        1000: { items: 4 }
+                    },
+                    navText: ['<i class="bx bx-chevron-left"></i>', '<i class="bx bx-chevron-right"></i>']
+                });
+            }
+
+            // Function to populate special movie
+            function populateSpecialMovie(data) {
+                const specialMovie = $('#special-movie');
+                const section = $('#special-movie-section');
+                if (!data || data.length === 0) {
+                    section.remove();
+                    return;
+                }
+                const movie = data[0];
+                specialMovie.empty();
+                const specialItem = `
+                    <img src="${movie.posterUrl || 'https://via.placeholder.com/1280x720?text=No+Image'}" alt="${movie.title}">
+                    <div class="overlay"></div>
+                    <div class="hero-slide-item-content" data-movie='${JSON.stringify(movie)}'>
+                        <div class="item-content-wraper">
+                            <div class="item-content-title">${movie.title}</div>
+                            <div class="movie-infos">
+                                <div class="movie-info"><i class="bx bxs-star"></i><span>${movie.rating || 'N/A'}</span></div>
+                                <div class="movie-info"><i class="bx bxs-video"></i><span>${movie.quality || 'Unknown'}</span></div>
+                                <div class="movie-info"><i class="bx bxs-category"></i><span>${movie.category || 'Unknown'}</span></div>
+                                <div class="movie-info"><i class="bx bxs-calendar"></i><span>${movie.release_year || 'N/A'}</span></div>
+                                <div class="movie-info"><i class="bx bxs-time"></i><span>${movie.duration || 'N/A'}</span></div>
+                            </div>
+                            <div class="item-content-description">${movie.description || 'No description available.'}</div>
+                            <div class="item-action">
+                                <a href="#" class="btn btn-hover"><i class="bx bxs-right-arrow"></i><span>Watch now</span></a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                specialMovie.append(specialItem);
+            }
+
+            // Function to populate search popup
+            function populateSearchPopup(data) {
+                const popup = $('#search-popup');
+                popup.removeClass('loading');
+                popup.empty();
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    popup.append(`
+                        <div class="search-result">
+                            <div class="search-result-info">
+                                <div class="search-result-title">No results found</div>
+                                <div class="search-result-details">Try a different search term</div>
+                            </div>
+                        </div>
+                    `);
+                    popup.addClass('active');
+                    $('#search-backdrop').addClass('active');
+                    return;
+                }
+                data.forEach((movie, index) => {
+                    const resultItem = `
+                        <div class="search-result" data-movie='${JSON.stringify(movie)}' style="animation-delay: ${index * 0.1}s">
+                            <img src="${movie.posterUrl || 'https://via.placeholder.com/50x75?text=No+Image'}" alt="${movie.title}">
+                            <div class="search-result-info">
+                                <div class="search-result-title">${movie.title}</div>
+                                <div class="search-result-details">
+                                    ${movie.category || 'Unknown'} | ${movie.release_year || 'N/A'} | ${movie.duration || 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    popup.append(resultItem);
+                });
+                popup.addClass('active');
+                $('#search-backdrop').addClass('active');
+            }
+
+            // Function to show movie modal
+            function showMovieModal(movie) {
+                $('#modal-poster').attr({
+                    'src': movie.posterUrl || 'https://via.placeholder.com/250x375?text=No+Image',
+                    'alt': movie.title
+                });
+                $('#modal-title').text(movie.title);
+                $('#modal-info').html(`
+                    <span><i class="bx bxs-star"></i>${movie.rating || 'N/A'}</span>
+                    <span><i class="bx bxs-video"></i>${movie.quality || 'Unknown'}</span>
+                    <span><i class="bx bxs-category"></i>${movie.category || 'Unknown'}</span>
+                    <span><i class="bx bxs-calendar"></i>${movie.release_year || 'N/A'}</span>
+                    <span><i class="bx bxs-time"></i>${movie.duration || 'N/A'}</span>
+                    <span><i class="bx bxs-film"></i>${movie.genre || 'N/A'}</span>
+                    <span><i class="bx bxs-user"></i>Directed by ${movie.director || 'N/A'}</span>
+                    <span><i class="bx bxs-group"></i>${movie.cast || 'N/A'}</span>
+                `);
+                $('#modal-description').text(movie.description || 'No description available.');
+                $('#movie-modal').attr('aria-hidden', 'false').addClass('active');
+            }
+
+            // Search bar activation
+            $('#search-input').on('focus', function() {
+                $('.search-bar').addClass('active');
+                $('#search-backdrop').addClass('active');
+            });
+
+            // Real-time search
+            let searchTimeout;
+            $('#search-input').on('input', function() {
+                $('.search-bar').addClass('active');
+                clearTimeout(searchTimeout);
+                const query = $(this).val().trim();
+                if (query) {
+                    $('#search-popup').addClass('loading');
+                    searchTimeout = setTimeout(() => {
+                        fetchData(`/home/search?q=${encodeURIComponent(query)}`)
+                            .then(data => populateSearchPopup(data))
+                            .catch(error => {
+                                console.error('Search error:', error);
+                                $('#search-popup').removeClass('loading').empty().append(`
+                                    <div class="search-result">
+                                        <div class="search-result-info">
+                                            <div class="search-result-title">Search Failed</div>
+                                            <div class="search-result-details">Please try again later</div>
+                                        </div>
+                                    </div>
+                                `).addClass('active');
+                                $('#search-backdrop').addClass('active');
+                            });
+                    }, 300);
+                } else {
+                    $('#search-popup').empty().removeClass('active loading');
+                    $('#search-backdrop').removeClass('active');
+                    $('.search-bar').removeClass('active');
+                }
+            });
+
+            // Submit search to update hero carousel
+            $('#search-button').click(function(e) {
+                e.preventDefault();
+                const query = $('#search-input').val().trim();
+                if (query) {
+                    fetchData(`/home/search?q=${encodeURIComponent(query)}`)
+                        .then(data => {
+                            populateHeroSlide(data);
+                            $('#search-popup').empty().removeClass('active loading');
+                            $('#search-backdrop').removeClass('active');
+                            $('.search-bar').removeClass('active');
+                        })
+                        .catch(error => {
+                            console.error('Search submit error:', error);
+                            $('#search-popup').empty().removeClass('active loading').append(`
+                                <div class="search-result">
+                                    <div class="search-result-info">
+                                        <div class="search-result-title">Search Failed</div>
+                                        <div class="search-result-details">Please try again later</div>
+                                    </div>
+                                </div>
+                            `).addClass('active');
+                            $('#search-backdrop').addClass('active');
+                        });
+                }
+            });
+
+            // Close search popup and backdrop
+            $('#search-backdrop').on('click', function() {
+                $('#search-popup').empty().removeClass('active loading');
+                $('#search-backdrop').removeClass('active');
+                $('.search-bar').removeClass('active');
+            });
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.search-bar').length && !$(e.target).is('.search-bar')) {
+                    $('#search-popup').empty().removeClass('active loading');
+                    $('#search-backdrop').removeClass('active');
+                    $('.search-bar').removeClass('active');
+                }
+            });
+
+            $('.search-bar').on('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // Modal close
+            $('#modal-close').on('click', function() {
+                $('#movie-modal').attr('aria-hidden', 'true').removeClass('active');
+            });
+
+            // Movie item click with visual feedback
+            $(document).on('click', '.movie-item, .search-result, .hero-slide-item-content', function(e) {
+                e.preventDefault();
+                const $element = $(this);
+                $element.addClass('clicked');
+                setTimeout(() => $element.removeClass('clicked'), 400);
+                const movieData = $element.data('movie');
+                if (movieData) {
+                    showMovieModal(movieData);
+                } else {
+                    console.error('No movie data found for element:', $element);
+                }
+            });
+
+            // Fetch and populate sections
+            fetchData('/home/details').then(data => populateHeroSlide(data));
+            fetchData('/home/details?category=top movie', 'hero-section').then(data => populateMovieItems('#top-movies-slide', data, 'hero-section'));
+            fetchData('/home/details?category=hollywood', 'hollywood-section').then(data => populateMovieItems('#latest-hollywood', data, 'hollywood-section'));
+            fetchData('/home/details?category=bollywood', 'bollywood-section').then(data => populateMovieItems('#latest-bollywood', data, 'bollywood-section'));
+            fetchData('/home/details?category=web series', 'web-series-section').then(data => populateMovieItems('#latest-web-series', data, 'web-series-section'));
+            fetchData('/home/details?category=tamil', 'tamil-section').then(data => populateMovieItems('#latest-tamil', data, 'tamil-section'));
+            fetchData('/home/details?category=action', 'action-section').then(data => populateMovieItems('#latest-action', data, 'action-section'));
+            fetchData('/home/details?category=kids', 'kids-section').then(data => populateMovieItems('#latest-kids', data, 'kids-section'));
+            fetchData('/home/details?limit=1', 'special-movie-section').then(data => populateSpecialMovie(data));
+
+            // Category dropdown
+            $('.dropdown-toggle').click(function(e) {
+                e.preventDefault();
+                $(this).parent().toggleClass('active');
+            });
+
+            $('.dropdown-menu a').click(function(e) {
+                e.preventDefault();
+                const category = $(this).data('category');
+                fetchData(`/home/details?category=${encodeURIComponent(category)}`).then(data => populateHeroSlide(data));
+            });
+
+            $(document).click(function(e) {
+                if (!$(e.target).closest('.dropdown').length) {
+                    $('.dropdown').removeClass('active');
+                }
+            });
+
+            // Hamburger menu toggle
+            $('#hamburger-menu').click(function() {
+                $(this).toggleClass('active');
+                const isExpanded = $(this).hasClass('active');
+                $(this).attr('aria-expanded', isExpanded);
+                $('#nav-menu').toggleClass('active');
+            });
+        });
+    </script>
+</body>
+</html>

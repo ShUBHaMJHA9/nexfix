@@ -31,7 +31,7 @@ from urllib.parse import urljoin, quote, urlparse
 from cachetools import TTLCache
 import ipaddress
 import logging
-
+from api.home import home_app
 # Constants
 EXPIRY_MINUTES = 60
 DB_PATH = "database.json"
@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 rate_limit_cache = TTLCache(maxsize=1000, ttl=60)
 RATE_LIMIT_REQUESTS = 100
 templates = Jinja2Templates(directory="templates")
-
+home = Jinja2Templates(directory="home")
 class MediaType(str, Enum):
     MOVIE = "movie"
     LIVE = "live"
@@ -97,6 +97,10 @@ def initialize_files_and_dirs():
 initialize_files_and_dirs()
 app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 app.mount("/node_modules", StaticFiles(directory=NODE), name="node")
+# Use '/assets' instead of '/static'
+app.mount("/assets", StaticFiles(directory="home"), name="assets")
+print("Successfully imported home_app:", home_app)
+app.mount("/home", home_app)
 
 def load_db() -> List[Dict]:
     if os.path.exists(DB_PATH):
@@ -291,13 +295,6 @@ async def get_embed_page(request: Request, url: str):
         logger.error(f"Embed error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to process embed request: {str(e)}")
 
-@app.get("/player", response_class=HTMLResponse)
-async def get_player(request: Request):
-    template_path = Path("templates/player.html")
-    if not template_path.exists():
-        logger.error(f"Template not found at {template_path}")
-        raise HTTPException(status_code=500, detail="Template 'player.html' not found")
-    return templates.TemplateResponse("player.html", {"request": request})
 
 @app.get("/proxy")
 async def proxy_stream(url: str, request: Request):
@@ -537,17 +534,15 @@ async def media_player(request: Request, video_id: str = Query(...)):
         raise HTTPException(status_code=500, detail="Template 'player.html' not found")
     return templates.TemplateResponse("player.html", {"request": request, "video_id": video_id})
 
+
+
 @app.get("/", response_class=HTMLResponse)
-async def homepage():
-    return """
-    <html>
-    <head>
-        <meta name="6a97888e-site-verification" content="1693bb71edabc1676e00dea6864620a0">
-        <title>Nexfix</title>
-    </head>
-    <body><h1>Welcome to Nexfix</h1></body>
-    </html>
-    """
+async def homepage(request: Request):
+    home_path = Path("home/home.html")
+    if not home_path.exists():
+        logger.error(f"Home not found at {home_path}")
+        raise HTTPException(status_code=500, detail="Home 'home.html' not found")
+    return home.TemplateResponse("home.html", {"request": request})
 
 @app.get("/request-movie", response_class=JSONResponse)
 async def request_movie(

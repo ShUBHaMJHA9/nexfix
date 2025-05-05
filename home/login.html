@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In - Nexfix</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      rel="shortcut icon"
+      href="/assets/images/logo.png"
+      type="image/x-icon"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"
+      integrity="sha512-AA1Bzp5Q0K1KanKKmvN/4d3IRKVlv9PYgwFPvm32nPO6QS8yH1HO7LbgB1pgiOxPtfeg5zEn2ba64MUcqJx6CA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <link href="./css/login.css" rel="stylesheet" type="text/css" />
+    <meta
+      name="google-signin-client_id"
+      content="556331998780-jhmmulhgm2s2fgrqqln50vmtp1fh41vc.apps.googleusercontent.com"
+    />
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+  </head>
+  <body>
+    <div class="logo">
+      <a href="dash.html">
+        <img src="/assets/images/logo.png" class="img-logo" alt="Nexfix Logo" />
+      </a>
+    </div>
+    <div class="login-div">
+      <form
+        class="login"
+        id="regform"
+        name="regform"
+        autocomplete="off"
+        onsubmit="DisplayResults(event)"
+      >
+        <h1 class="sign">Sign In</h1>
+        <div id="errormessage" role="alert"></div>
+        <span class="seperator"></span>
+        <div class="input-text">
+          <input
+            type="email"
+            name="email"
+            id="email"
+            placeholder="Email"
+            oninput="clearError()"
+            aria-label="Email address"
+            aria-describedby="errormessage"
+            required
+          />
+        </div>
+        <div class="input-text">
+          <input
+            id="pass_signup"
+            type="password"
+            name="password"
+            placeholder="Password"
+            oninput="clearError()"
+            aria-label="Password"
+            aria-describedby="errormessage"
+            required
+          />
+          <i
+            class="fa fa-fw fa-eye field-icon toggle-password"
+            id="togglePassword"
+            aria-label="Toggle password visibility"
+          ></i>
+        </div>
+        <span class="seperator"></span>
+        <input class="signin-button" type="submit" value="Sign In" />
+        <div class="remember-flex">
+          <div>
+            <div class="or">OR</div>
+            <div
+              class="g-signin2"
+              data-onsuccess="onSignIn"
+              data-theme="dark"
+              data-width="258.5"
+              data-height="50"
+              data-longtitle="true"
+            ></div>
+          </div>
+        </div>
+        <div class="help">
+          <a class="color_text" href="https://www.google.com/gmail/"
+            >Need help?</a
+          >
+        </div>
+        <div class="login-face">
+          <div class="new-members">
+            New to Nexfix?
+            <a href="/assets/signup.html" class="signup-link">Sign up now</a>.
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="bottom">
+      <div class="bottom-width">
+        <div class="questions">
+          <span
+            >Questions? <br />Ask on:
+            <a href="mailto:nexfix@gmail.com" class="tel-link"
+              >nexfix@gmail.com</a
+            ></span
+          >
+          <select class="fa select-language" aria-label="Select language">
+            <option> English</option>
+            <option> Hindi</option>
+          </select>
+        </div>
+        <ul class="bottom-flex">
+          <li class="list-bottom">
+            <a href="faq.html" class="link-bottom">FAQ</a>
+          </li>
+          <li class="list-bottom">
+            <a href="#" class="link-bottom">Help Center</a>
+          </li>
+          <li class="list-bottom">
+            <a href="#" class="link-bottom">Terms of Use</a>
+          </li>
+          <li class="list-bottom">
+            <a href="#" class="link-bottom">Privacy</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <button id="scrollToTopButton" title="Go to top" aria-label="Scroll to top">
+      <i class="fa fa-angle-double-up" aria-hidden="true"></i>
+    </button>
+    <script>
+      const strongPass = /^(?=.*[a-zA-Z])(?=.*[0-9]).{6,}$/;
+      const mailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      function DisplayResults(event) {
+        event.preventDefault();
+        const email = document.forms["regform"]["email"].value.trim();
+        const password = document.forms["regform"]["password"].value;
+        const error = document.getElementById("errormessage");
+
+        error.style.display = "none";
+        error.innerHTML = "";
+
+        if (!email) {
+          error.style.display = "block";
+          error.innerHTML = `
+            <p><i class="fas fa-exclamation-circle"></i>
+            <span class="error">Email should not be empty</span></p>`;
+          return;
+        }
+        if (!mailFormat.test(email)) {
+          error.style.display = "block";
+          error.innerHTML = `
+            <p><i class="fas fa-exclamation-circle"></i>
+            <span class="error">Email address is invalid</span></p>`;
+          return;
+        }
+        if (!strongPass.test(password)) {
+          error.style.display = "block";
+          error.innerHTML = `
+            <p><i class="fas fa-exclamation-circle"></i>
+            <span class="error">Password must be at least 6 characters long and include a letter and a number</span></p>`;
+          return;
+        }
+
+        swal({
+          title: "Welcome back!",
+          text: "Let the binge watch begin!",
+          icon: "success",
+        }).then(() => {
+          document.location.href = "dash.html";
+        });
+      }
+
+      function clearError() {
+        const error = document.getElementById("errormessage");
+        if (error.style.display === "block") {
+          error.style.display = "none";
+          error.innerHTML = "";
+        }
+      }
+
+      $(document).ready(function () {
+        $("#scrollToTopButton").hide();
+        window.onscroll = function () {
+          if (
+            document.body.scrollTop > 100 ||
+            document.documentElement.scrollTop > 100
+          ) {
+            $("#scrollToTopButton").fadeIn();
+          } else {
+            $("#scrollToTopButton").fadeOut();
+          }
+        };
+
+        $("#scrollToTopButton").click(function () {
+          $("html, body").animate({ scrollTop: 0 }, 800);
+        });
+
+        $(".toggle-password").click(function () {
+          $(this).toggleClass("fa-eye fa-eye-slash");
+          const input = $("#pass_signup");
+          input.attr("type", input.attr("type") === "password" ? "text" : "password");
+        });
+      });
+
+      function onSignIn(googleUser) {
+        document.location.href = "dash.html";
+      }
+    </script>
+  </body>
+</html>
