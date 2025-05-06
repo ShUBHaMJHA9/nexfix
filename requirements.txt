@@ -1,5 +1,5 @@
 sqlalchemy
-python-multiport
+python-multipart
 fastapi
 uvicorn[standard]
 httpx
@@ -9,4 +9,4 @@ beautifulsoup4
 pydantic
 m3u8
 cachetools
-python-dotenv  # Optional, in case you use environment configs
+python-dotenv
