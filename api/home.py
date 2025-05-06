@@ -157,9 +157,7 @@ async def details(
 @home_app.get("/search")
 async def search(q: str = Query(..., description="Search query for movie name")):
     return await get_movie_details(search=q, limit=10)
-
 async def get_movie_details(genre=None, category=None, limit=10, search=None):
-    # Normalize category to lowercase for validation
     if category and category.lower() not in VALID_CATEGORIES:
         return JSONResponse(
             status_code=400,
@@ -173,7 +171,7 @@ async def get_movie_details(genre=None, category=None, limit=10, search=None):
     try:
         with conn.cursor() as cur:
             query = """
-                SELECT name, description, rating, poster_path, category, release_year
+                SELECT unique_id, name, description, rating, poster_path, category, release_year
                 FROM movies
                 WHERE 1=1
             """
@@ -199,15 +197,17 @@ async def get_movie_details(genre=None, category=None, limit=10, search=None):
 
             movies = []
             for result in results:
-                name, description, rating, poster_path, category, release_year = result
+                unique_id, name, description, rating, poster_path, category, release_year = result
                 movie = {
+                    "id": unique_id,
                     "title": name or "Unknown Title",
                     "posterUrl": os.path.join(BASE_URL, poster_path) if poster_path else "https://via.placeholder.com/1280x720",
                     "rating": rating if rating is not None else "N/A",
                     "quality": "HD",
                     "description": description or "No description available.",
                     "category": category or "hero",
-                    "release_year": release_year or "N/A"
+                    "release_year": release_year or "N/A",
+                    "watchUrl": f"{BASE_URL}/?watch={unique_id}"
                 }
                 movies.append(movie)
 

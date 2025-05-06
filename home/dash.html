@@ -4,31 +4,348 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Stream movies and series on Nexfix, your ultimate entertainment platform.">
+    <meta name="description" content="Stream the latest Hollywood, Bollywood, and regional movies on Nexfix. Enjoy unlimited entertainment with our subscription plans.">
     <meta property="og:title" content="Nexfix - Movies & Series">
     <meta property="og:description" content="Explore a vast collection of Hollywood, Bollywood, and more on Nexfix.">
-    <meta property="og:image" content="/assets/images/logo.png">
+    <meta property="og:image" content="https://nexfix.example.com/assets/images/logo.png">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://nexfix.example.com">
-    <title>Nexfix</title>
+    <link rel="canonical" href="https://nexfix.example.com">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet">
+    <title>Nexfix - Stream Movies & Series</title>
     <!-- GOOGLE FONTS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;700;900&family=Montserrat:wght@700;800&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- FONT AWESOME -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- OWL CAROUSEL -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" integrity="sha512-tS3S5qG0BlhnQROyJXvNjeEM4UpMXHrQfTGmbQ1gKmelCxlSEBUaxhRBj/EFTzpbP4RVSrpEikbmdJobCvhE3g==" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" integrity="sha512-sMXtMNL1zRzolHYKEujM2AqCLUR9F2C4/05cdbxjjLSRvMQIciEPCQZo++nk7go3BtSuK9kfa/s+a4f4i5pLkw==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" integrity="sha512-tS3S5qG0BlhnQROyJXvNjeEM4UpMXHrQfTGmbQ1gKmelCxlSEBUaxhRBj/EFTzpbP4RVSrpEikbmdJobCvhE3g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" integrity="sha512-sMXtMNL1zRzolHYKEujM2AqCLUR9F2C4/05cdbxjjLSRvMQIciEPCQZo++nk7go3BtSuK9kfa/s+a4f4i5pLkw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- BOX ICONS -->
-    <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" integrity="sha512-1C0jW3U0uP83N0q4nJ9S4J7gqO8V2rZE3rVSLD7C0W+2eDUA8S0jD5bI5v+0A3gYbC4z2X7Y0eI5B9C2eI5B9A==" crossorigin="anonymous">
     <!-- APP CSS -->
     <link rel="stylesheet" href="/assets/css/grid.css">
     <link rel="stylesheet" href="/assets/css/dash.css">
     <link rel="stylesheet" href="/assets/css/dash_2.css">
-    <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/assets/images/favicon.ico" type="image/x-icon">
+    <!-- Inline CSS for Telegram Ribbon and New Sections -->
+    <style>
+        :root {
+            --primary-color: #f0000c;
+            --secondary-color: #f0000c;
+            --dark-bg: #141414;
+            --text-primary: #ffffff;
+            --text-secondary: #d2d2d2;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        }
+
+        /* Navigation Z-Index */
+        .nav {
+            z-index: 1001;
+        }
+
+        /* Telegram Ribbon */
+        .telegram-ribbon {
+            position: fixed;
+            top: 10px;
+            right: -60px;
+            background: linear-gradient(135deg, var(--primary-color), #ff4b5c);
+            color: var(--text-primary);
+            padding: 8px 40px;
+            transform: rotate(45deg);
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .telegram-ribbon a {
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .telegram-ribbon i {
+            font-size: 16px;
+        }
+
+        .telegram-ribbon:hover {
+            right: -50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #ff4b5c, var(--primary-color));
+        }
+
+        @media (max-width: 768px) {
+            .telegram-ribbon {
+                top: 5px;
+                right: -70px;
+                padding: 6px 35px;
+                font-size: 11px;
+            }
+            .telegram-ribbon i {
+                font-size: 14px;
+            }
+        }
+
+        /* Trending Now Section */
+        .trending-section .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .trending-section .movie-grid-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .trending-section .movie-grid-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: var(--transition);
+        }
+
+        .trending-section .movie-grid-item .movie-grid-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            padding: 15px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+
+        .trending-section .movie-grid-item:hover .movie-grid-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .trending-section .movie-grid-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .trending-section .movie-grid-title {
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .trending-section .movie-grid-rating {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .trending-section .movie-grid-rating i {
+            color: #ffd700;
+            margin-right: 5px;
+        }
+
+        .trending-section .movie-grid-play {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--primary-color);
+            border-radius: 50%;
+            padding: 10px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .trending-section .movie-grid-item:hover .movie-grid-play {
+            opacity: 1;
+        }
+
+        /* New Releases Section */
+        .new-releases-section .movies-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding: 20px 0;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .new-releases-section .movies-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .new-releases-section .movie-scroll-item {
+            flex: 0 0 150px;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .new-releases-section .movie-scroll-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .new-releases-section .movie-scroll-item .movie-scroll-content {
+            padding: 10px;
+            background: var(--dark-bg);
+        }
+
+        .new-releases-section .movie-scroll-title {
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .new-releases-section .movie-scroll-year {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .new-releases-section .movie-scroll-category {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--primary-color);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .new-releases-section .movie-scroll-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Coming Soon Section */
+        .coming-soon-section .movies-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .coming-soon-section .movie-stack-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .coming-soon-section .movie-stack-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .coming-soon-section .movie-stack-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.8), transparent);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .coming-soon-section .movie-stack-title {
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .coming-soon-section .movie-stack-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+            max-height: 60px;
+            overflow: hidden;
+        }
+
+        .coming-soon-section .movie-stack-release {
+            color: var(--text-primary);
+            font-size: 14px;
+            margin: 10px 0;
+            background: var(--primary-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .coming-soon-section .movie-stack-notify {
+            background: linear-gradient(135deg, #28a745, #34c759);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .coming-soon-section .movie-stack-notify.notified {
+            background: linear-gradient(135deg, #6c757d, #adb5bd);
+        }
+
+        .coming-soon-section .movie-stack-notify:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .trending-section .movies-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            .new-releases-section .movies-scroll {
+                gap: 10px;
+            }
+            .new-releases-section .movie-scroll-item {
+                flex: 0 0 120px;
+            }
+            .coming-soon-section .movie-stack-title {
+                font-size: 16px;
+            }
+            .coming-soon-section .movie-stack-description {
+                font-size: 12px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- NAV -->
+    <!-- Telegram Join Group Ribbon -->
+    <div class="telegram-ribbon">
+        <a href="https://t.me/nexfixgroup" target="_blank" aria-label="Join our Telegram group">
+            <i class="bx bxl-telegram"></i>Join Our Telegram Group
+        </a>
+    </div>
+
+    <!-- Navigation -->
     <div class="nav-wrapper">
         <div class="container">
             <div class="nav">
@@ -36,11 +353,10 @@
                     <i class="bx bx-movie-play bx-tada main-color"></i>Nexf<span class="main-color">i</span>x
                 </a>
                 <!-- SEARCH BAR -->
-                <div class="search-bar">
+                <div class="search-bar" id="search-bar">
                     <div class="search-input-wrapper">
-                        <input type="text" placeholder="Search movies..." id="search-input">
+                        <input type="text" placeholder="Search" id="search-input">
                     </div>
-                    <button type="submit" id="search-button"><i class="bx bx-search"></i></button>
                     <div class="search-popup" id="search-popup"></div>
                 </div>
                 <!-- END SEARCH BAR -->
@@ -89,31 +405,12 @@
             </div>
         </div>
     </div>
-    <!-- END NAV -->
 
     <!-- SEARCH BACKDROP -->
     <div class="search-backdrop" id="search-backdrop"></div>
 
     <!-- MOVIE MODAL -->
-    <div class="movie-modal" id="movie-modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
-        <div class="modal-content">
-            <i class="bx bx-x modal-close" id="modal-close" role="button" aria-label="Close modal"></i>
-            <div class="modal-header">
-                <img id="modal-poster" src="" alt="">
-            </div>
-            <div class="modal-details">
-                <h2 class="modal-title" id="modal-title"></h2>
-                <div class="modal-info" id="modal-info"></div>
-                <div class="modal-description" id="modal-description"></div>
-                <div class="modal-actions">
-                    <a href="#" class="btn btn-hover">
-                        <i class="bx bxs-right-arrow"></i>
-                        <span>Watch now</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="movie-modal" id="movie-modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true"></div>
     <!-- END MOVIE MODAL -->
 
     <!-- HERO SECTION -->
@@ -126,6 +423,33 @@
         </div>
     </div>
     <!-- END HERO SECTION -->
+
+    <!-- TRENDING NOW SECTION -->
+    <div class="section trending-section" id="trending-section">
+        <div class="container">
+            <div class="section-header">Trending Now</div>
+            <div class="movies-grid" id="trending-movies"></div>
+        </div>
+    </div>
+    <!-- END TRENDING NOW SECTION -->
+
+    <!-- NEW RELEASES SECTION -->
+    <div class="section new-releases-section" id="new-releases-section">
+        <div class="container">
+            <div class="section-header">New Releases</div>
+            <div class="movies-scroll" id="new-releases-movies"></div>
+        </div>
+    </div>
+    <!-- END NEW RELEASES SECTION -->
+
+    <!-- COMING SOON SECTION -->
+    <div class="section coming-soon-section" id="coming-soon-section">
+        <div class="container">
+            <div class="section-header">Coming Soon</div>
+            <div class="movies-stack" id="coming-soon-movies"></div>
+        </div>
+    </div>
+    <!-- END COMING SOON SECTION -->
 
     <!-- LATEST HOLLYWOOD SECTION -->
     <div class="section" id="hollywood-section">
@@ -282,6 +606,9 @@
                             <a href="#" class="social-item">
                                 <i class="bx bxl-instagram"></i>
                             </a>
+                            <a href="https://t.me/nexfixgroup" class="social-item">
+                                <i class="bx bxl-telegram"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -350,387 +677,11 @@
             Tuat Tran Anh
         </a>
     </div>
-    <!-- END COPYRIGHT SECTION -->
 
     <!-- SCRIPT -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js" integrity="sha512-bPs7Ae6pVvhOSiIcyUClR7/q2OAsRiovw4vAkX+zJbw3ShAeeqezq50RIIcIURq7Oa20rW2n2q+fyXBNcU9lrw==" crossorigin="anonymous"></script>
     <script src="/assets/js/app.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Function to initialize Owl Carousel
-            function initCarousel(selector, options) {
-                try {
-                    const $carousel = $(selector);
-                    if ($carousel.length === 0) {
-                        console.error(`Carousel element ${selector} not found`);
-                        return;
-                    }
-                    $carousel.owlCarousel(options);
-                    $carousel.trigger('refresh.owl.carousel');
-                } catch (error) {
-                    console.error(`Error initializing carousel ${selector}:`, error);
-                }
-            }
-
-            // Function to fetch data from backend API
-            async function fetchData(url, sectionId) {
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}, URL: ${url}`);
-                    }
-                    const text = await response.text();
-                    if (!text) {
-                        throw new Error(`Empty response from ${url}`);
-                    }
-                    const data = JSON.parse(text);
-                    if (!Array.isArray(data)) {
-                        console.error(`Expected array, got:`, data, `from ${url}`);
-                        if (sectionId) {
-                            $(`#${sectionId}`).html(`
-                                <div class="section-error">Failed to load content. Please try again later.</div>
-                            `);
-                        }
-                        return [];
-                    }
-                    return data;
-                } catch (error) {
-                    console.error(`Error fetching ${url}:`, error);
-                    if (sectionId) {
-                        $(`#${sectionId}`).html(`
-                            <div class="section-error">Failed to load content. Please try again later.</div>
-                        `);
-                    }
-                    return [];
-                }
-            }
-
-            // Function to populate hero slide
-            function populateHeroSlide(data) {
-                const carousel = $('#hero-carousel');
-                carousel.empty();
-                if (!data || data.length === 0) {
-                    carousel.append(`
-                        <div class="hero-slide-item">
-                            <img src="https://via.placeholder.com/1280x720?text=No+Movies" alt="No Movies">
-                            <div class="overlay"></div>
-                            <div class="hero-slide-item-content">
-                                <div class="item-content-wraper">
-                                    <div class="item-content-title top-down">No Movies Found</div>
-                                    <div class="item-content-description top-down delay-4">Try a different category or search term.</div>
-                                </div>
-                            </div>
-                        </div>
-                    `);
-                } else {
-                    data.forEach(movie => {
-                        const slideItem = `
-                            <div class="hero-slide-item" data-movie='${JSON.stringify(movie)}'>
-                                <img src="${movie.posterUrl || 'https://via.placeholder.com/1280x720?text=No+Image'}" alt="${movie.title}">
-                                <div class="overlay"></div>
-                                <div class="hero-slide-item-content">
-                                    <div class="item-content-wraper">
-                                        <div class="item-content-title top-down">${movie.title}</div>
-                                        <div class="movie-infos top-down delay-2">
-                                            <div class="movie-info"><i class="bx bxs-star"></i><span>${movie.rating || 'N/A'}</span></div>
-                                            <div class="movie-info"><i class="bx bxs-video"></i><span>${movie.quality || 'Unknown'}</span></div>
-                                            <div class="movie-info"><i class="bx bxs-category"></i><span>${movie.category || 'Unknown'}</span></div>
-                                            <div class="movie-info"><i class="bx bxs-calendar"></i><span>${movie.release_year || 'N/A'}</span></div>
-                                            <div class="movie-info"><i class="bx bxs-time"></i><span>${movie.duration || 'N/A'}</span></div>
-                                        </div>
-                                        <div class="item-content-description top-down delay-4">${movie.description || 'No description available.'}</div>
-                                        <div class="item-action top-down delay-6">
-                                            <a href="#" class="btn btn-hover"><i class="bx bxs-right-arrow"></i><span>Watch now</span></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        carousel.append(slideItem);
-                    });
-                }
-                initCarousel('#hero-carousel', {
-                    items: 1,
-                    loop: true,
-                    nav: true,
-                    dots: true,
-                    autoplay: true,
-                    autoplayTimeout: 5000,
-                    smartSpeed: 1000,
-                    navText: ['<i class="bx bx-chevron-left"></i>', '<i class="bx bx-chevron-right"></i>']
-                });
-            }
-
-            // Function to populate movie items
-            function populateMovieItems(selector, data, sectionId) {
-                const carousel = $(selector);
-                const section = sectionId === 'hero-section' ? $('.hero-section') : $(`#${sectionId}`);
-                carousel.empty();
-                if (!data || data.length === 0) {
-                    section.remove();
-                    return;
-                }
-                data.forEach(movie => {
-                    const movieItem = `
-                        <a href="#" class="movie-item" data-movie='${JSON.stringify(movie)}'>
-                            <img src="${movie.posterUrl || 'https://via.placeholder.com/200x300?text=No+Image'}" alt="${movie.title}">
-                            <div class="movie-item-content">
-                                <div class="movie-item-title">${movie.title}</div>
-                                <div class="movie-infos">
-                                    <div class="movie-info"><i class="bx bxs-star"></i><span>${movie.rating || 'N/A'}</span></div>
-                                    <div class="movie-info"><i class="bx bxs-video"></i><span>${movie.quality || 'Unknown'}</span></div>
-                                    <div class="movie-info"><i class="bx bxs-category"></i><span>${movie.category || 'Unknown'}</span></div>
-                                    <div class="movie-info"><i class="bx bxs-time"></i><span>${movie.duration || 'N/A'}</span></div>
-                                </div>
-                            </div>
-                        </a>
-                    `;
-                    carousel.append(movieItem);
-                });
-                initCarousel(selector, {
-                    items: 4,
-                    loop: true,
-                    nav: true,
-                    dots: true,
-                    responsive: {
-                        0: { items: 1 },
-                        600: { items: 2 },
-                        1000: { items: 4 }
-                    },
-                    navText: ['<i class="bx bx-chevron-left"></i>', '<i class="bx bx-chevron-right"></i>']
-                });
-            }
-
-            // Function to populate special movie
-            function populateSpecialMovie(data) {
-                const specialMovie = $('#special-movie');
-                const section = $('#special-movie-section');
-                if (!data || data.length === 0) {
-                    section.remove();
-                    return;
-                }
-                const movie = data[0];
-                specialMovie.empty();
-                const specialItem = `
-                    <img src="${movie.posterUrl || 'https://via.placeholder.com/1280x720?text=No+Image'}" alt="${movie.title}">
-                    <div class="overlay"></div>
-                    <div class="hero-slide-item-content" data-movie='${JSON.stringify(movie)}'>
-                        <div class="item-content-wraper">
-                            <div class="item-content-title">${movie.title}</div>
-                            <div class="movie-infos">
-                                <div class="movie-info"><i class="bx bxs-star"></i><span>${movie.rating || 'N/A'}</span></div>
-                                <div class="movie-info"><i class="bx bxs-video"></i><span>${movie.quality || 'Unknown'}</span></div>
-                                <div class="movie-info"><i class="bx bxs-category"></i><span>${movie.category || 'Unknown'}</span></div>
-                                <div class="movie-info"><i class="bx bxs-calendar"></i><span>${movie.release_year || 'N/A'}</span></div>
-                                <div class="movie-info"><i class="bx bxs-time"></i><span>${movie.duration || 'N/A'}</span></div>
-                            </div>
-                            <div class="item-content-description">${movie.description || 'No description available.'}</div>
-                            <div class="item-action">
-                                <a href="#" class="btn btn-hover"><i class="bx bxs-right-arrow"></i><span>Watch now</span></a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                specialMovie.append(specialItem);
-            }
-
-            // Function to populate search popup
-            function populateSearchPopup(data) {
-                const popup = $('#search-popup');
-                popup.removeClass('loading');
-                popup.empty();
-                if (!data || !Array.isArray(data) || data.length === 0) {
-                    popup.append(`
-                        <div class="search-result">
-                            <div class="search-result-info">
-                                <div class="search-result-title">No results found</div>
-                                <div class="search-result-details">Try a different search term</div>
-                            </div>
-                        </div>
-                    `);
-                    popup.addClass('active');
-                    $('#search-backdrop').addClass('active');
-                    return;
-                }
-                data.forEach((movie, index) => {
-                    const resultItem = `
-                        <div class="search-result" data-movie='${JSON.stringify(movie)}' style="animation-delay: ${index * 0.1}s">
-                            <img src="${movie.posterUrl || 'https://via.placeholder.com/50x75?text=No+Image'}" alt="${movie.title}">
-                            <div class="search-result-info">
-                                <div class="search-result-title">${movie.title}</div>
-                                <div class="search-result-details">
-                                    ${movie.category || 'Unknown'} | ${movie.release_year || 'N/A'} | ${movie.duration || 'N/A'}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    popup.append(resultItem);
-                });
-                popup.addClass('active');
-                $('#search-backdrop').addClass('active');
-            }
-
-            // Function to show movie modal
-            function showMovieModal(movie) {
-                $('#modal-poster').attr({
-                    'src': movie.posterUrl || 'https://via.placeholder.com/250x375?text=No+Image',
-                    'alt': movie.title
-                });
-                $('#modal-title').text(movie.title);
-                $('#modal-info').html(`
-                    <span><i class="bx bxs-star"></i>${movie.rating || 'N/A'}</span>
-                    <span><i class="bx bxs-video"></i>${movie.quality || 'Unknown'}</span>
-                    <span><i class="bx bxs-category"></i>${movie.category || 'Unknown'}</span>
-                    <span><i class="bx bxs-calendar"></i>${movie.release_year || 'N/A'}</span>
-                    <span><i class="bx bxs-time"></i>${movie.duration || 'N/A'}</span>
-                    <span><i class="bx bxs-film"></i>${movie.genre || 'N/A'}</span>
-                    <span><i class="bx bxs-user"></i>Directed by ${movie.director || 'N/A'}</span>
-                    <span><i class="bx bxs-group"></i>${movie.cast || 'N/A'}</span>
-                `);
-                $('#modal-description').text(movie.description || 'No description available.');
-                $('#movie-modal').attr('aria-hidden', 'false').addClass('active');
-            }
-
-            // Search bar activation
-            $('#search-input').on('focus', function() {
-                $('.search-bar').addClass('active');
-                $('#search-backdrop').addClass('active');
-            });
-
-            // Real-time search
-            let searchTimeout;
-            $('#search-input').on('input', function() {
-                $('.search-bar').addClass('active');
-                clearTimeout(searchTimeout);
-                const query = $(this).val().trim();
-                if (query) {
-                    $('#search-popup').addClass('loading');
-                    searchTimeout = setTimeout(() => {
-                        fetchData(`/home/search?q=${encodeURIComponent(query)}`)
-                            .then(data => populateSearchPopup(data))
-                            .catch(error => {
-                                console.error('Search error:', error);
-                                $('#search-popup').removeClass('loading').empty().append(`
-                                    <div class="search-result">
-                                        <div class="search-result-info">
-                                            <div class="search-result-title">Search Failed</div>
-                                            <div class="search-result-details">Please try again later</div>
-                                        </div>
-                                    </div>
-                                `).addClass('active');
-                                $('#search-backdrop').addClass('active');
-                            });
-                    }, 300);
-                } else {
-                    $('#search-popup').empty().removeClass('active loading');
-                    $('#search-backdrop').removeClass('active');
-                    $('.search-bar').removeClass('active');
-                }
-            });
-
-            // Submit search to update hero carousel
-            $('#search-button').click(function(e) {
-                e.preventDefault();
-                const query = $('#search-input').val().trim();
-                if (query) {
-                    fetchData(`/home/search?q=${encodeURIComponent(query)}`)
-                        .then(data => {
-                            populateHeroSlide(data);
-                            $('#search-popup').empty().removeClass('active loading');
-                            $('#search-backdrop').removeClass('active');
-                            $('.search-bar').removeClass('active');
-                        })
-                        .catch(error => {
-                            console.error('Search submit error:', error);
-                            $('#search-popup').empty().removeClass('active loading').append(`
-                                <div class="search-result">
-                                    <div class="search-result-info">
-                                        <div class="search-result-title">Search Failed</div>
-                                        <div class="search-result-details">Please try again later</div>
-                                    </div>
-                                </div>
-                            `).addClass('active');
-                            $('#search-backdrop').addClass('active');
-                        });
-                }
-            });
-
-            // Close search popup and backdrop
-            $('#search-backdrop').on('click', function() {
-                $('#search-popup').empty().removeClass('active loading');
-                $('#search-backdrop').removeClass('active');
-                $('.search-bar').removeClass('active');
-            });
-
-            $(document).on('click', function(e) {
-                if (!$(e.target).closest('.search-bar').length && !$(e.target).is('.search-bar')) {
-                    $('#search-popup').empty().removeClass('active loading');
-                    $('#search-backdrop').removeClass('active');
-                    $('.search-bar').removeClass('active');
-                }
-            });
-
-            $('.search-bar').on('click', function(e) {
-                e.stopPropagation();
-            });
-
-            // Modal close
-            $('#modal-close').on('click', function() {
-                $('#movie-modal').attr('aria-hidden', 'true').removeClass('active');
-            });
-
-            // Movie item click with visual feedback
-            $(document).on('click', '.movie-item, .search-result, .hero-slide-item-content', function(e) {
-                e.preventDefault();
-                const $element = $(this);
-                $element.addClass('clicked');
-                setTimeout(() => $element.removeClass('clicked'), 400);
-                const movieData = $element.data('movie');
-                if (movieData) {
-                    showMovieModal(movieData);
-                } else {
-                    console.error('No movie data found for element:', $element);
-                }
-            });
-
-            // Fetch and populate sections
-            fetchData('/home/details').then(data => populateHeroSlide(data));
-            fetchData('/home/details?category=top movie', 'hero-section').then(data => populateMovieItems('#top-movies-slide', data, 'hero-section'));
-            fetchData('/home/details?category=hollywood', 'hollywood-section').then(data => populateMovieItems('#latest-hollywood', data, 'hollywood-section'));
-            fetchData('/home/details?category=bollywood', 'bollywood-section').then(data => populateMovieItems('#latest-bollywood', data, 'bollywood-section'));
-            fetchData('/home/details?category=web series', 'web-series-section').then(data => populateMovieItems('#latest-web-series', data, 'web-series-section'));
-            fetchData('/home/details?category=tamil', 'tamil-section').then(data => populateMovieItems('#latest-tamil', data, 'tamil-section'));
-            fetchData('/home/details?category=action', 'action-section').then(data => populateMovieItems('#latest-action', data, 'action-section'));
-            fetchData('/home/details?category=kids', 'kids-section').then(data => populateMovieItems('#latest-kids', data, 'kids-section'));
-            fetchData('/home/details?limit=1', 'special-movie-section').then(data => populateSpecialMovie(data));
-
-            // Category dropdown
-            $('.dropdown-toggle').click(function(e) {
-                e.preventDefault();
-                $(this).parent().toggleClass('active');
-            });
-
-            $('.dropdown-menu a').click(function(e) {
-                e.preventDefault();
-                const category = $(this).data('category');
-                fetchData(`/home/details?category=${encodeURIComponent(category)}`).then(data => populateHeroSlide(data));
-            });
-
-            $(document).click(function(e) {
-                if (!$(e.target).closest('.dropdown').length) {
-                    $('.dropdown').removeClass('active');
-                }
-            });
-
-            // Hamburger menu toggle
-            $('#hamburger-menu').click(function() {
-                $(this).toggleClass('active');
-                const isExpanded = $(this).hasClass('active');
-                $(this).attr('aria-expanded', isExpanded);
-                $('#nav-menu').toggleClass('active');
-            });
-        });
-    </script>
+    <script src="/assets/js/dash.js"></script>
 </body>
 </html>
