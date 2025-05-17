@@ -1,3 +1,4 @@
+
 from psycopg2 import Error
 from api.sql import create_connection
 import logging

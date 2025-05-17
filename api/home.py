@@ -25,6 +25,11 @@ from api.create import initialize_database
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 # FastAPI app initialization
 home_app = FastAPI(title="Nexfix Home API", version="3.0", docs_url="/docs")
 
