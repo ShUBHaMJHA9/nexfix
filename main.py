@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import uvicorn
+from api.sql import create_connection
 from m3u8 import ParseError
 import httpx
 from typing import List, Dict, Optional, Tuple
@@ -28,6 +29,7 @@ import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 import m3u8
 from urllib.parse import urljoin, quote, urlparse
+import urllib
 from cachetools import TTLCache
 import ipaddress
 import logging
@@ -35,11 +37,11 @@ from api.home import home_app
 # Constants
 EXPIRY_MINUTES = 60
 DB_PATH = "database.json"
-TMP_DIR = Path("")
-STATIC_PATH = TMP_DIR / "static"
+STATIC_PATH = Path("static")
 SUBTITLE_PATH = STATIC_PATH / "subtitles"
 THUMBNAIL_PATH = STATIC_PATH / "nexfix-logo.jpg"
 LOGO_PATH = STATIC_PATH / "logo.svg"
+DEFAULT_SUBTITLE = "/static/subtitles/english.vtt"
 NODE = "node_modules"
 DEFAULT_SUBTITLE = "/static/subtitles/english.vtt"
 
@@ -529,6 +531,7 @@ async def handle_m3u8_playlist(url: str, request: Request):
 @app.get("/play", response_class=HTMLResponse)
 async def media_player(request: Request, video_id: str = Query(...)):
     template_path = Path("templates/player.html")
+    print(template_path)
     if not template_path.exists():
         logger.error(f"Template not found at {template_path}")
         raise HTTPException(status_code=500, detail="Template 'player.html' not found")
@@ -796,6 +799,86 @@ def determine_quality(title: str) -> str:
     if 'low' in title: return "Low"
     if 'hd' in title: return "HD"
     return "Unknown"
+
+import traceback
+
+##movie handler i here so dont touch that code 
+
+@app.get("/watch", response_class=HTMLResponse)
+async def media_player(request: Request, v: str = Query(...)):  # v is now the video ID
+    # Ensure the template exists
+    template_path = Path("home/watch.html")
+    if not template_path.exists():
+        logger.error(f"Template not found at {template_path}")
+        raise HTTPException(status_code=500, detail="Template 'watch.html' not found")
+    return home.TemplateResponse("watch.html", {"request": request, "video_id": v})
+
+@app.get("/download/{video_id}/{quality}")
+async def download_video(video_id: str, quality: str, request: Request):
+    conn = create_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT url FROM download WHERE movie_id = %s AND quality = %s", (video_id, quality))
+            result = cur.fetchone()
+            if not result:
+                raise HTTPException(status_code=404, detail="Download URL not found")
+            actual_url = result[0]
+
+        range_header = request.headers.get("range")
+
+        session = aiohttp.ClientSession()
+        try:
+            async with session.head(actual_url) as head_resp:
+                if head_resp.status != 200:
+                    await session.close()
+                    raise HTTPException(status_code=head_resp.status, detail="Failed to fetch video header")
+
+                total_size = int(head_resp.headers.get("Content-Length", 0))
+                content_type = head_resp.headers.get("Content-Type", "video/mp4")
+
+            start, end = 0, total_size - 1
+            if range_header:
+                range_match = re.match(r"bytes=(\d+)-(\d*)", range_header)
+                if range_match:
+                    start = int(range_match.group(1))
+                    if range_match.group(2):
+                        end = int(range_match.group(2)) or total_size - 1
+                    if start > end:
+                        await session.close()
+                        raise HTTPException(status_code=416, detail="Invalid range")
+
+            headers = {"Range": f"bytes={start}-{end}"}
+
+            async def stream_chunk():
+                async with session.get(actual_url, headers=headers) as resp:
+                    async for chunk in resp.content.iter_chunked(1024 * 1024 * 2):  # 2MB
+                        yield chunk
+                await session.close()
+
+            return StreamingResponse(
+                stream_chunk(),
+                status_code=206 if range_header else 200,
+                headers={
+                    "Content-Range": f"bytes {start}-{end}/{total_size}" if range_header else "",
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": str(end - start + 1),
+                    "Content-Type": content_type,
+                    "Content-Disposition": f'attachment; filename="{video_id}.mp4"'
+                }
+            )
+        except Exception:
+            await session.close()
+            raise
+
+    except Exception as e:
+        print("Download Error:", traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again later.")
+    finally:
+        conn.close()
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

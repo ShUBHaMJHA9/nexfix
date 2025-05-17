@@ -9,14 +9,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 def create_connection():
     try:
         tembo_uri = os.getenv("DATABASE_URL")
         
         # Ensure TEMBO_URI is provided
         if not tembo_uri:
-            raise ValueError("TEMBO_URI environment variable is not set.")
+            raise ValueError("DATABASE_URL environment variable is not set.")
         
         # Connect through the proxy (Ensure your proxy server is set up correctly)
         conn = psycopg2.connect(tembo_uri)

@@ -3,312 +3,773 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Nexfix MP4HUB</title>
+    <meta name="description" content="Stream your favorite movies and TV shows in stunning HD quality on Nexfix MP4HUB. Enjoy a seamless viewing experience with a vast library of content.">
+    <meta name="keywords" content="streaming, movies, TV shows, Nexfix, HD, entertainment">
+    <meta name="robots" content="index, follow">
+    <title>Nexfix MP4HUB - Premium Streaming</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="/static/videojs/video-js.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+    <!-- VideoJS CSS -->
+    <link href="/static/videojs/video-js.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/grid.css">
+    <link rel="stylesheet" href="/assets/css/dash2.css">
+    
 </head>
 <body>
-    <header class="nexfix-header" role="banner">
-        <div class="header-left">
-            <img src="/static/logo.svg" alt="Nexfix MP4HUB Logo" class="brand-logo">
-            <h1 class="brand-title">Nexfix MP4HUB</h1>
-        </div>
-        <div class="content-type">
-            <button class="content-type-btn" id="contentTypeBtn" aria-label="Select content type" aria-expanded="false">
-                <span class="material-icons">movie</span>
-                <span>Movies</span>
-                <span class="material-icons">arrow_drop_down</span>
-            </button>
-            <div class="content-type-dropdown hidden" id="contentTypeDropdown" role="menu">
-                <div class="content-type-item active" data-type="movies" role="menuitem" tabindex="0">
-                    <span class="material-icons">movie</span>
-                    <span>Movies</span>
-                </div>
-                <div class="content-type-item" data-type="albums" role="menuitem" tabindex="0">
-                    <span class="material-icons">album</span>
-                    <span>Albums</span>
-                </div>
-                <div class="content-type-item" data-type="tv" role="menuitem" tabindex="0">
-                    <span class="material-icons">live_tv</span>
-                    <span>TV Shows</span>
-                </div>
-                <div class="content-type-item" data-type="live" role="menuitem" tabindex="0">
-                    <span class="material-icons">sensors</span>
-                    <span>Live Streams</span>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Telegram Ribbon -->
+    <div class="telegram-ribbon">
+        <a href="https://t.me/nexfixgroup" target="_blank" aria-label="Join our Telegram group">
+            <i class="bx bxl-telegram"></i> Join Our Telegram Group for Exclusive Updates
+        </a>
+    </div>
 
-    <div class="telegram-join-banner" role="complementary">
-        <img src="/static/Telegram_logo.png" alt="Telegram Logo" class="telegram-logo">
-        <div class="telegram-text">
-            <p>Stay Updated — Join Us on Telegram</p>
-            <div class="telegram-links">
-                <a href="https://t.me/TeraBoX_dlFree_bot" target="_blank" class="telegram-btn" rel="noopener noreferrer">Our Telegram Bot</a>
-                <a href="https://t.me/freeDL_1" target="_blank" class="telegram-btn" rel="noopener noreferrer">Main Channel</a>
+        <!-- Navigation -->
+    <div class="nav-wrapper">
+        <div class="container">
+            <div class="nav">
+                <a href="#" class="logo">
+                    <i class="bx bx-movie-play bx-tada main-color"></i>Nexf<span class="main-color">i</span>x
+                </a>
+                <!-- SEARCH BAR -->
+                <div class="search-bar" id="search-bar">
+                    <div class="search-input-wrapper">
+                        <input type="text" placeholder="Search" id="search-input">
+                    </div>
+                    <div class="search-popup" id="search-popup"></div>
+                </div>
+                <!-- END SEARCH BAR -->
+                <ul class="nav-menu" id="nav-menu">
+                    <li><a href="#">Home</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle">Genre</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" data-category="hollywood">Hollywood</a></li>
+                            <li><a href="#" data-category="bollywood">Bollywood</a></li>
+                            <li><a href="#" data-category="hindi dubbed">Hindi Dubbed</a></li>
+                            <li><a href="#" data-category="hindi dubbed south">Hindi Dubbed South</a></li>
+                            <li><a href="#" data-category="bengali">Bengali</a></li>
+                            <li><a href="#" data-category="marathi">Marathi</a></li>
+                            <li><a href="#" data-category="punjabi">Punjabi</a></li>
+                            <li><a href="#" data-category="tamil">Tamil</a></li>
+                            <li><a href="#" data-category="telugu">Telugu</a></li>
+                            <li><a href="#" data-category="kannada">Kannada</a></li>
+                            <li><a href="#" data-category="web series">Web Series</a></li>
+                            <li><a href="#" data-category="tv show">TV Shows</a></li>
+                            <li><a href="#" data-category="documentary">Documentary</a></li>
+                            <li><a href="#" data-category="anime">Anime</a></li>
+                            <li><a href="#" data-category="kids">Kids</a></li>
+                            <li><a href="#" data-category="action">Action</a></li>
+                            <li><a href="#" data-category="comedy">Comedy</a></li>
+                            <li><a href="#" data-category="drama">Drama</a></li>
+                            <li><a href="#" data-category="thriller">Thriller</a></li>
+                            <li><a href="#" data-category="horror">Horror</a></li>
+                            <li><a href="#" data-category="romance">Romance</a></li>
+                            <li><a href="#" data-category="international">International</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#">Movies</a></li>
+                    <li><a href="#">Series</a></li>
+                    <li><a href="#">About</a></li>
+                    <li>
+                        <a href="#" class="btn btn-hover">
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                <li>
+            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                <span class="material-icons">brightness_4</span>
+            </button>
+        </li>
+    </ul>
+    <!-- MOBILE MENU TOGGLE -->
+    <div class="hamburger-menu" id="hamburger-menu" role="button" aria-label="Toggle navigation" aria-expanded="false">
+        <div class="hamburger"></div>
+    </div>
+</div>
+
+    <!-- Telegram Banner -->
+    <div id="telegram-banner">
+        <div class="telegram-join-banner">
+            <img src="/static/Telegram_logo.png" alt="Telegram Logo" class="telegram-logo" loading="lazy">
+            <div class="telegram-text">
+                <p>Stay Updated with the Latest Content — Join Our Telegram Community</p>
+                <div class="telegram-links">
+                    <a href="https://t.me/TeraBoX_dlFree_bot" target="_blank" class="telegram-btn" rel="noopener noreferrer" aria-label="Join Telegram Bot">
+                        <i class="bx bxl-telegram"></i> Telegram Bot
+                    </a>
+                    <a href="https://t.me/freeDL_1" target="_blank" class="telegram-btn" rel="noopener noreferrer" aria-label="Join Main Channel">
+                        <i class="bx bxl-telegram"></i> Main Channel
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-
-    <div id="videoPlayer" class="video_player" role="region" aria-label="Video player">
-        <div class="error-overlay hidden" aria-live="assertive">
-            <span class="error-message"></span>
+     <section class="generated-section">
+        <div class="notice-banner">
+            <p><strong>🎉 New Feature:</strong> Download directly from Telegram via our bot!</p>
+            <a href="https://t.me/TeraBoX_dlFree_bot" target="_blank" class="cta-button">Try It Now</a>
         </div>
-        <div class="loading-spinner hidden" aria-label="Loading video"></div>
-        <div class="context-menu hidden" aria-hidden="true" style="display: none;">
-            <ul role="menu">
-                <li data-action="play-pause" role="menuitem" tabindex="0">Play/Pause</li>
-                <li data-action="add-bookmark" role="menuitem" tabindex="0">Add Bookmark</li>
-                <li data-action="add-annotation" role="menuitem" tabindex="0">Add Annotation</li>
-                <li data-action="toggle-pip" role="menuitem" tabindex="0">Picture-in-Picture</li>
-                <li data-action="toggle-fullscreen" role="menuitem" tabindex="0">Fullscreen</li>
-                <li data-action="show-shortcuts" role="menuitem" tabindex="0">Keyboard Shortcuts</li>
-                <li data-action="capture-screenshot" role="menuitem" tabindex="0">Capture Screenshot</li>
-                <li data-action="share-video" role="menuitem" tabindex="0">Share Video</li>
-            </ul>
-        </div>
-        <video id="mainPlayer" class="video-js vjs-big-play-centered" playsinline preload="auto" aria-label="Main video player">
-            <source src="" type="application/x-mpegURL">
-            <p class="vjs-no-js">
-                To view this video please enable JavaScript, and consider upgrading to a web browser that
-                <a href="https://videojs.com/html5-video-support/" target="_blank" rel="noopener noreferrer">supports HTML5 video</a>
-            </p>
-        </video>
-        <div id="iframePlayerContainer" class="iframe-player-container hidden" aria-label="Embedded video player">
-            <iframe id="iframePlayer" frameborder="0" allowfullscreen aria-label="Embedded video content"></iframe>
-        </div>
-        <button id="centerControl" class="center-control" aria-label="Play" role="button" tabindex="0">
-            <span class="material-icons">play_arrow</span>
-        </button>
-        <div id="qualityBadge" class="quality-badge" aria-live="polite">Auto</div>
-        <div class="annotation-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100;"></div>
-        <button id="skipAdBtn" class="skip-ad-btn hidden" disabled aria-label="Skip advertisement">
-            <span class="skip-ad-text" id="skipAdTimer">Skip in 5s</span>
-            <span class="skip-ad-active">Skip Ad</span>
-        </button>
-        <div id="volumeOverlay" class="swipe-overlay hidden" aria-hidden="true">
-            <div id="volumeIndicator" class="swipe-indicator">
-                <span class="material-icons" id="volumeIcon">volume_up</span>
-                <span id="volumeValue">80%</span>
-            </div>
-            <div class="volume-bar"></div>
-        </div>
-        <div id="brightnessOverlay" class="swipe-overlay hidden" aria-hidden="true">
-            <div id="brightnessIndicator" class="swipe-indicator">
-                <span class="material-icons" id="brightnessIcon">brightness_5</span>
-                <span id="brightnessValue">100%</span>
-            </div>
-            <div class="brightness-bar"></div>
-        </div>
-        <div id="rewindIndicator" class="tap-indicator left hidden" aria-hidden="true">
-            <div class="tap-indicator-content">
-                <span class="material-icons">fast_rewind</span>
-                <span id="rewindValue">-10s</span>
-            </div>
-        </div>
-        <div id="forwardIndicator" class="tap-indicator right hidden" aria-hidden="true">
-            <div class="tap-indicator-content">
-                <span class="material-icons">fast_forward</span>
-                <span id="forwardValue">+10s</span>
-            </div>
-        </div>
-        <div id="seekFeedbackLeft" class="seek-feedback left hidden" aria-hidden="true"></div>
-        <div id="seekFeedbackRight" class="seek-feedback right hidden" aria-hidden="true"></div>
-        <div id="speedFeedback" class="speed-feedback hidden" aria-hidden="true"></div>
-        <div id="lockOverlay" class="lock-overlay hidden" aria-hidden="true"></div>
-        <div id="adOverlay" class="ad-overlay hidden" aria-hidden="true">
-            <span id="adText" class="ad-label">Advertisement</span>
-            <span id="adTimer" class="ad-timer">5s</span>
-        </div>
-        <div id="orientationFeedback" class="orientation-feedback hidden" aria-hidden="true"></div>
-        <div class="controls hidden" role="toolbar">
-            <div id="progressArea" class="progress-area" role="slider" aria-valuemin="0" aria-label="Video progress">
-                <div class="bufferedBar"></div>
-                <div class="progress-bar"><span></span></div>
-            </div>
-            <div class="controls-list">
-                <div class="controls-left">
-                    <button class="icon fast-rewind" aria-label="Rewind 10 seconds" role="button" tabindex="0">
-                        <span class="material-icons">fast_rewind</span>
-                    </button>
-                    <div class="timer" aria-live="polite">
-                        <span class="current" aria-label="Current time">0:00</span>/<span class="duration" aria-label="Total duration">0:00</span>
+    </section>
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Left Column -->
+        <div class="left-column">
+            <!-- Video Player -->
+            <div id="videoPlayer" class="video_player" role="region" aria-label="Video player">
+                <div class="error-overlay hidden" aria-live="assertive">
+                    <span class="error-message"></span>
+                </div>
+                <div class="loading-spinner hidden" aria-label="Loading video"></div>
+                <button id="liveButton" class="hidden" aria-label="Go to live">LIVE</button>
+                <div class="context-menu hidden" aria-hidden="true" style="display: none;">
+                    <ul role="menu">
+                        <li data-action="play-pause" role="menuitem" tabindex="0">Play/Pause</li>
+                        <li data-action="toggle-pip" role="menuitem" tabindex="0">Picture-in-Picture</li>
+                        <li data-action="toggle-fullscreen" role="menuitem" tabindex="0">Fullscreen</li>
+                        <li data-action="share-video" role="menuitem" tabindex="0">Share Video</li>
+                        <li data-action="create-clip" role="menuitem" tabindex="0">Create Clip</li>
+                        <li data-action="add-bookmark" role="menuitem" tabindex="0">Add Bookmark</li>
+                    </ul>
+                </div>
+                <video id="mainPlayer" class="video-js vjs-big-play-centered" playsinline preload="auto" poster="" crossorigin="anonymous" aria-label="Main video player">
+                    <p class="vjs-no-js">
+                        To view this video please enable JavaScript, and consider upgrading to a web browser that
+                        <a href="https://videojs.com/html5-video-support/" target="_blank" rel="noopener noreferrer">supports HTML5 video</a>
+                    </p>
+                </video>
+                <div id="iframePlayerContainer" class="iframe-player-container hidden" aria-label="Embedded video player">
+                    <iframe id="iframePlayer" frameborder="0" allowfullscreen aria-label="Embedded video content"></iframe>
+                </div>
+                <button id="centerControl" class="center-control" aria-label="Play" role="button" tabindex="0">
+                    <span class="material-icons">play_arrow</span>
+                </button>
+                <div id="qualityBadge" class="quality-badge" aria-live="polite">Auto</div>
+                <div class="annotation-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100;"></div>
+                <button id="skipAdBtn" class="skip-ad-btn hidden" disabled aria-label="Skip advertisement">
+                    <span class="skip-ad-text" id="skipAdTimer">Skip in 5s</span>
+                    <span class="skip-ad-active">Skip Ad</span>
+                </button>
+                <div id="volumeOverlay" class="swipe-overlay hidden" aria-hidden="true">
+                    <div id="volumeIndicator" class="swipe-indicator">
+                        <span class="material-icons" id="volumeIcon">volume_up</span>
+                        <span id="volumeValue">80%</span>
                     </div>
-                    <div class="live-indicator hidden" id="liveBtn" role="status">
-                        <span class="material-icons">sensors</span>
-                        LIVE <span id="liveTimer" aria-label="Live duration">0:00</span>
+                    <div class="volume-bar"></div>
+                </div>
+                <div id="brightnessOverlay" class="swipe-overlay hidden" aria-hidden="true">
+                    <div id="brightnessIndicator" class="swipe-indicator">
+                        <span class="material-icons" id="brightnessIcon">brightness_5</span>
+                        <span id="brightnessValue">100%</span>
+                    </div>
+                    <div class="brightness-bar"></div>
+                </div>
+                <div id="rewindIndicator" class="tap-indicator left hidden" aria-hidden="true">
+                    <div class="tap-indicator-content">
+                        <span class="material-icons">fast_rewind</span>
+                        <span id="rewindValue">-10s</span>
                     </div>
                 </div>
-                <div class="controls-right">
-                    <div class="volume" role="group">
-                        <button class="icon" aria-label="Toggle mute" role="button" tabindex="0">
-                            <span class="material-icons">volume_up</span>
-                        </button>
-                        <div class="volume-popup">
-                            <input type="range" class="volume-slider" min="0" max="100" value="80" aria-label="Volume control" role="slider">
-                            <span class="volume-percentage" aria-hidden="true">80%</span>
+                <div id="forwardIndicator" class="tap-indicator right hidden" aria-hidden="true">
+                    <div class="tap-indicator-content">
+                        <span class="material-icons">fast_forward</span>
+                        <span id="forwardValue">+10s</span>
+                    </div>
+                </div>
+                <div id="adOverlay" class="ad-overlay hidden" aria-hidden="true">
+                    <span id="adText" class="ad-label">Advertisement</span>
+                    <span id="adTimer" class="ad-timer">5s</span>
+                </div>
+                <div id="chaptersOverlay" class="chapters-overlay"></div>
+                <div class="controls hidden" role="toolbar">
+                    <div id="progressArea" class="progress-area" role="slider" aria-valuemin="0" aria-label="Video progress">
+                        <div class="bufferedBar"></div>
+                        <div class="progress-bar"><span></span></div>
+                    </div>
+                    <div class="controls-list">
+                        <div class="controls-left">
+                            <button class="icon fast-rewind" aria-label="Rewind 10 seconds" role="button" tabindex="0">
+                                <span class="material-icons">fast_rewind</span>
+                            </button>
+                            <div class="timer" aria-live="polite">
+                                <span class="current" aria-label="Current time">0:00</span>/<span class="duration" aria-label="Total duration">0:00</span>
+                            </div>
+                        </div>
+                        <div class="controls-right">
+                            <div class="volume" role="group">
+                                <button class="icon" aria-label="Toggle mute" role="button" tabindex="0">
+                                    <span class="material-icons">volume_up</span>
+                                </button>
+                                <div class="volume-popup">
+                                    <input type="range" class="volume-slider" min="0" max="100" value="80" aria-label="Volume control" role="slider">
+                                    <span class="volume-percentage" aria-hidden="true">80%</span>
+                                </div>
+                            </div>
+                            <button class="icon settingsBtn" id="settingsBtn" aria-label="Open settings" role="button" tabindex="0">
+                                <span class="material-icons">settings</span>
+                            </button>
+                            <button class="icon captionsBtn" id="captionsBtn" aria-label="Open captions menu" role="button" tabindex="0">
+                                <span class="material-icons">closed_caption</span>
+                            </button>
+                            <button class="icon picture_in_picture" aria-label="Toggle Picture-in-Picture" role="button" tabindex="0">
+                                <span class="material-icons">picture_in_picture_alt</span>
+                            </button>
+                            <button class="icon theater-mode" aria-label="Toggle theater mode" role="button" tabindex="0">
+                                <span class="material-icons">theater_comedy</span>
+                            </button>
+                            <button class="icon fullscreen" aria-label="Enter fullscreen" role="button" tabindex="0">
+                                <span class="material-icons">fullscreen</span>
+                            </button>
                         </div>
                     </div>
-                    <button class="icon audioTrackBtn" id="audioTrackBtn" aria-label="Open audio tracks menu" role="button" tabindex="0">
-                        <span class="material-icons">audiotrack</span>
+                </div>
+                <div id="settingsPanel" class="settings-panel-wrapper hidden" role="dialog" aria-label="Settings panel">
+                    <div class="settings-panel active" data-label="settingHome" aria-expanded="true">
+                        <div class="settings-header">Settings</div>
+                        <ul role="menu">
+                            <li data-label="playbackSpeed" role="menuitem" tabindex="0" aria-label="Open playback speed menu">Playback Speed</li>
+                            <li data-label="qualityMenu" role="menuitem" tabindex="0" aria-label="Open video quality menu">Quality</li>
+                            <li data-label="chaptersMenu" role="menuitem" tabindex="0" aria-label="Open chapters menu">Chapters</li>
+                            <li id="autoQualityToggle" class="active" role="menuitem" tabindex="0" aria-label="Toggle auto quality">Auto Quality <span class="material-icons">check</span></li>
+                            <li data-label="statsForNerds" role="menuitem" tabindex="0" aria-label="Show technical stats">Stats for Nerds</li>
+                        </ul>
+                    </div>
+                    <div class="settings-panel" data-label="playbackSpeed" aria-expanded="false">
+                        <div class="settings-header">
+                            <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Playback Speed
+                        </div>
+                        <ul role="menu">
+                            <li data-speed="0.25" role="menuitem" tabindex="0" aria-label="Set playback speed to 0.25x">0.25x</li>
+                            <li data-speed="0.5" role="menuitem" tabindex="0" aria-label="Set playback speed to 0.5x">0.5x</li>
+                            <li data-speed="0.75" role="menuitem" tabindex="0" aria-label="Set playback speed to 0.75x">0.75x</li>
+                            <li data-speed="1" class="active" role="menuitem" tabindex="0" aria-label="Set playback speed to 1x">1x <span class="material-icons">check</span></li>
+                            <li data-speed="1.25" role="menuitem" tabindex="0" aria-label="Set playback speed to 1.25x">1.25x</li>
+                            <li data-speed="1.5" role="menuitem" tabindex="0" aria-label="Set playback speed to 1.5x">1.5x</li>
+                            <li data-speed="1.75" role="menuitem" tabindex="0" aria-label="Set playback speed to 1.75x">1.75x</li>
+                            <li data-speed="2" role="menuitem" tabindex="0" aria-label="Set playback speed to 2x">2x</li>
+                        </ul>
+                    </div>
+                    <div class="settings-panel" data-label="qualityMenu" aria-expanded="false">
+                        <div class="settings-header">
+                            <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Video Quality
+                        </div>
+                        <ul id="qualityMenu" role="menu"></ul>
+                    </div>
+                    <div class="settings-panel" data-label="chaptersMenu" aria-expanded="false">
+                        <div class="settings-header">
+                            <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Chapters
+                        </div>
+                        <ul id="chaptersMenu" role="menu">
+                            <li data-chapter="0" role="menuitem" tabindex="0" aria-label="Go to chapter: Introduction">Introduction <span>0:00</span></li>
+                            <li data-chapter="1" role="menuitem" tabindex="0" aria-label="Go to chapter: Main Story">Main Story <span>5:23</span></li>
+                            <li data-chapter="2" role="menuitem" tabindex="0" aria-label="Go to chapter: Climax">Climax <span>45:12</span></li>
+                            <li data-chapter="3" role="menuitem" tabindex="0" aria-label="Go to chapter: Ending">Ending <span>1:12:45</span></li>
+                        </ul>
+                    </div>
+                    <div class="settings-panel" data-label="statsForNerds" aria-expanded="false">
+                        <div class="settings-header">
+                            <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Stats for Nerds
+                        </div>
+                        <div class="stats-container">
+                            <div class="stat-item">
+                                <span class="stat-label">Resolution:</span>
+                                <span class="stat-value" id="stat-resolution">1920x1080</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Bitrate:</span>
+                                <span class="stat-value" id="stat-bitrate">5.2 Mbps</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Codecs:</span>
+                                <span class="stat-value" id="stat-codecs">H.264, AAC</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Buffer Health:</span>
+                                <span class="stat-value" id="stat-buffer">15.3s</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Dropped Frames:</span>
+                                <span class="stat-value" id="stat-dropped">2/12450</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Network Activity:</span>
+                                <span class="stat-value" id="stat-network">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="captions-panel-wrapper hidden" id="captionsPanel" role="dialog" aria-label="Subtitles panel">
+                    <div class="settings-header">Subtitles</div>
+                    <ul id="captionMenu" role="menu">
+                        <li data-caption="off" role="menuitem" tabindex="0" aria-label="Turn off subtitles">Off</li>
+                        <li data-caption="en" role="menuitem" tabindex="0" aria-label="English subtitles">English</li>
+                        <li data-caption="es" role="menuitem" tabindex="0" aria-label="Spanish subtitles">Spanish</li>
+                        <li data-caption="fr" role="menuitem" tabindex="0" aria-label="French subtitles">French</li>
+                    </ul>
+                </div>
+                <div class="audio-tracks hidden" id="audioTracksPanel" role="dialog" aria-label="Audio tracks panel">
+                    <div class="settings-header">Audio Tracks</div>
+                    <ul id="audioTrackMenu" role="menu">
+                        <li data-audio="en" role="menuitem" tabindex="0" aria-label="English audio">English (Original)</li>
+                        <li data-audio="es" role="menuitem" tabindex="0" aria-label="Spanish audio">Spanish</li>
+                        <li data-audio="fr" role="menuitem" tabindex="0" aria-label="French audio">French</li>
+                    </ul>
+                </div>
+                <div class="annotation-panel hidden" id="annotationPanel" role="dialog" aria-label="Annotations panel">
+                    <div class="settings-header">Annotations</div>
+                    <ul id="annotationMenu" role="menu"></ul>
+                </div>
+                <div class="playlist-panel hidden" id="playlistPanel" role="dialog" aria-label="Playlist panel">
+                    <div class="settings-header">Playlist</div>
+                    <ul id="playlistMenu" role="menu"></ul>
+                </div>
+                <div class="download-queue-panel hidden" id="downloadQueuePanel" role="dialog" aria-label="Download queue panel">
+                    <div class="settings-header">Download Queue</div>
+                    <ul id="downloadQueueMenu" role="menu"></ul>
+                </div>
+                <div class="bookmark-panel hidden" id="bookmarkPanel" role="dialog" aria-label="Bookmarks panel">
+                    <div class="settings-header">Bookmarks</div>
+                    <ul id="bookmarkMenu" role="menu"></ul>
+                </div>
+                <div id="keyboardShortcutsOverlay" class="hidden" aria-hidden="true">
+                    <div class="settings-header">Keyboard Shortcuts</div>
+                    <ul>
+                        <li>Space: Play/Pause</li>
+                        <li>K: Play/Pause</li>
+                        <li>F: Toggle Fullscreen</li>
+                        <li>M: Toggle Mute</li>
+                        <li>←/→: Seek 5 seconds</li>
+                        <li>↑/↓: Volume control</li>
+                        <li>J: Rewind 10 seconds</li>
+                        <li>L: Forward 10 seconds</li>
+                        <li>0-9: Jump to percentage</li>
+                        <li>C: Toggle captions</li>
+                        <li>Shift+>: Increase speed</li>
+                        <li>Shift+<: Decrease speed</li>
+                    </ul>
+                </div>
+                <div id="lockOverlay" class="hidden" aria-hidden="true">
+                    <span class="material-icons">lock</span>
+                </div>
+                <div id="orientationFeedback" class="hidden" aria-hidden="true">
+                    <span>Rotate Device</span>
+                </div>
+                <div class="mobile-controls-overlay" id="mobileControlsOverlay"></div>
+            </div>
+
+            <!-- Engagement buttons -->
+            <div class="engagement-buttons">
+                <button class="engagement-btn" id="likeBtn" aria-label="Like this video">
+                    <i class='bx bx-like'></i>
+                    <span>Like</span>
+                    <span class="count" id="likeCount">1.2K</span>
+                </button>
+                <button class="engagement-btn" id="dislikeBtn" aria-label="Dislike this video">
+                    <i class='bx bx-dislike'></i>
+                    <span>Dislike</span>
+                    <span class="count" id="dislikeCount">45</span>
+                </button>
+                <button class="engagement-btn" id="favoriteBtn" aria-label="Add to favorites">
+                    <i class='bx bx-heart'></i>
+                    <span>Favorite</span>
+                </button>
+                <button class="engagement-btn" id="watchLaterBtn" aria-label="Add to watch later">
+                    <i class='bx bx-time'></i>
+                    <span>Watch Later</span>
+                </button>
+                <button class="engagement-btn" id="videoShareBtn" aria-label="Share this video">
+                    <i class='bx bx-share-alt'></i>
+                    <span>Share</span>
+                </button>
+            </div>
+
+            <!-- Watch party section -->
+            <div class="watch-party-section">
+                <h3>Watch Party</h3>
+                <p>Invite friends to watch this movie together in sync!</p>
+                <div class="watch-party-buttons">
+                    <button class="btn" id="createPartyBtn" aria-label="Create watch party">
+                        <i class='bx bx-plus'></i> Create Party
                     </button>
-                    <button class="icon settingsBtn" id="settingsBtn" aria-label="Open settings" role="button" tabindex="0">
-                        <span class="material-icons">settings</span>
-                    </button>
-                    <button class="icon captionsBtn" id="captionsBtn" aria-label="Open captions menu" role="button" tabindex="0">
-                        <span class="material-icons">closed_caption</span>
-                    </button>
-                    <button class="icon picture_in_picture" aria-label="Toggle Picture-in-Picture" role="button" tabindex="0">
-                        <span class="material-icons">picture_in_picture_alt</span>
-                    </button>
-                    <button class="icon theater-mode" aria-label="Toggle theater mode" role="button" tabindex="0">
-                        <span class="material-icons">theater_comedy</span>
-                    </button>
-                    <button class="icon fullscreen" aria-label="Enter fullscreen" role="button" tabindex="0">
-                        <span class="material-icons">fullscreen</span>
-                    </button>
-                    <button class="icon screenshot-btn" id="screenshotBtn" aria-label="Capture screenshot" role="button" tabindex="0">
-                        <span class="material-icons">camera_alt</span>
-                    </button>
-                    <button class="icon share-btn" id="shareBtn" aria-label="Share video" role="button" tabindex="0">
-                        <span class="material-icons">share</span>
-                    </button>
-                    <button class="icon" id="lockBtn" aria-label="Lock controls" role="button" tabindex="0">
-                        <span class="material-icons">lock_open</span>
-                    </button>
-                    <button class="icon" id="orientationBtn" aria-label="Lock orientation" role="button" tabindex="0">
-                        <span class="material-icons">screen_rotation</span>
+                    <button class="btn outline" id="joinPartyBtn" aria-label="Join watch party">
+                        <i class='bx bx-group'></i> Join Party
                     </button>
                 </div>
             </div>
-        </div>
-        <div id="settingsPanel" class="settings hidden" role="dialog" aria-label="Settings panel">
-            <div class="settings-panel active" data-label="settingHome" aria-expanded="true">
-                <div class="settings-header">Settings</div>
-                <ul role="menu">
-                    <li data-label="playbackSpeed" role="menuitem" tabindex="0">Playback Speed</li>
-                    <li data-label="qualityMenu" role="menuitem" tabindex="0">Quality</li>
-                    <li id="statsToggle" role="menuitem" tabindex="0">Show Technical Stats</li>
-                    <li id="chapterMarkersToggle" class="active" role="menuitem" tabindex="0">Chapter Markers <span class="material-icons">check</span></li>
-                    <li id="swipeControlsToggle" class="active" role="menuitem" tabindex="0">Swipe Controls <span class="material-icons">check</span></li>
-                    <li id="autoQualityToggle" class="active" role="menuitem" tabindex="0">Auto Quality <span class="material-icons">check</span></li>
-                    <li id="orientationLockToggle" role="menuitem" tabindex="0">Orientation Lock</li>
-                    <li id="loopToggle" role="menuitem" tabindex="0">Loop Playback</li>
-                </ul>
-            </div>
-            <div class="settings-panel" data-label="playbackSpeed" aria-expanded="false">
-                <div class="settings-header">
-                    <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Playback Speed
+
+            <!-- Chapters navigation -->
+            <div class="chapters-container">
+                <h3>Chapters</h3>
+                <div class="chapters-scroller">
+                    <div class="chapter-item">
+                        <div class="chapter-thumbnail" style="background-image: url('https://via.placeholder.com/160x90');"></div>
+                        <div class="chapter-info">
+                            <h4>Introduction</h4>
+                            <p>0:00 - 5:22</p>
+                        </div>
+                    </div>
+                    <div class="chapter-item">
+                        <div class="chapter-thumbnail" style="background-image: url('https://via.placeholder.com/160x90');"></div>
+                        <div class="chapter-info">
+                            <h4>Main Story</h4>
+                            <p>5:23 - 45:11</p>
+                        </div>
+                    </div>
+                    <div class="chapter-item">
+                        <div class="chapter-thumbnail" style="background-image: url('https://via.placeholder.com/160x90');"></div>
+                        <div class="chapter-info">
+                            <h4>Climax</h4>
+                            <p>45:12 - 1:12:44</p>
+                        </div>
+                    </div>
+                    <div class="chapter-item">
+                        <div class="chapter-thumbnail" style="background-image: url('https://via.placeholder.com/160x90');"></div>
+                        <div class="chapter-info">
+                            <h4>Ending</h4>
+                            <p>1:12:45 - 1:35:00</p>
+                        </div>
+                    </div>
                 </div>
-                <ul role="menu">
-                    <li data-speed="0.25" role="button" tabindex="0">0.25x</li>
-                    <li data-speed="0.5" role="button" tabindex="0">0.5x</li>
-                    <li data-speed="0.75" role="button" tabindex="0">0.75x</li>
-                    <li data-speed="1" class="active" role="button" tabindex="0">1x <span class="material-icons">check</span></li>
-                    <li data-speed="1.25" role="button" tabindex="0">1.25x</li>
-                    <li data-speed="1.5" role="button" tabindex="0">1.5x</li>
-                    <li data-speed="1.75" role="button" tabindex="0">1.75x</li>
-                    <li data-speed="2" role="button" tabindex="0">2x</li>
-                    <li class="custom-speed-input" role="menuitem" tabindex="0">
-                        <input type="number" id="customSpeedInput" step="0.1" min="0.1" max="8" placeholder="Custom speed" aria-label="Custom playback speed">
-                        <button id="saveCustomSpeedBtn" aria-label="Apply custom speed"><span class="material-icons">check</span></button>
-                    </li>
-                </ul>
             </div>
-            <div class="settings-panel" data-label="qualityMenu" aria-expanded="false">
-                <div class="settings-header">
-                    <span class="material-icons back-arrow" data-label="settingHome" role="button" aria-label="Back to main settings" tabindex="0">arrow_back</span> Video Quality
+
+            <!-- Enhanced controls -->
+            <div class="enhanced-controls">
+                <button class="enhanced-control-btn" id="clipBtn" aria-label="Create clip">
+                    <i class='bx bx-cut'></i>
+                    <span>Create Clip</span>
+                </button>
+                <button class="enhanced-control-btn" id="bookmarkBtn" aria-label="Add bookmark">
+                    <i class='bx bx-bookmark'></i>
+                    <span>Bookmark</span>
+                </button>
+                <button class="enhanced-control-btn" id="loopBtn" aria-label="Toggle loop">
+                    <i class='bx bx-repeat'></i>
+                    <span>Loop</span>
+                </button>
+                <button class="enhanced-control-btn" id="audioBoostBtn" aria-label="Toggle audio boost">
+                    <i class='bx bx-volume-full'></i>
+                    <span>Audio Boost</span>
+                </button>
+                <button class="enhanced-control-btn" id="nightModeBtn" aria-label="Toggle night mode">
+                    <i class='bx bx-moon'></i>
+                    <span>Night Mode</span>
+                </button>
+            </div>
+
+            <!-- Reaction buttons -->
+            <div class="reaction-buttons">
+                <button class="reaction-btn" data-reaction="laugh" aria-label="React with laugh">
+                    <img src="https://cdn.jsdelivr.net/npm/twemoji@11.3.0/2/svg/1f602.svg" alt="Laughing emoji" loading="lazy">
+                </button>
+                <button class="reaction-btn" data-reaction="love" aria-label="React with love">
+                    <img src="https://cdn.jsdelivr.net/npm/twemoji@11.3.0/2/svg/1f60d.svg" alt="Love emoji" loading="lazy">
+                </button>
+                <button class="reaction-btn" data-reaction="wow" aria-label="React with wow">
+                    <img src="https://cdn.jsdelivr.net/npm/twemoji@11.3.0/2/svg/1f62e.svg" alt="Wow emoji" loading="lazy">
+                </button>
+                <button class="reaction-btn" data-reaction="sad" aria-label="React with sad">
+                    <img src="https://cdn.jsdelivr.net/npm/twemoji@11.3.0/2/svg/1f622.svg" alt="Sad emoji" loading="lazy">
+                </button>
+                <button class="reaction-btn" data-reaction="angry" aria-label="React with angry">
+                    <img src="https://cdn.jsdelivr.net/npm/twemoji@11.3.0/2/svg/1f620.svg" alt="Angry emoji" loading="lazy">
+                </button>
+            </div>
+
+            <!-- Movie Details -->
+            <section class="movie-detail" id="movie-detail" data-movie-id="">
+                <div class="movie-detail-content">
+                    <h1 class="detail-title" id="movie-title">Sample Movie</h1>
+                    <div class="meta-wrapper">
+                        <div class="badge-wrapper">
+                            <div class="badge badge-fill" id="movie-rating">PG-13</div>
+                            <div class="badge badge-outline" id="movie-quality">HD</div>
+                            <div class="badge badge-outline" id="movie-resolution">4K</div>
+                            <div class="badge badge-outline" id="movie-audio">Dolby Atmos</div>
+                        </div>
+                        <div class="ganre-wrapper" id="movie-genres">
+                            <a href="#" aria-label="Action genre">Action</a>
+                            <a href="#" aria-label="Adventure genre">Adventure</a>
+                            <a href="#" aria-label="Sci-Fi genre">Sci-Fi</a>
+                        </div>
+                        <div class="date-time">
+                            <div>
+                                <i class='bx bx-calendar'></i>
+                                <time datetime="2021" id="movie-year">2021</time>
+                            </div>
+                            <div>
+                                <i class='bx bx-time'></i>
+                                <time datetime="PT115M" id="movie-duration">115 min</time>
+                            </div>
+                            <div>
+                                <i class='bx bx-camera-movie'></i>
+                                <span id="movie-director">Director: John Doe</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rating-section">
+                        <div class="imdb-rating">
+                            <img src="/assets/images/imdb-logo.png" alt="IMDb logo" loading="lazy">
+                            <span id="imdb-rating">8.5/10</span>
+                        </div>
+                        <div class="user-rating">
+                            <div class="stars">
+                                <i class='bx bxs-star'></i>
+                                <i class='bx bxs-star'></i>
+                                <i class='bx bxs-star'></i>
+                                <i class='bx bxs-star'></i>
+                                <i class='bx bxs-star-half'></i>
+                            </div>
+                            <span>(1,234 reviews)</span>
+                        </div>
+                    </div>
+                    <p class="storyline" id="movie-description">
+                        Embark on an epic journey with a band of unlikely heroes as they unite to save the universe from a looming catastrophe. This cinematic masterpiece blends heart-pounding action, witty humor, and emotional depth, delivering an unforgettable viewing experience.
+                    </p>
+                    <div class="details-actions">
+                        <button class="share" id="movieShareBtn" aria-label="Share movie">
+                            <i class='bx bx-share-alt'></i>
+                            <span>Share</span>
+                        </button>
+                        <div class="download-btn-container">
+                            <button id="hdDownloadBtn" aria-label="Download in HD quality">
+                                <i class='bx bx-download'></i> HD Download
+                            </button>
+                        </div>
+                        <div class="download-btn-container">
+                            <button id="fastDownloadBtn" aria-label="Download quickly">
+                                <i class='bx bx-cloud-download'></i> Fast Download
+                            </button>
+                        </div>
+                        <div class="download-btn-container">
+                            <button id="subtitlesDownloadBtn" aria-label="Download subtitles">
+                                <i class='bx bx-captions'></i> Subtitles
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <ul id="qualityMenu" role="menu">
-                    <!-- Populated dynamically -->
-                </ul>
+            </section>
+
+            <!-- Reviews Section -->
+            <section class="reviews-section">
+                <h2 class="section-title">User Reviews</h2>
+                <form id="review-form" class="review-form" aria-label="Submit a review">
+                    <h3>Share Your Thoughts</h3>
+                    <div class="rating-input">
+                        <span>Your Rating:</span>
+                        <div class="star-rating">
+                            <i class='bx bx-star' data-rating="1" role="button" aria-label="Rate 1 star"></i>
+                            <i class='bx bx-star' data-rating="2" role="button" aria-label="Rate 2 stars"></i>
+                            <i class='bx bx-star' data-rating="3" role="button" aria-label="Rate 3 stars"></i>
+                            <i class='bx bx-star' data-rating="4" role="button" aria-label="Rate 4 stars"></i>
+                            <i class='bx bx-star' data-rating="5" role="button" aria-label="Rate 5 stars"></i>
+                        </div>
+                    </div>
+                    <textarea placeholder="Write your review here..." required aria-label="Write your review"></textarea>
+                    <button type="submit" aria-label="Submit review">
+                        <i class='bx bx-send'></i> Submit Review
+                    </button>
+                </form>
+                <div class="reviews-list" id="user-reviews"></div>
+            </section>
+
+            <!-- Cast Section -->
+            <section class="cast-section">
+                <h2 class="section-title">Cast</h2>
+                <button class="nav-arrow nav-arrow-left" aria-label="Scroll cast left">
+                    <span class="material-icons">chevron_left</span>
+                </button>
+                <div class="cast-grid">
+                    <div class="cast-member">
+                        <div class="cast-image-container">
+                            <img src="https://via.placeholder.com/100x100" alt="Chris Hemsworth portrait" loading="lazy">
+                        </div>
+                        <p class="cast-name">Chris Hemsworth</p>
+                        <p class="cast-role">Lead Hero</p>
+                    </div>
+                    <div class="cast-member">
+                        <div class="cast-image-container">
+                            <img src="https://via.placeholder.com/100x100" alt="Zoe Saldana portrait" loading="lazy">
+                        </div>
+                        <p class="cast-name">Zoe Saldana</p>
+                        <p class="cast-role">Co-Star</p>
+                    </div>
+                    <div class="cast-member">
+                        <div class="cast-image-container">
+                            <img src="https://via.placeholder.com/100x100" alt="Robert Downey Jr. portrait" loading="lazy">
+                        </div>
+                        <p class="cast-name">Robert Downey Jr.</p>
+                        <p class="cast-role">Supporting Role</p>
+                    </div>
+                    <div class="cast-member">
+                        <div class="cast-image-container">
+                            <img src="https://via.placeholder.com/100x100" alt="Scarlett Johansson portrait" loading="lazy">
+                        </div>
+                        <p class="cast-name">Scarlett Johansson</p>
+                        <p class="cast-role">Supporting Role</p>
+                    </div>
+                    <div class="cast-member">
+                        <div class="cast-image-container">
+                            <img src="https://via.placeholder.com/100x100" alt="Mark Ruffalo portrait" loading="lazy">
+                        </div>
+                        <p class="cast-name">Mark Ruffalo</p>
+                        <p class="cast-role">Supporting Role</p>
+                    </div>
+                </div>
+                <button class="nav-arrow nav-arrow-right" aria-label="Scroll cast right">
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            </section>
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+            <h2 class="section-title">Recommended Videos</h2>
+            <div id="recommended-videos" class="recommended-videos"></div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-brand-wrapper">
+                    <a href="/" class="logo" aria-label="Nexfix homepage">
+                        <img src="/assets/images/logo.svg" alt="Nexfix logo" loading="lazy">
+                    </a>
+                    <ul class="footer-list">
+                        <li><a href="/home" class="footer-link">Home</a></li>
+                        <li><a href="/movies" class="footer-link">Movies</a></li>
+                        <li><a href="/tv-shows" class="footer-link">TV Shows</a></li>
+                        <li><a href="/web-series" class="footer-link">Web Series</a></li>
+                        <li><a href="/pricing" class="footer-link">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="divider"></div>
+                <div class="quicklink-wrapper">
+                    <ul class="quicklink-list">
+                        <li><a href="/faq" class="quicklink-link">FAQ</a></li>
+                        <li><a href="/help" class="quicklink-link">Help Center</a></li>
+                        <li><a href="/terms" class="quicklink-link">Terms of Use</a></li>
+                        <li><a href="/privacy" class="quicklink-link">Privacy</a></li>
+                    </ul>
+                    <ul class="social-list">
+                        <li><a href="#" class="social-link" aria-label="Facebook"><ion-icon name="logo-facebook"></ion-icon></a></li>
+                        <li><a href="#" class="social-link" aria-label="Twitter"><ion-icon name="logo-twitter"></ion-icon></a></li>
+                        <li><a href="#" class="social-link" aria-label="Pinterest"><ion-icon name="logo-pinterest"></ion-icon></a></li>
+                        <li><a href="#" class="social-link" aria-label="LinkedIn"><ion-icon name="logo-linkedin"></ion-icon></a></li>
+                    </ul>
+                </div>
             </div>
         </div>
-        <div class="captions hidden" id="captionsPanel" role="dialog" aria-label="Subtitles panel">
-            <div class="settings-header">Subtitles</div>
-            <ul id="captionMenu" role="menu"></ul>
-        </div>
-        <div class="audio-tracks hidden" id="audioTracksPanel" role="dialog" aria-label="Audio tracks panel">
-            <div class="settings-header">Audio Tracks</div>
-            <ul id="audioTrackMenu" role="menu"></ul>
-        </div>
-        <div id="keyboardShortcutsOverlay" class="keyboard-shortcuts-overlay hidden" role="dialog" aria-label="Keyboard shortcuts" aria-hidden="true" style="display: none;">
-            <div class="shortcuts-content">
-                <h3>Keyboard Shortcuts</h3>
-                <ul>
-                    <li><strong>Space</strong>: Play/Pause</li>
-                    <li><strong>M</strong>: Mute/Unmute</li>
-                    <li><strong>F</strong>: Toggle Fullscreen</li>
-                    <li><strong>T</strong>: Toggle Theater Mode</li>
-                    <li><strong>L</strong>: Lock/Unlock Controls</li>
-                    <li><strong>Left Arrow</strong>: Rewind 5s</li>
-                    <li><strong>Right Arrow</strong>: Forward 5s</li>
-                    <li><strong>Up Arrow</strong>: Volume Up</li>
-                    <li><strong>Down Arrow</strong>: Volume Down</li>
-                    <li><strong>B</strong>: Add Bookmark</li>
-                    <li><strong>S</strong>: Show Shortcuts</li>
-                    <li><strong>C</strong>: Capture Screenshot</li>
-                    <li><strong>H</strong>: Share Video</li>
-                </ul>
+        <div class="footer-bottom">
+            <div class="container">
+                <p class="copyright">© 2025 <a href="/">Nexfix</a>. All Rights Reserved</p>
+                <img src="/assets/images/footer-bottom-img.png" alt="Online banking companies logo" class="footer-bottom-img" loading="lazy">
             </div>
         </div>
-    </div>
+    </footer>
 
-    <div class="stats-panel hidden" id="statsPanel" role="complementary" aria-label="Technical statistics">
-        <div class="stat-item"><span class="material-icons">play_arrow</span> Playback: <span id="playbackRate">1x</span></div>
-        <div class="stat-item"><span class="material-icons">volume_up</span> Volume: <span id="currentVolume">80%</span></div>
-        <div class="stat-item"><span class="material-icons">brightness_5</span> Brightness: <span id="currentBrightness">100%</span></div>
-        <div class="stat-item"><span class="material-icons">timer</span> Time: <span id="currentTime">0:00</span></div>
-        <div class="stat-item"><span class="material-icons">hourglass_empty</span> Duration: <span id="videoDuration">0:00</span></div>
-        <div class="stat-item"><span class="material-icons">signal_cellular_alt</span> Buffer: <span id="bufferHealth">0s</span></div>
-        <div class="stat-item"><span class="material-icons">high_quality</span> Quality: <span id="currentQuality">Auto</span></div>
-        <div class="stat-item"><span class="material-icons">network_check</span> Network: <span id="networkStatus">Unknown</span></div>
+    <!-- Watch Party Popup -->
+<div class="watch-party-popup" id="watchPartyPopup">
+  <div class="party-popup-content">
+    <div class="party-popup-header">
+      <h3>Watch Party</h3>
+      <button class="close-popup" id="closePartyPopup">×</button>
     </div>
-
-    <div class="downloader" id="downloader_button" role="region" aria-label="Download options">
-        <div class="download-btn-container">
-            <button id="hdDownloadBtn" aria-label="Download in HD quality">HD Downloader</button>
+    <div class="party-popup-body">
+      <div class="party-tab-buttons">
+        <button class="party-tab active" data-tab="create">Create Party</button>
+        <button class="party-tab" data-tab="join">Join Party</button>
+      </div>
+      
+      <!-- Create Party Tab -->
+      <div class="party-tab-content active" data-tab-content="create">
+        <div class="party-form-group">
+          <label for="partyName">Party Name</label>
+          <input type="text" id="partyName" placeholder="Enter a name for your party">
         </div>
-        <div class="download-btn-container">
-            <button id="fastDownloadBtn" aria-label="Download quickly">Fast Downloader</button>
+        <div class="party-form-group">
+          <label for="partyPassword">Password (optional)</label>
+          <input type="password" id="partyPassword" placeholder="Set a password">
         </div>
+        <div class="party-form-actions">
+          <button class="btn outline" id="cancelCreateParty">Cancel</button>
+          <button class="btn" id="confirmCreateParty">Create Party</button>
+        </div>
+      </div>
+      
+      <!-- Join Party Tab -->
+      <div class="party-tab-content" data-tab-content="join">
+        <div class="party-form-group">
+          <label for="partyCode">Party Code</label>
+          <input type="text" id="partyCode" placeholder="Enter party code">
+        </div>
+        <div class="party-form-group">
+          <label for="joinPassword">Password (if required)</label>
+          <input type="password" id="joinPassword" placeholder="Enter password">
+        </div>
+        <div class="party-form-actions">
+          <button class="btn outline" id="cancelJoinParty">Cancel</button>
+          <button class="btn" id="confirmJoinParty">Join Party</button>
+        </div>
+      </div>
+      
+      <!-- Active Party View (hidden by default) -->
+      <div class="party-active-view" id="activePartyView" style="display: none;">
+        <div class="party-chat-container">
+          <div class="party-chat-messages" id="partyChatMessages">
+            <!-- Chat messages will appear here -->
+          </div>
+          <div class="party-chat-input">
+            <input type="text" id="partyChatInput" placeholder="Type a message...">
+            <button id="sendPartyMessage">Send</button>
+          </div>
+        </div>
+        
+        <h4>Party Members</h4>
+        <div class="party-members" id="partyMembersList">
+          <!-- Party members will appear here -->
+        </div>
+        
+        <h4>Party Controls</h4>
+        <div class="party-controls">
+          <button class="party-control-btn" id="partyPlayPause">
+            <i class='bx bx-play'></i>
+            <span>Play/Pause</span>
+          </button>
+          <button class="party-control-btn" id="partySync">
+            <i class='bx bx-reset'></i>
+            <span>Sync</span>
+          </button>
+          <button class="party-control-btn" id="partySettings">
+            <i class='bx bx-cog'></i>
+            <span>Settings</span>
+          </button>
+        </div>
+        
+        <button class="leave-party-btn" id="leavePartyBtn">
+          Leave Party
+        </button>
+      </div>
     </div>
-
-    <div class="description-section" role="complementary">
-        <h2 class="description-title" id="videoTitle">Loading...</h2>
-        <p class="description-content" id="videoDescription">Loading video description...</p>
-        <div class="error-message hidden" id="persistentError" aria-live="assertive"></div>
-    </div>
-
+  </div>
+</div>
+    <!-- Scripts -->
+    <script src="/assets/js/scripts.js"></script>
+    <!-- <script src="/assets/js/dash.js"></script> -->
     <script src="/static/videojs/video.min.js"></script>
-    <script src="/static/videojs/videojs-contrib-hls.min.js"></script>
     <script src="/static/videojs/videojs-contrib-quality-levels.min.js"></script>
     <script src="/static/videojs/videojs-http-source-selector.min.js"></script>
-    <script src="/static/scripts.js"></script>
-    <script>
-        // Request embed and initialize iframe player
-        async function initIframePlayer() {
-            try {
-                const response = await fetch('/request-embed?iframe_url=https%3A%2F%2Fsportsipl.vercel.app%2Fstar.html&user_id=test_user');
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Failed to request embed');
-                setupIframePlayer(
-                    { url: data.sources[0].url },
-                    { title: data.title, description: data.description },
-                    data.video_id
-                );
-            } catch (err) {
-                console.error('Embed request failed:', err);
-                document.querySelector('.error-message').textContent = 'Failed to load embedded video: ' + err.message;
-                document.querySelector('.error-overlay').classList.remove('hidden');
-            }
-        }
-        initIframePlayer();
-    </script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -428,7 +428,7 @@ $(document).ready(function() {
                     </div>
                     <p class="modal-description">${movie.description || 'No description available.'}</p>
                     <div class="modal-actions">
-                        <a href="#" class="btn watch-now" data-action="watch"><i class="bx bx-play"></i>Watch Now</a>
+                        <a href="${movie.watchUrl || '#'}" class="btn watch-now" data-action="watch"><i class="bx bx-play"></i>Watch Now</a>
                         <a href="#" class="btn add-to-list ${isAdded ? 'added' : ''}" data-action="add-to-list"><i class="bx ${isAdded ? 'bx-bookmark' : 'bx-bookmark-plus'}"></i>${isAdded ? 'Remove from List' : 'Add to List'}</a>
                         <a href="#" class="btn share" data-action="share"><i class="bx bx-share-alt"></i>Share</a>
                     </div>
@@ -440,7 +440,7 @@ $(document).ready(function() {
         $('body').addClass('no-scroll');
         $('.modal-close').focus();
         trapFocus(modal);
-
+    
         // Handle modal close button click
         modal.find('.modal-close').on('click', function(e) {
             e.preventDefault();
@@ -451,14 +451,19 @@ $(document).ready(function() {
             $('body').removeClass('no-scroll');
             $('#search-input').focus();
         });
-
+    
         // Handle button clicks
         modal.find('.btn').on('click', function(e) {
             e.preventDefault();
             const action = $(this).data('action');
             if (action === 'watch') {
-                const url = movie.streamingUrl || `https://example.com/watch/${encodeURIComponent(movie.title)}`;
-                window.open(url, '_blank');
+                // Redirect to watchUrl
+                if (movie.watchUrl) {
+                    window.open(movie.watchUrl, '_blank');
+                } else {
+                    console.warn('No watchUrl provided for movie:', movie.title);
+                    alert('Watch URL not available for this movie.');
+                }
             } else if (action === 'add-to-list') {
                 const isAdded = toggleWatchlist(movie);
                 $(this).toggleClass('added', isAdded);
@@ -467,7 +472,7 @@ $(document).ready(function() {
                 const shareData = {
                     title: movie.title || 'Movie',
                     text: movie.description || 'Check out this movie!',
-                    url: movie.streamingUrl || `https://example.com/movie/${encodeURIComponent(movie.title)}`
+                    url: movie.watchUrl || window.location.href
                 };
                 if (navigator.share && navigator.canShare(shareData)) {
                     navigator.share(shareData).catch(err => console.error('Share error:', err));
