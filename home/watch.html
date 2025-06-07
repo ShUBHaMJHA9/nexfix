@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Details | Nexfix</title>
+    <link rel="shortcut icon" href="/assets/images/icon.png" type="image/x-icon">
+    <link rel="stylesheet" href="/assets/css/grid.css">
+    <link rel="stylesheet" href="/assets/css/watch.css">
+    <link rel="stylesheet" href="/assets/css/dash.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="/assets/images/logo.png" type="image/x-icon" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="loading-spinner" id="loading-spinner">
+        <i class='bx bx-loader-alt bx-spin bx-md'></i>
+    </div>
+    <div class="telegram-ribbon">
+        <a href="https://t.me/nexfixgroup" target="_blank" aria-label="Join our Telegram group">
+            <i class="bx bxl-telegram"></i>Join Our Telegram Group
+        </a>
+    </div>
+    <div class="nav-wrapper">
+        <div class="container">
+            <div class="nav">
+                <a href="#" class="logo">
+                    <i class="bx bx-movie-play bx-tada main-color"></i>Nexf<span class="main-color">i</span>x
+                </a>
+            </div>
+        </div>
+    </div>
+    <main>
+        <article>
+            <section class="movie-detail" id="movie-detail">
+                <div class="container">
+                    <figure class="movie-detail-banner">
+                        <img id="movie-poster" src="https://via.placeholder.com/1280x720" alt="Movie poster">
+                        <button class="play-btn">
+                            <ion-icon name="play-circle-outline"></ion-icon>
+                        </button>
+                    </figure>
+                    <div class="movie-detail-content">
+                        <h1 class="h1 detail-title" id="movie-title">Loading...</h1>
+                        <div class="meta-wrapper">
+                            <div class="badge-wrapper">
+                                <div class="badge badge-fill" id="movie-rating">PG 13</div>
+                                <div class="badge badge-outline" id="movie-quality">HD</div>
+                            </div>
+                            <div class="ganre-wrapper" id="movie-genres">
+                                <a href="#">Genre</a>
+                            </div>
+                            <div class="date-time">
+                                <div>
+                                    <ion-icon name="calendar-outline"></ion-icon>
+                                    <time datetime="2021" id="movie-year">2021</time>
+                                </div>
+                                <div>
+                                    <ion-icon name="time-outline"></ion-icon>
+                                    <time datetime="PT115M" id="movie-duration">115 min</time>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rating-section">
+                            <div class="imdb-rating">
+                                <img src="/assets/images/imdb-logo.png" alt="IMDb logo">
+                                <span id="imdb-rating">8.5/10</span>
+                            </div>
+                            <div class="user-rating">
+                                <div class="stars">
+                                    <i class='bx bxs-star'></i>
+                                    <i class='bx bxs-star'></i>
+                                    <i class='bx bxs-star'></i>
+                                    <i class='bx bxs-star'></i>
+                                    <i class='bx bxs-star-half'></i>
+                                </div>
+                                <span>(1,234 reviews)</span>
+                            </div>
+                        </div>
+                        <p class="storyline" id="movie-description">Loading description...</p>
+                        <div class="details-actions">
+                            <button class="share">
+                                <ion-icon name="share-social"></ion-icon>
+                                <span>Share</span>
+                            </button>
+                            <div class="title-wrapper">
+                                <p class="title">Nexfix MP4HUB</p>
+                                <p class="text">Our Streaming Platform</p>
+                            </div>
+                            <button class="btn btn-primary">
+                                <ion-icon name="play"></ion-icon>
+                                <span>Watch Now</span>
+                            </button>
+                        </div>
+                        <a href="#" id="ransomware-link" class="download-btn">
+                            <span>Download</span>
+                            <ion-icon name="download-outline"></ion-icon>
+                        </a>
+                    </div>
+                </div>
+
+                
+            </section>
+            <section class="reviews-section">
+                <div class="container">
+                    <h2 class="section-title">User Reviews</h2>
+                    <div class="reviews-container">
+                        <div class="review-form">
+                            <h3>Write a Review</h3>
+                            <form id="review-form">
+                                <div class="rating-input">
+                                    <span>Your Rating:</span>
+                                    <div class="star-rating">
+                                        <i class='bx bx-star' data-rating="1"></i>
+                                        <i class='bx bx-star' data-rating="2"></i>
+                                        <i class='bx bx-star' data-rating="3"></i>
+                                        <i class='bx bx-star' data-rating="4"></i>
+                                        <i class='bx bx-star' data-rating="5"></i>
+                                    </div>
+                                </div>
+                                <textarea placeholder="Share your thoughts about this movie..." required></textarea>
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                            </form>
+                        </div>
+                        <div class="reviews-list" id="user-reviews"></div>
+                    </div>
+                </div>
+            </section>
+            <section class="similar-movies">
+                <div class="container">
+                    <h2 class="section-title">More Like This</h2>
+                    <div class="movies-grid" id="similar-movies"></div>
+                </div>
+            </section>
+            <section class="category-section" id="category-hero">
+                <div class="container">
+                    <p class="section-subtitle">Explore Hero</p>
+                    <h2 class="h2 section-title" data-category="hero">Hero Movies <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-hero"></ul>
+                    <button class="more-btn" id="more-hero" data-category="hero">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-hollywood">
+                <div class="container">
+                    <p class="section-subtitle">Explore Hollywood</p>
+                    <h2 class="h2 section-title" data-category="hollywood">Hollywood Hits <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-hollywood"></ul>
+                    <button class="more-btn" id="more-hollywood" data-category="hollywood">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-hindi-dubbed-south">
+                <div class="container">
+                    <p class="section-subtitle">Explore Hindi Dubbed South</p>
+                    <h2 class="h2 section-title" data-category="hindi dubbed south">South Hindi Dubbed <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-hindi-dubbed-south"></ul>
+                    <button class="more-btn" id="more-hindi-dubbed-south" data-category="hindi dubbed south">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-hindi-dubbed">
+                <div class="container">
+                    <p class="section-subtitle">Explore Hindi Dubbed</p>
+                    <h2 class="h2 section-title" data-category="hindi dubbed">Hindi Dubbed Movies <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-hindi-dubbed"></ul>
+                    <button class="more-btn" id="more-hindi-dubbed" data-category="hindi dubbed">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-bollywood">
+                <div class="container">
+                    <p class="section-subtitle">Explore Bollywood</p>
+                    <h2 class="h2 section-title" data-category="bollywood">Bollywood Blockbusters <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-bollywood"></ul>
+                    <button class="more-btn" id="more-bollywood" data-category="bollywood">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-bengali">
+                <div class="container">
+                    <p class="section-subtitle">Explore Bengali</p>
+                    <h2 class="h2 section-title" data-category="bengali">Bengali Cinema <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-bengali"></ul>
+                    <button class="more-btn" id="more-bengali" data-category="bengali">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-web-series">
+                <div class="container">
+                    <p class="section-subtitle">Explore Featured Series</p>
+                    <h2 class="h2 section-title" data-category="web series">Featured Series <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-web-series"></ul>
+                    <button class="more-btn" id="more-web-series" data-category="web series">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-marathi">
+                <div class="container">
+                    <p class="section-subtitle">Explore Marathi</p>
+                    <h2 class="h2 section-title" data-category="marathi">Marathi Movies <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-marathi"></ul>
+                    <button class="more-btn" id="more-marathi" data-category="marathi">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-punjabi">
+                <div class="container">
+                    <p class="section-subtitle">Explore Punjabi</p>
+                    <h2 class="h2 section-title" data-category="punjabi">Punjabi Hits <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-punjabi"></ul>
+                    <button class="more-btn" id="more-punjabi" data-category="punjabi">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-action">
+                <div class="container">
+                    <p class="section-subtitle">Explore Action</p>
+                    <h2 class="h2 section-title" data-category="action">Action Thrillers <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-action"></ul>
+                    <button class="more-btn" id="more-action" data-category="action">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-tamil">
+                <div class="container">
+                    <p class="section-subtitle">Explore Tamil</p>
+                    <h2 class="h2 section-title" data-category="tamil">Tamil Cinema <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-tamil"></ul>
+                    <button class="more-btn" id="more-tamil" data-category="tamil">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-kids">
+                <div class="container">
+                    <p class="section-subtitle">Explore Kids</p>
+                    <h2 class="h2 section-title" data-category="kids">Kids Favorites <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-kids"></ul>
+                    <button class="more-btn" id="more-kids" data-category="kids">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-top-movie">
+                <div class="container">
+                    <p class="section-subtitle">Explore Top Movies</p>
+                    <h2 class="h2 section-title" data-category="top movie">Top Movies <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-top-movie"></ul>
+                    <button class="more-btn" id="more-top-movie" data-category="top movie">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+            <section class="category-section" id="category-coming-soon">
+                <div class="container">
+                    <p class="section-subtitle">Explore Coming Soon</p>
+                    <h2 class="h2 section-title" data-category="coming-soon">Coming Soon <i class='bx bx-chevron-down'></i></h2>
+                    <ul class="movies-list" id="movies-coming-soon"></ul>
+                    <button class="more-btn" id="more-coming-soon" data-category="coming-soon">More <i class='bx bx-chevron-down'></i></button>
+                </div>
+            </section>
+        </article>
+    </main>
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-brand-wrapper">
+                    <a href="./index.html" class="logo">
+                        <img src="/assets/images/logo.svg" alt="Nexfix logo">
+                    </a>
+                    <ul class="footer-list">
+                        <li><a href="assets/home.html" class="footer-link">Home</a></li>
+                        <li><a href="#" class="footer-link">Movie</a></li>
+                        <li><a href="#" class="footer-link">TV Show</a></li>
+                        <li><a href="#" class="footer-link">Web Series</a></li>
+                        <li><a href="#" class="footer-link">Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="divider"></div>
+                <div class="quicklink-wrapper">
+                    <ul class="quicklink-list">
+                        <li><a href="#" class="quicklink-link">Faq</a></li>
+                        <li><a href="#" class="quicklink-link">Help center</a></li>
+                        <li><a href="#" class="quicklink-link">Terms of use</a></li>
+                        <li><a href="#" class="quicklink-link">Privacy</a></li>
+                    </ul>
+                    <ul class="social-list">
+                        <li><a href="#" class="social-link"><ion-icon name="logo-facebook"></ion-icon></a></li>
+                        <li><a href="#" class="social-link"><ion-icon name="logo-twitter"></ion-icon></a></li>
+                        <li><a href="#" class="social-link"><ion-icon name="logo-pinterest"></ion-icon></a></li>
+                        <li><a href="#" class="social-link"><ion-icon name="logo-linkedin"></ion-icon></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p class="copyright">© 2025 <a href="#">codetech</a>. All Rights Reserved</p>
+                <img src="/assets/images/footer-bottom-img.png" alt="Online banking companies logo" class="footer-bottom-img">
+            </div>
+        </div>
+    </footer>
+    <div class="modal" id="trailer-modal">
+        <div class="modal-content">
+            <span class="close-modal">×</span>
+            <div class="video-container">
+                <iframe id="trailer-video" width="560" height="315" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+    <a href="#top" class="go-top" data-go-top>
+        <ion-icon name="chevron-up"></ion-icon>
+    </a>
+    <script src="/assets/js/watch.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+</body>
+</html>
