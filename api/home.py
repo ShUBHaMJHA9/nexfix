@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Query, HTTPException, Form
 from fastapi.responses import JSONResponse
+from socketio import AsyncServer, ASGIApp
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from passlib.context import CryptContext
@@ -8,6 +9,18 @@ from urllib.parse import unquote
 import psycopg2
 from psycopg2 import Error
 import os
+import string
+import json
+import uuid
+from datetime import datetime, timedelta
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+import asyncio
+import socketio
+import mysql.connector
+import logging
 import aiohttp
 from fastapi import HTTPException
 from urllib.parse import urlencode
@@ -20,7 +33,7 @@ from api.sql import create_connection
 import aiohttp
 load_dotenv()
 from api.create import initialize_database
-
+import random , string , json , uuid
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -36,6 +49,20 @@ home_app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+sio = socketio.AsyncServer(
+    async_mode='asgi',
+    cors_allowed_origins='*',
+    logger=True,
+    engineio_logger=True,
+)
+
+socket_app = socketio.ASGIApp(sio, socketio_path="")
+
+# Database connection
+conn = create_connection()
+cursor = conn.cursor()
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -686,3 +713,522 @@ async def get_watch_options(video_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
     finally:
         conn.close()
+
+
+import random
+import string
+import json
+import uuid
+from datetime import datetime, timedelta
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+import asyncio
+
+
+
+def generate_party_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+class PartyCreate(BaseModel):
+    name: str
+    privacy: str
+    password: str | None
+    max_members: int
+    settings: dict
+    video_id: str | None
+
+class PartyJoin(BaseModel):
+    code: str
+    password: str | None
+
+async def cleanup_expired_parties():
+    while True:
+        try:
+            cursor.execute("SELECT code, created_at FROM party")
+            parties = cursor.fetchall()
+            current_time = datetime.utcnow()
+            for party in parties:
+                code, created_at = party
+                if current_time - created_at > timedelta(hours=24):
+                    cursor.execute("SELECT members FROM party WHERE code = %s", (code,))
+                    members = json.loads(cursor.fetchone()[0])
+                    for member in members:
+                        cursor.execute("SELECT sid FROM users WHERE user_id = %s", (member['id'],))
+                        user = cursor.fetchone()
+                        if user:
+                            await sio.emit('party_expired', to=user[0])
+                    cursor.execute("DELETE FROM party WHERE code = %s", (code,))
+                    conn.commit()
+                    logger.info(f"Deleted expired party: {code}")
+        except Exception as e:
+            logger.error(f"Error cleaning up parties: {str(e)}")
+        await asyncio.sleep(3600)
+
+@home_app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(cleanup_expired_parties())
+
+@home_app.get("/info")
+async def get_info():
+    return JSONResponse(content={"message": "Welcome to the Home API"})
+
+@home_app.get("/parties/public")
+async def get_public_parties():
+    try:
+        cursor.execute("SELECT code, name, members, max_members, created_at FROM party WHERE privacy = %s", ('public',))
+        parties = cursor.fetchall()
+        result = [
+            {
+                "code": party[0],
+                "name": party[1],
+                "member_count": len(json.loads(party[2])),
+                "max_members": party[3],
+                "created_at": party[4].isoformat()
+            }
+            for party in parties
+            if datetime.utcnow() - party[4] <= timedelta(hours=24)
+        ]
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error fetching public parties: {str(e)}")
+        return JSONResponse(status_code=500, content={"message": str(e)})
+
+@sio.event
+async def connect(sid, environ):
+    user_id = str(uuid.uuid4())
+    username = f"User_{user_id[:8]}"
+    print(f"User connected with SID: {sid}, User ID: {user_id}, Username: {username}")
+    try:
+        cursor.execute(
+            "INSERT INTO users (user_id, sid, username, connected_at) VALUES (%s, %s, %s, %s)",
+            (user_id, sid, username, datetime.utcnow())
+        )
+        conn.commit()
+        await sio.emit('user_connected', {"user_id": user_id, "username": username}, to=sid)
+        logger.info(f"User connected: {user_id} (SID: {sid})")
+    except Exception as e:
+        logger.error(f"Error on connect: {str(e)}")
+
+@sio.event
+async def disconnect(sid):
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if user:
+            user_id = user[0]
+            cursor.execute("SELECT code, members FROM party WHERE JSON_CONTAINS(members, %s, '$')", (f'"{user_id}"',))
+            party = cursor.fetchone()
+            if party:
+                await perform_leave_party(sid, user_id, party[0])
+            cursor.execute("DELETE FROM users WHERE sid = %s", (sid,))
+            conn.commit()
+            logger.info(f"User disconnected: {user_id} (SID: {sid})")
+    except Exception as e:
+        logger.error(f"Error on disconnect: {str(e)}")
+
+
+@sio.event
+async def create_party(sid, data):
+    try:
+        # Ensure rollback in case of previous error
+        conn.rollback()
+
+        # Generate a unique party code
+        party_code = generate_party_code()
+        cursor.execute("SELECT code FROM party WHERE code = %s", (party_code,))
+        while cursor.fetchone():
+            party_code = generate_party_code()
+
+        # Get the user info from current connection
+        cursor.execute("SELECT user_id, username FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if not user:
+            await sio.emit('error', {"message": "User not found"}, to=sid)
+            return
+
+        # Build party data
+        party = {
+            "code": party_code,
+            "name": data["name"],
+            "privacy": data["privacy"],
+            "password": data.get("password"),
+            "max_members": data["max_members"],
+            "settings": data["settings"],
+            "members": [{"id": user[0], "username": user[1], "is_host": True}],
+            "created_at": datetime.utcnow().isoformat(),
+            "video_id": data.get("video_id")  # Include video_id
+        }
+
+        # Insert the new party into the database
+        cursor.execute(
+            """
+            INSERT INTO party (
+                code, name, privacy, password,
+                max_members, settings, members,
+                created_at, video_id
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                party["code"],
+                party["name"],
+                party["privacy"],
+                party["password"],
+                party["max_members"],
+                json.dumps(party["settings"]),
+                json.dumps(party["members"]),
+                party["created_at"],
+                party["video_id"]
+            )
+        )
+
+        conn.commit()
+
+        # Add user to the room and notify them
+        await sio.enter_room(sid, party_code)
+        await sio.emit('party_created', party, to=sid)
+
+        logger.info(f"Party created: {party_code} by {user[0]}")
+
+    except Exception as e:
+        logger.error(f"Error creating party: {str(e)}")
+        await sio.emit('error', {"message": str(e)}, to=sid)
+
+from datetime import datetime, timedelta
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+@sio.event
+async def join_party(sid, data):
+    try:
+        party_code = data["code"]
+        password = data.get("password")
+
+        cursor.execute("""
+            SELECT code, privacy, password, members, max_members, name, settings, created_at 
+            FROM party 
+            WHERE code = %s
+        """, (party_code,))
+        party = cursor.fetchone()
+
+        if not party:
+            await sio.emit('error', {"message": "Party not found"}, to=sid)
+            return
+
+        if datetime.utcnow() - party[7] > timedelta(hours=24):
+            await sio.emit('error', {"message": "Party has expired"}, to=sid)
+            return
+
+        # Parse party members and settings safely
+        members = party[3]
+        if isinstance(members, str):
+            members = json.loads(members)
+
+        settings = party[6]
+        if isinstance(settings, str):
+            settings = json.loads(settings)
+
+        party_data = {
+            "code": party[0],
+            "privacy": party[1],
+            "password": party[2],
+            "members": members,
+            "max_members": party[4],
+            "name": party[5],
+            "settings": settings,
+            "created_at": party[7].isoformat()
+        }
+
+        if party_data["privacy"] == "private" and password != party_data["password"]:
+            await sio.emit('error', {"message": "Invalid password"}, to=sid)
+            return
+
+        if len(party_data["members"]) >= party_data["max_members"]:
+            await sio.emit('error', {"message": "Party is full"}, to=sid)
+            return
+
+        cursor.execute("SELECT user_id, username FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if not user:
+            await sio.emit('error', {"message": "User not found"}, to=sid)
+            return
+
+        if any(m["id"] == user[0] for m in party_data["members"]):
+            await sio.emit('error', {"message": "Already in party"}, to=sid)
+            return
+
+        new_member = {
+            "id": user[0],
+            "username": user[1],
+            "is_host": False
+        }
+
+        party_data["members"].append(new_member)
+
+        cursor.execute(
+            "UPDATE party SET members = %s WHERE code = %s",
+            (json.dumps(party_data["members"]), party_code)
+        )
+        conn.commit()
+
+        await sio.enter_room(sid, party_code)
+
+        await sio.emit('party_joined', party_data, to=sid)
+        await sio.emit('member_joined', {
+            "username": user[1],
+            "members": party_data["members"]
+        }, room=party_code)
+
+        logger.info(f"User {user[0]} joined party: {party_code}")
+
+    except Exception as e:
+        conn.rollback()  # ✅ Critical fix to reset the failed DB transaction
+        logger.error(f"Error joining party: {str(e)}")
+        await sio.emit('error', {"message": str(e)}, to=sid)
+
+@sio.event
+async def leave_party(sid , data=None):
+    await perform_leave_party(sid)
+
+async def perform_leave_party(sid, user_id=None, party_code=None):
+    try:
+        # Fetch user_id if not passed
+        if not user_id:
+            cursor.execute("SELECT user_id FROM users WHERE sid = %s", (sid,))
+            user = cursor.fetchone()
+            if not user:
+                return
+            user_id = user[0]
+
+        # Fetch party_code and members if not passed
+        if not party_code:
+            cursor.execute("""
+                SELECT code, members 
+                FROM party 
+                WHERE EXISTS (
+                    SELECT 1 FROM json_array_elements(members) AS m
+                    WHERE (m->>'id')::text = %s
+                )
+            """, (str(user_id),))
+            party = cursor.fetchone()
+            if not party:
+                return
+            party_code = party[0]
+            members_raw = party[1]
+        else:
+            cursor.execute("SELECT members FROM party WHERE code = %s", (party_code,))
+            row = cursor.fetchone()
+            if not row:
+                return
+            members_raw = row[0]
+
+        # Deserialize members
+        members = json.loads(members_raw) if isinstance(members_raw, str) else members_raw
+
+        # Remove user from party
+        username = next((m["username"] for m in members if m["id"] == user_id), None)
+        updated_members = [m for m in members if m["id"] != user_id]
+
+        if updated_members:
+            cursor.execute(
+                "UPDATE party SET members = %s WHERE code = %s",
+                (json.dumps(updated_members), party_code)
+            )
+            conn.commit()
+
+            await sio.leave_room(sid, party_code)
+            await sio.emit("party_left", {"message": "You left the party."}, to=sid)
+            await sio.emit("member_left", {
+                "username": username,
+                "members": updated_members
+            }, room=party_code)
+        else:
+            cursor.execute("DELETE FROM party WHERE code = %s", (party_code,))
+            conn.commit()
+
+            await sio.leave_room(sid, party_code)
+            await sio.emit("party_left", {"message": "Party deleted as last member left."}, to=sid)
+
+        logger.info(f"User {user_id} left party {party_code}")
+
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error leaving party: {str(e)}")
+        await sio.emit("error", {"message": "Failed to leave party."}, to=sid)
+
+
+@sio.event
+async def kick_member(sid, data):
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if not user:
+            return
+        user_id = user[0]
+        cursor.execute("SELECT code, members FROM party WHERE JSON_CONTAINS(members, %s, '$')", (f'"{user_id}"',))
+        party = cursor.fetchone()
+        if party:
+            members = json.loads(party[1])
+            is_host = any(m["id"] == user_id and m["is_host"] for m in members)
+            if is_host:
+                target_user_id = data["user_id"]
+                username = data["username"]
+                updated_members = [m for m in members if m["id"] != target_user_id]
+                if len(updated_members) < len(members):
+                    cursor.execute(
+                        "UPDATE party SET members = %s WHERE code = %s",
+                        (json.dumps(updated_members), party[0])
+                    )
+                    conn.commit()
+                    cursor.execute("SELECT sid FROM users WHERE user_id = %s", (target_user_id,))
+                    target_user = cursor.fetchone()
+                    if target_user:
+                        await sio.emit('kicked_from_party', to=target_user[0])
+                    if updated_members:
+                        await sio.emit('member_left', {
+                            "username": username,
+                            "members": updated_members
+                        }, room=party[0])
+                    else:
+                        cursor.execute("DELETE FROM party WHERE code = %s", (party[0],))
+                        conn.commit()
+                    logger.info(f"User {target_user_id} kicked from party: {party[0]}")
+    except Exception as e:
+        logger.error(f"Error kicking member: {str(e)}")
+
+@sio.event
+async def chat_message(sid, data):
+    try:
+        cursor.execute("SELECT user_id, username FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if not user:
+            return
+
+        cursor.execute("""
+            SELECT code, settings 
+            FROM party 
+            WHERE EXISTS (
+                SELECT 1 FROM json_array_elements(members) AS member
+                WHERE (member->>'id')::text = %s
+            )
+        """, (str(user[0]),))
+        party = cursor.fetchone()
+
+        if party:
+            settings = party[1] if isinstance(party[1], dict) else json.loads(party[1])
+            if settings.get("text_chat"):
+                await sio.emit('chat_message', {
+                    "username": user[1],
+                    "content": data["content"],
+                    "timestamp": data["timestamp"]
+                }, room=party[0])
+                logger.info(f"Chat message in party {party[0]} by {user[1]}")
+
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error sending chat message: {str(e)}")
+        await sio.emit('error', {"message": "Failed to send chat message."}, to=sid)
+
+
+@sio.event
+async def video_sync(sid, data):
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if not user:
+            return
+
+        cursor.execute("""
+            SELECT code, settings, members 
+            FROM party 
+            WHERE EXISTS (
+                SELECT 1 FROM json_array_elements(members) AS member
+                WHERE (member->>'id')::text = %s
+            )
+        """, (str(user[0]),))
+        party = cursor.fetchone()
+
+        if party:
+            settings = json.loads(party[1])
+            members = json.loads(party[2])
+            is_host = any(m["id"] == user[0] and m.get("is_host") for m in members)
+
+            if not settings.get("host_only_controls") or is_host:
+                await sio.emit('video_sync', data, room=party[0])
+                logger.info(f"Video sync in party {party[0]} by {user[0]}")
+
+    except Exception as e:
+        conn.rollback()  # Reset DB transaction on error
+        logger.error(f"Error syncing video: {str(e)}")
+        await sio.emit('error', {"message": "Failed to sync video."}, to=sid)
+
+@sio.event
+async def toggle_media(sid, data):
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if not user:
+            return
+        cursor.execute("SELECT code FROM party WHERE JSON_CONTAINS(members, %s, '$')", (f'"{user[0]}"',))
+        party = cursor.fetchone()
+        if party:
+            await sio.emit('member_media_changed', {
+                "user_id": user[0],
+                "type": data["type"],
+                "enabled": data["enabled"]
+            }, room=party[0])
+            logger.info(f"Media toggle in party {party[0]} by {user[0]}")
+    except Exception as e:
+        logger.error(f"Error toggling media: {str(e)}")
+
+@sio.event
+async def webrtc_offer(sid, data):
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if user:
+            cursor.execute("SELECT sid FROM users WHERE user_id = %s", (data["target_user_id"],))
+            target_user = cursor.fetchone()
+            if target_user:
+                await sio.emit('webrtc_offer', {
+                    "from_user_id": user[0],
+                    "offer": data["offer"]
+                }, to=target_user[0])
+                logger.info(f"WebRTC offer from {user[0]} to {data['target_user_id']}")
+    except Exception as e:
+        logger.error(f"Error handling WebRTC offer: {str(e)}")
+
+@sio.event
+async def webrtc_answer(sid, data):
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if user:
+            cursor.execute("SELECT sid FROM users WHERE user_id = %s", (data["target_user_id"],))
+            target_user = cursor.fetchone()
+            if target_user:
+                await sio.emit('webrtc_answer', {
+                    "from_user_id": user[0],
+                    "answer": data["answer"]
+                }, to=target_user[0])
+                logger.info(f"WebRTC answer from {user[0]} to {data['target_user_id']}")
+    except Exception as e:
+        logger.error(f"Error handling WebRTC answer: {str(e)}")
+
+@sio.event
+async def webrtc_ice_candidate(sid, data):
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE sid = %s", (sid,))
+        user = cursor.fetchone()
+        if user:
+            cursor.execute("SELECT sid FROM users WHERE user_id = %s", (data["target_user_id"],))
+            target_user = cursor.fetchone()
+            if target_user:
+                await sio.emit('webrtc_ice_candidate', {
+                    "from_user_id": user[0],
+                    "candidate": data["candidate"]
+                }, to=target_user[0])
+                logger.info(f"WebRTC ICE candidate from {user[0]} to {data['target_user_id']}")
+    except Exception as e:
+        logger.error(f"Error handling WebRTC ICE candidate: {str(e)}")

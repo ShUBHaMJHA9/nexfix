@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import uvicorn
 from api.sql import create_connection
+from api.home import socket_app 
 from m3u8 import ParseError
 import httpx
 from typing import List, Dict, Optional, Tuple
@@ -104,6 +105,9 @@ app.mount("/assets", StaticFiles(directory="home"), name="assets")
 print("Successfully imported home_app:", home_app)
 app.mount("/home", home_app)
 
+app.mount("/ws/socket.io", socket_app)
+
+print("wsadded at ws ")
 def load_db() -> List[Dict]:
     if os.path.exists(DB_PATH):
         try:
@@ -882,4 +886,10 @@ async def download_video(video_id: str, quality: str, request: Request):
 
 
 if __name__ == "__main__":
+    from api.create import initialize_database
+    try:
+        initialize_database()
+    except RuntimeError as e:
+        logger.error(f"Database initialization failed: {e}")
+        exit(1)
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

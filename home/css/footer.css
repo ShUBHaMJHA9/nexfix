@@ -1,0 +1,243 @@
+/* Footer Styling (Netflix-inspired with custom Nexfix logo) */
+.footer {
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    padding: 48px 0;
+    font-size: 14px;
+    box-shadow: var(--shadow);
+    transition: background-color var(--transition);
+}
+
+/* Footer Top Container */
+.footer-top .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 32px;
+}
+
+/* Footer Brand Wrapper with Custom CSS Logo */
+.footer-brand-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.footer-brand-wrapper .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    background: linear-gradient(45deg, var(--accent-color), var(--accent-hover));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+    transition: transform var(--transition), filter var(--transition);
+}
+
+.footer-brand-wrapper .logo:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+}
+
+.footer-brand-wrapper .logo::before {
+    content: 'Nexfix';
+}
+
+/* Footer Lists */
+.footer-list,
+.quicklink-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer-link a,
+.quicklink-link a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color var(--transition), transform var(--transition);
+}
+
+.footer-link a:hover,
+.quicklink-link a:hover {
+    color: var(--accent-color);
+    transform: translateX(4px);
+}
+
+/* Footer Column Headings */
+.footer-column h4 {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 12px;
+    transition: color var(--transition);
+}
+
+/* Social Links */
+.social-list {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
+    display: flex;
+    gap: 16px;
+}
+
+.social-link ion-icon {
+    font-size: 24px;
+    color: var(--text-secondary);
+    transition: color var(--transition), transform var(--transition);
+}
+
+.social-link ion-icon:hover {
+    color: var(--accent-color);
+    transform: scale(1.2);
+}
+
+/* Footer Bottom */
+.footer-bottom {
+    margin-top: 40px;
+    padding: 24px;
+    background-color: var(--background-primary);
+    border-top: 1px solid var(--border-color);
+    transition: background-color var(--transition), border-color var(--transition);
+}
+
+.footer-bottom .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.copyright {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin: 0;
+    transition: color var(--transition);
+}
+
+.copyright a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: text-decoration var(--transition);
+}
+
+.copyright a:hover {
+    text-decoration: underline;
+}
+
+.footer-bottom-img {
+    height: 28px;
+    width: auto;
+    filter: brightness(0.8);
+    transition: filter var(--transition);
+}
+
+.footer-bottom-img:hover {
+    filter: brightness(1);
+}
+
+/* Responsive Design */
+@media (max-width: 767px) {
+    .footer {
+        padding: 32px 0;
+    }
+
+    .footer-top .container {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 0 16px;
+    }
+
+    .footer-brand-wrapper .logo {
+        font-size: 32px;
+    }
+
+    .footer-bottom {
+        padding: 16px;
+    }
+
+    .footer-bottom .container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .social-list {
+        gap: 12px;
+    }
+
+    .social-link ion-icon {
+        font-size: 20px;
+    }
+
+    .copyright {
+        font-size: 12px;
+    }
+
+    .footer-bottom-img {
+        height: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer {
+        padding: 24px 0;
+    }
+
+    .footer-top .container {
+        padding: 0 12px;
+    }
+
+    .footer-brand-wrapper .logo {
+        font-size: 28px;
+    }
+
+    .footer-column h4 {
+        font-size: 14px;
+    }
+
+    .footer-link a,
+    .quicklink-link a {
+        font-size: 13px;
+    }
+
+    .social-link ion-icon {
+        font-size: 18px;
+    }
+
+    .footer-bottom {
+        padding: 12px;
+    }
+
+    .footer-bottom-img {
+        height: 20px;
+    }
+}
+
+/* Cross-browser Compatibility */
+.footer * {
+    box-sizing: border-box;
+}
+
+.footer a:focus,
+.footer ion-icon:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}

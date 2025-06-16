@@ -23,3 +23,4 @@ pydantic
 m3u8
 cachetools
 python-dotenv
+python-socketio

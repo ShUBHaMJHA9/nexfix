@@ -5,47 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Nexfix - Premium streaming platform with watch party and video call features. Enjoy movies, series, and live events with friends in sync.">
     <meta name="keywords" content="movies, streaming, series, videos, watch party, video call">
-    <meta name="author" content="CodeTech">
-    <meta name="robots" content="index, follow">
-    <!-- Open Graph Meta Tags for Social Sharing -->
-    <meta property="og:title" content="Nexfix | Watch Together">
-    <meta property="og:description" content="Join Nexfix to stream movies, series, and live events with friends using watch party and video call features.">
-    <meta property="og:image" content="/static/images/video-poster.jpg">
-    <meta property="og:url" content="https://www.nexfix.com">
-    <meta property="og:type" content="website">
     <title>Nexfix | Watch Together</title>
-
+    
     <!-- Favicon -->
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="manifest" href="/static/site.webmanifest">
-
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
+    
     <!-- Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-
+    
     <!-- CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://vjs.zencdn.net/8.6.1/video-js.css" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/rot.css">
+    <link rel="stylesheet" href="/assets/css/root.css">
     <link rel="stylesheet" href="/assets/css/footer.css">
     <link rel="stylesheet" href="/assets/css/nav.css">
-    <link rel="stylesheet" href="/assets/css/left.css">
     <link rel="stylesheet" href="/assets/css/right.css">
+    <link rel="stylesheet" href="/assets/css/left.css">
     <link rel="stylesheet" href="/assets/css/party.css">
     <link rel="stylesheet" href="/assets/css/video.css">
     <link rel="stylesheet" href="/assets/css/chat.css">
 </head>
 <body class="dark-theme">
     <!-- Loading Screen -->
-    <!-- <div id="loadingScreen" class="loading-screen" aria-hidden="true">
+    <div id="loadingScreen" class="loading-screen">
         <div class="loading-animation">
             <div class="logo-spinner">
                 <i class="material-icons-round">play_circle_filled</i>
@@ -54,29 +45,29 @@
                 <span>N</span><span>e</span><span>x</span><span>f</span><span>i</span><span>x</span>
             </div>
         </div>
-    </div> -->
+    </div>
 
     <!-- Navigation -->
-    <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <nav class="navbar">
         <div class="navbar-container">
-            <a href="/" class="navbar-brand" aria-label="Nexfix home">
+            <a href="/" class="navbar-brand">
                 <i class="material-icons-round">play_circle_filled</i>
                 <span>Nexfix</span>
             </a>
             <div class="navbar-search">
                 <div class="search-container">
-                    <input type="text" id="search-input" placeholder="Search movies, shows..." aria-label="Search movies or shows">
-                    <button class="search-btn" aria-label="Submit search">
+                    <input type="text" id="search-input" placeholder="Search movies, shows..." aria-label="Search">
+                    <button class="search-btn" aria-label="Search">
                         <i class="material-icons-round">search</i>
                     </button>
-                    <div class="search-popup" id="search-popup" role="listbox" aria-label="Search suggestions"></div>
+                    <div class="search-popup" id="search-popup"></div>
                 </div>
             </div>
             <ul class="navbar-menu">
-                <li><a href="/" class="active" aria-current="page"><i class="material-icons-round">home</i> Home</a></li>
+                <li><a href="/" class="active"><i class="material-icons-round">home</i> Home</a></li>
                 <li class="dropdown">
                     <a href="#" aria-haspopup="true" aria-expanded="false"><i class="material-icons-round">category</i> Browse</a>
-                    <div class="dropdown-menu" role="menu">
+                    <div class="dropdown-menu">
                         <div class="dropdown-grid">
                             <div class="dropdown-section">
                                 <h4>Movies</h4>
@@ -100,12 +91,12 @@
                 <li><a href="/watchlist"><i class="material-icons-round">bookmark</i> Watchlist</a></li>
                 <li><a href="/live"><i class="material-icons-round">live_tv</i> Live</a></li>
                 <li class="dropdown user-dropdown">
-                    <a href="#" class="user-avatar" aria-haspopup="true" aria-expanded="false" aria-label="User menu">
-                        <img src="/assets/images/user.svg" id="userAvatar" alt="User profile avatar" loading="lazy">
+                    <a href="#" class="user-avatar" aria-haspopup="true" aria-expanded="false">
+                        <img src="/assets/images/user.svg" id="userAvatar" alt="User profile">
                     </a>
-                    <div class="dropdown-menu user-menu" role="menu">
+                    <div class="dropdown-menu user-menu">
                         <div class="user-info">
-                            <img src="https://icon2.cleanpng.com/20180320/jew/kisspng-shoulder-human-behavior-neck-conversation-sitting-user-mapping-5ab09bc0828695.7478563115215236485346.jpg" alt="User profile avatar" loading="lazy">
+                            <img src="https://icon2.cleanpng.com/20180320/jew/kisspng-shoulder-human-behavior-neck-conversation-sitting-user-mapping-5ab09bc0828695.7478563115215236485346.jpg" alt="User profile">
                             <div>
                                 <h5 id="usernameDisplay">Guest</h5>
                                 <small id="userEmailDisplay">guest@example.com</small>
@@ -120,36 +111,24 @@
                     </div>
                 </li>
                 <li>
-                    <button class="btn btn-primary" id="createPartyBtn" aria-label="Create watch party">
+                    <button class="btn btn-primary" id="createPartyBtn">
                         <i class="material-icons-round">group</i>
                         <span>Create Party</span>
                     </button>
                 </li>
                 <li>
-                    <button class="btn btn-primary" id="joinPartyBtn" aria-label="Join watch party">
+                    <button class="btn btn-primary" id="joinPartyBtn">
                         <i class="material-icons-round">group_add</i>
                         <span>Join Party</span>
                     </button>
                 </li>
                 <li>
-                    <button id="themeToggle" aria-label="Toggle between light and dark theme">
+                    <button id="themeToggle" aria-label="Toggle theme">
                         <i class="material-icons-round" id="themeIcon">dark_mode</i>
                     </button>
                 </li>
-                <!-- Language Switcher -->
-                <li class="dropdown language-switcher">
-                    <button class="btn" aria-haspopup="true" aria-expanded="false" aria-label="Select language">
-                        <i class="material-icons-round">language</i>
-                        <span>EN</span>
-                    </button>
-                    <div class="dropdown-menu" role="menu">
-                        <a href="#" lang="en" aria-label="English">English</a>
-                        <a href="#" lang="es" aria-label="Spanish">Español</a>
-                        <a href="#" lang="fr" aria-label="French">Français</a>
-                    </div>
-                </li>
                 <li class="mobile-menu-toggle">
-                    <button id="hamburger-menu" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <button id="hamburger-menu" aria-label="Toggle menu">
                         <i class="material-icons-round">menu</i>
                     </button>
                 </li>
@@ -158,10 +137,10 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content" role="main">
+    <main class="main-content">
         <div class="content-container">
             <!-- Left Section -->
-            <section class="video-section left-section" aria-label="Video player and metadata">
+            <section class="video-section left-section">
                 <div class="video-player-container">
                     <video
                         id="mainPlayer"
@@ -169,38 +148,37 @@
                         preload="auto"
                         poster="/static/images/video-poster.jpg"
                         data-setup='{"fluid": true, "responsive": true, "controlBar": false}'
-                        aria-label="Main video player"
-                        controls>
+                        aria-label="Main video player">
                         <source src="" type="video/mp4">
                         <p class="vjs-no-js">
                             To view this video please enable JavaScript, and consider upgrading to a web browser that
-                            <a href="https://videojs.com/html5-video-support/" target="_blank" rel="noopener">supports HTML5 video</a>.
+                            <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
                         </p>
                     </video>
                     <button class="vjs-big-play-button custom-big-play-button" aria-label="Play video">
                         <i class="material-icons-round">play_arrow</i>
                     </button>
-                    <div class="custom-controls" id="customControls" role="group" aria-label="Video controls">
+                    <div class="custom-controls" id="customControls">
                         <div class="progress-container">
-                            <input type="range" id="progressBar" min="0" max="1" value="0" step="0.01" aria-label="Seek video progress" aria-valuemin="0" aria-valuemax="1">
+                            <input type="range" id="progressBar" min="0" max="1" value="0" step="0.01" aria-label="Seek video progress">
                         </div>
                         <div class="control-bar">
-                            <button class="control-btn" id="playPauseBtn" aria-label="Play or pause video">
+                            <button class="control-btn" id="playPauseBtn" aria-label="Play or Pause video">
                                 <i class="material-icons-round">play_arrow</i>
                             </button>
                             <button class="control-btn" id="fastRewindBtn" aria-label="Rewind 10 seconds">
                                 <i class="material-icons-round">replay_10</i>
                             </button>
-                            <button class="control-btn" id="fastForwardBtn" aria-label="Fast forward 10 seconds">
+                            <button class="control-btn" id="fastForwardBtn" aria-label="Forward 10 seconds">
                                 <i class="material-icons-round">forward_10</i>
                             </button>
                             <div class="volume-control">
-                                <button class="control-btn" id="muteBtn" aria-label="Mute or unmute video">
+                                <button class="control-btn" id="muteBtn" aria-label="Mute or Unmute video">
                                     <i class="material-icons-round">volume_up</i>
                                 </button>
-                                <input type="range" id="volumeSlider" min="0" max="100" value="100" aria-label="Adjust volume" aria-valuemin="0" aria-valuemax="100">
+                                <input type="range" id="volumeSlider" min="0" max="100" value="100" aria-label="Adjust volume">
                             </div>
-                            <div class="time-display" aria-live="polite">
+                            <div class="time-display">
                                 <span id="currentTime">0:00</span>
                                 <span>/</span>
                                 <span id="duration">0:00</span>
@@ -227,60 +205,60 @@
                                 <i class="material-icons-round">mic</i>
                             </button>
                         </div>
-                        <div class="settings-panel" id="settingsPanel" role="dialog" aria-label="Video settings">
+                        <div class="settings-panel" id="settingsPanel">
                             <div class="settings-main active">
                                 <div class="settings-section">
                                     <h6>Playback Speed</h6>
-                                    <ul class="settings-options" id="playbackSpeedMenu" role="listbox">
-                                        <li data-speed="0.5" role="option">0.5x</li>
-                                        <li data-speed="0.75" role="option">0.75x</li>
-                                        <li data-speed="1" class="active" role="option" aria-selected="true">1x</li>
-                                        <li data-speed="1.25" role="option">1.25x</li>
-                                        <li data-speed="1.5" role="option">1.5x</li>
-                                        <li data-speed="2" role="option">2x</li>
+                                    <ul class="settings-options" id="playbackSpeedMenu">
+                                        <li data-speed="0.5">0.5x</li>
+                                        <li data-speed="0.75">0.75x</li>
+                                        <li data-speed="1" class="active">1x</li>
+                                        <li data-speed="1.25">1.25x</li>
+                                        <li data-speed="1.5">1.5x</li>
+                                        <li data-speed="2">2x</li>
                                     </ul>
                                 </div>
                                 <div class="settings-section">
                                     <h6>Quality</h6>
-                                    <ul class="settings-options" id="qualityMenu" role="listbox">
-                                        <li data-submenu="quality" role="option" aria-selected="true">Auto</li>
+                                    <ul class="settings-options" id="qualityMenu">
+                                        <li data-submenu="quality">Auto</li>
                                     </ul>
                                 </div>
                                 <div class="settings-section">
                                     <h6>Captions</h6>
-                                    <ul class="settings-options" id="captionMenu" role="listbox">
-                                        <li data-caption="off" class="active" role="option" aria-selected="true">Off</li>
-                                        <li data-caption="en" role="option">English</li>
+                                    <ul class="settings-options" id="captionMenu">
+                                        <li data-caption="off" class="active">Off</li>
+                                        <li data-caption="en">English</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="settings-submenu" id="qualitySubmenu">
                                 <div class="settings-section">
-                                    <button class="back-btn" id="qualityBackBtn" aria-label="Back to main settings">
+                                    <button class="back-btn" id="qualityBackBtn" aria-label="Back to settings">
                                         <i class="material-icons-round">arrow_back</i> Quality
                                     </button>
-                                    <ul class="settings-options" id="qualityOptions" role="listbox">
-                                        <li data-quality="auto" class="active" role="option" aria-selected="true">Auto</li>
-                                        <li data-quality="144p" role="option">144p</li>
-                                        <li data-quality="240p" role="option">240p</li>
-                                        <li data-quality="360p" role="option">360p</li>
-                                        <li data-quality="480p" role="option">480p</li>
-                                        <li data-quality="720p" role="option">720p</li>
-                                        <li data-quality="1080p" role="option">1080p</li>
+                                    <ul class="settings-options" id="qualityOptions">
+                                        <li data-quality="auto" class="active">Auto</li>
+                                        <li data-quality="144p">144p</li>
+                                        <li data-quality="240p">240p</li>
+                                        <li data-quality="360p">360p</li>
+                                        <li data-quality="480p">480p</li>
+                                        <li data-quality="720p">720p</li>
+                                        <li data-quality="1080p">1080p</li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="loading-spinner" id="loadingSpinner" aria-hidden="true">
+                    <div class="loading-spinner" id="loadingSpinner">
                         <div class="spinner"></div>
                         <p>Loading video...</p>
                     </div>
-                    <div class="error-overlay" id="errorOverlay" role="alert">
+                    <div class="error-overlay" id="errorOverlay">
                         <div class="error-message">
                             <i class="material-icons-round">error_outline</i>
                             <p id="errorMessage">Failed to load video.</p>
-                            <button class="btn btn-primary" id="retryBtn" aria-label="Retry loading video">Retry</button>
+                            <button class="btn btn-primary" id="retryBtn">Retry</button>
                         </div>
                     </div>
                 </div>
@@ -296,29 +274,33 @@
                     </div>
                     <div class="metadata-actions">
                         <div class="action-buttons">
-                            <button class="act-btn" id="likeBtn" aria-label="Like video">
+                            <button class="action-btn" id="likeBtn" aria-label="Like video">
                                 <i class="material-icons-round">thumb_up</i>
                                 <span id="likeCount">0</span>
                             </button>
-                            <button class="act-btn" id="dislikeBtn" aria-label="Dislike video">
+                            <button class="action-btn" id="dislikeBtn" aria-label="Dislike video">
                                 <i class="material-icons-round">thumb_down</i>
                                 <span id="dislikeCount">0</span>
                             </button>
-                            <button class="act-btn" id="favoriteBtn" aria-label="Add to favorites">
+                            <button class="action-btn" id="favoriteBtn" aria-label="Add to favorites">
                                 <i class="material-icons-round">favorite</i>
                                 <span>Favorite</span>
                             </button>
-                            <button class="act-btn" id="watchLaterBtn" aria-label="Add to watch later">
+                            <button class="action-btn" id="watchLaterBtn" aria-label="Add to watch later">
                                 <i class="material-icons-round">watch_later</i>
                                 <span>Watch Later</span>
                             </button>
-                            <button class="act-btn" id="videoShareBtn" aria-label="Share video">
+                            <button class="action-btn" id="videoShareBtn" aria-label="Share video">
                                 <i class="material-icons-round">share</i>
                                 <span>Share</span>
                             </button>
-                            <button class="act-btn" id="downloadBtn" aria-label="Download video">
+                            <button class="action-btn" id="downloadBtn" aria-label="Download video">
                                 <i class="material-icons-round">download</i>
                                 <span>Download</span>
+                            </button>
+                            <button class="action-btn" id="liveChatBtn" aria-label="Open live chat">
+                                <i class="material-icons-round">chat</i>
+                                <span>Live Chat</span>
                             </button>
                         </div>
                         <div class="ratings">
@@ -327,7 +309,7 @@
                                 <span id="imdb-rating"></span>
                             </div>
                             <div class="user-rating">
-                                <div class="stars" id="userRatingStars" role="img" aria-label="User rating stars"></div>
+                                <div class="stars" id="userRatingStars"></div>
                                 <span id="user-count"></span>
                             </div>
                         </div>
@@ -347,7 +329,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="watch-party-section" aria-label="Watch party controls">
+                <div class="watch-party-section">
                     <div class="watch-party-header">
                         <h3><i class="bx bx-group"></i> Watch Party</h3>
                         <div class="party-status" id="currentPartyStatus">
@@ -380,51 +362,51 @@
                         </div>
                         <div class="party-info-item">
                             <span>Code:</span>
-                            <strong id="partyCodeDisplay">ABCD12</strong>
+                            <strong id="partyCodeDisplay"></strong>
                             <button class="copy-btn" id="copyPartyCodeBtn" aria-label="Copy party code">
                                 <i class="bx bx-copy"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="cast-section" aria-label="Cast information">
+                <div class="cast-section">
                     <h3>Cast</h3>
                     <div class="cast-grid">
-                        <button class="nav-arrow-left" aria-label="Scroll cast left"><i class="material-icons-round">chevron_left</i></button>
-                        <div class="cast-scroller" id="castGrid" role="list"></div>
-                        <button class="nav-arrow-right" aria-label="Scroll cast right"><i class="material-icons-round">chevron_right</i></button>
+                        <div class="nav-arrow-left"><i class="material-icons-round">chevron_left</i></div>
+                        <div class="cast-scroller" id="castGrid"></div>
+                        <div class="nav-arrow-right"><i class="material-icons-round">chevron_right</i></div>
                     </div>
                 </div>
-                <div class="reviews-section" aria-label="User reviews">
+                <div class="reviews-section">
                     <div class="reviews-header">
                         <h3>User Reviews</h3>
-                        <button class="btn btn-outline" id="writeReviewBtn" aria-label="Write a review">Write a Review</button>
+                        <button class="btn btn-outline" id="writeReviewBtn">Write a Review</button>
                     </div>
-                    <div class="review-form" id="review-form" role="form" aria-label="Review submission form">
+                    <div class="review-form" id="review-form">
                         <div class="form-header">
                             <h4>Write Your Review</h4>
-                            <div class="star-rating" role="radiogroup" aria-label="Select rating">
-                                <i class="bx bx-star" data-rating="1" role="radio" aria-checked="false" tabindex="0"></i>
-                                <i class="bx bx-star" data-rating="2" role="radio" aria-checked="false" tabindex="-1"></i>
-                                <i class="bx bx-star" data-rating="3" role="radio" aria-checked="false" tabindex="-1"></i>
-                                <i class="bx bx-star" data-rating="4" role="radio" aria-checked="false" tabindex="-1"></i>
-                                <i class="bx bx-star" data-rating="5" role="radio" aria-checked="false" tabindex="-1"></i>
+                            <div class="star-rating">
+                                <i class="bx bx-star" data-rating="1"></i>
+                                <i class="bx bx-star" data-rating="2"></i>
+                                <i class="bx bx-star" data-rating="3"></i>
+                                <i class="bx bx-star" data-rating="4"></i>
+                                <i class="bx bx-star" data-rating="5"></i>
                             </div>
                         </div>
-                        <textarea placeholder="Share your thoughts about this movie..." id="reviewText" aria-label="Write your review" required></textarea>
-                        <div class="form-acts">
-                            <button class="btn btn-outline" id="cancelReviewBtn" aria-label="Cancel review">Cancel</button>
-                            <button class="btn btn-primary" id="submitReviewBtn" aria-label="Submit review">Submit</button>
+                        <textarea placeholder="Share your thoughts about this movie..." id="reviewText" aria-label="Write your review"></textarea>
+                        <div class="form-actions">
+                            <button class="btn btn-outline" id="cancelReviewBtn">Cancel</button>
+                            <button class="btn btn-primary" id="submitReviewBtn">Submit</button>
                         </div>
                     </div>
-                    <div class="reviews-list" id="user-reviews" role="list"></div>
+                    <div class="reviews-list" id="user-reviews"></div>
                 </div>
-                <footer class="footer" role="contentinfo">
+                <footer class="footer">
                     <div class="footer-top">
                         <div class="container">
                             <div class="footer-brand-wrapper">
-                                <a href="/" class="logo" aria-label="Nexfix home"></a>
-                                <ul class="footer-list" role="list">
+                                <a href="/" class="logo"></a>
+                                <ul class="footer-list">
                                     <li><a href="/" class="footer-link">Home</a></li>
                                     <li><a href="/movies" class="footer-link">Movies</a></li>
                                     <li><a href="/tv" class="footer-link">TV Shows</a></li>
@@ -434,7 +416,7 @@
                             </div>
                             <div class="footer-column">
                                 <h4>Company</h4>
-                                <ul class="footer-list" role="list">
+                                <ul class="footer-list">
                                     <li><a href="/about" class="footer-link">About Us</a></li>
                                     <li><a href="/careers" class="footer-link">Careers</a></li>
                                     <li><a href="/press" class="footer-link">Press</a></li>
@@ -442,7 +424,7 @@
                             </div>
                             <div class="footer-column">
                                 <h4>Support</h4>
-                                <ul class="footer-list" role="list">
+                                <ul class="footer-list">
                                     <li><a href="/faq" class="footer-link">FAQ</a></li>
                                     <li><a href="/help" class="footer-link">Help Center</a></li>
                                     <li><a href="/contact" class="footer-link">Contact Us</a></li>
@@ -450,7 +432,7 @@
                             </div>
                             <div class="footer-column">
                                 <h4>Legal</h4>
-                                <ul class="footer-list" role="list">
+                                <ul class="footer-list">
                                     <li><a href="/terms" class="footer-link">Terms of Use</a></li>
                                     <li><a href="/privacy" class="footer-link">Privacy Policy</a></li>
                                     <li><a href="/cookies" class="footer-link">Cookie Policy</a></li>
@@ -460,57 +442,53 @@
                     </div>
                     <div class="footer-bottom">
                         <div class="container">
-                            <ul class="social-list" role="list">
-                                <li><a href="#" class="social-link" aria-label="Facebook"><ion-icon name="logo-facebook"></ion-icon></a></li>
-                                <li><a href="#" class="social-link" aria-label="Twitter"><ion-icon name="logo-twitter"></ion-icon></a></li>
-                                <li><a href="#" class="social-link" aria-label="Pinterest"><ion-icon name="logo-pinterest"></ion-icon></a></li>
-                                <li><a href="#" class="social-link" aria-label="LinkedIn"><ion-icon name="logo-linkedin"></ion-icon></a></li>
+                            <ul class="social-list">
+                                <li><a href="#" class="social-link"><ion-icon name="logo-facebook"></ion-icon></a></li>
+                                <li><a href="#" class="social-link"><ion-icon name="logo-twitter"></ion-icon></a></li>
+                                <li><a href="#" class="social-link"><ion-icon name="logo-pinterest"></ion-icon></a></li>
+                                <li><a href="#" class="social-link"><ion-icon name="logo-linkedin"></ion-icon></a></li>
                             </ul>
                             <p class="copyright">© 2025 <a href="#">CodeTech</a>. All Rights Reserved.</p>
-                            <img src="/assets/images/footer-bottom-img.png" alt="Payment partners logos" class="footer-bottom-img" loading="lazy">
+                            <img src="/assets/images/footer-bottom-img.png" alt="Payment partners" class="footer-bottom-img" loading="lazy">
                         </div>
                     </div>
                 </footer>
             </section>
             <!-- Right Section -->
-            <aside class="sidebar right-section" id="sidebar" role="complementary" aria-label="Sidebar content">
-                <div class="sidebar-tabs" role="tablist">
-                    <button class="sidebar-tab active" data-tab="recommended" role="tab" aria-selected="true" aria-controls="recommended-content">
+            <aside class="sidebar right-section" id="sidebar">
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="recommended">
                         <i class="material-icons-round">recommend</i>
                         <span>Recommended</span>
                     </button>
-                    <button class="sidebar-tab" data-tab="chat" role="tab" aria-selected="false" aria-controls="chat-content">
+                    <button class="sidebar-tab" data-tab="chat">
                         <i class="material-icons-round">forum</i>
                         <span>Live Chat</span>
-                        <span class="notification-badge" id="unreadMessagesCount" aria-label="Unread messages count">0</span>
+                        <span class="notification-badge" id="unreadMessagesCount">0</span>
                     </button>
                 </div>
 
-                <div class="sidebar-section active" id="recommended-content" data-tab-content="recommended" role="tabpanel">
-                    <div class="section-header">
-                        <h4>Recommended Videos</h4>
-                    </div>
-                    <div class="recommended-list" role="list"></div>
-                    <button class="load-more-btn" id="loadMoreBtn" aria-label="Load more recommended videos">
-                        More <i class="material-icons-round">expand_more</i>
-                    </button>
+                <div class="sidebar-section active" id="recommendedVideos" data-tab-content="recommended">
+                    <!-- Recommended videos will load here when tab is active -->
                 </div>
 
-                <div class="sidebar-section" id="chat-content" data-tab-content="chat" role="tabpanel">
-                    <div class="section-header">
+                <div class="sidebar-section" id="activePartyView" data-tab-content="chat">
+                    <!-- Party Header (visible when in party) -->
+                    <div class="section-header party-header" id="partyHeader" style="display: none;">
                         <h4>
                             <i class="material-icons-round">local_movies</i>
                             Watch Party
-                            <span class="party-status-indicator online" aria-label="Party status online"></span>
+                            <span class="party-status-indicator online"></span>
+                            <span class="party-id" id="partyCodeDisplayHeader"></span>
                         </h4>
                         <div class="party-header-actions">
-                            <button class="btn-icon party-code-btn" id="partyCodeBtn" title="Copy Party Code" aria-label="Copy party code">
+                            <button class="btn-icon party-code-btn" id="partyCodeBtn" title="Copy Party Code">
                                 <i class="material-icons-round">content_copy</i>
-                                <span class="party-code" id="partyCodeDisplaySidebar">ABC123</span>
+                                <span class="party-code" id="partyCodeDisplaySidebar"></span>
                             </button>
-                            <button class="btn-icon members-toggle" id="toggleMembersBtn" title="Show online members" aria-label="Toggle online members list">
+                            <button class="btn-icon members-toggle" id="toggleMembersBtn" title="Online Members">
                                 <i class="material-icons-round">people</i>
-                                <span class="online-count" id="onlineMembersCount" aria-label="Online members count">0</span>
+                                <span class="online-count" id="onlineMembersCount">0</span>
                             </button>
                         </div>
                     </div>
@@ -522,244 +500,151 @@
                             Public Chat
                         </h4>
                         <div class="party-header-actions">
-                            <button class="btn-icon members-toggle" id="togglePublicMembersBtn" title="Show online users" aria-label="Toggle online users list">
+                            <button class="btn-icon members-toggle" id="togglePublicMembersBtn" title="Online Users">
                                 <i class="material-icons-round">people</i>
-                                <span class="online-count" id="publicOnlineCount" aria-label="Online users count">0</span>
+                                <span class="online-count" id="publicOnlineCount">0</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Online Members Popup -->
-                    <div class="online-members-popup stylish-popup" id="onlineMembersPopup" role="dialog" aria-label="Online members">
+                    <div class="online-members-popup stylish-popup" id="onlineMembersPopup">
                         <div class="popup-header">
                             <h5 id="membersPopupTitle">Participants</h5>
                             <div class="popup-controls">
-                                <div class="host-controls" id="hostControls">
-                                    <button class="btn-icon ban-user-btn" id="banUserBtn" title="Ban selected user" aria-label="Ban selected user">
-                                        <i class="material-icons-round">gavel</i>
-                                        <span>Ban</span>
-                                    </button>
-                                    <button class="btn-icon mute-all-btn" id="muteAllBtn" title="Mute all users' audio" aria-label="Mute all users">
-                                        <i class="material-icons-round">volume_off</i>
-                                        <span>Mute All</span>
-                                    </button>
-                                    <button class="btn-icon lock-party-btn" id="lockPartyBtn" title="Lock party to new members" aria-label="Lock party">
-                                        <i class="material-icons-round">lock</i>
-                                        <span>Lock Party</span>
-                                    </button>
-                                </div>
+                                <button class="btn-icon mute-all-btn" id="muteAllBtn" title="Mute all users' audio">
+                                    <i class="material-icons-round">volume_off</i>
+                                    <span>Mute All</span>
+                                </button>
                                 <button class="btn-icon close-popup" id="closeMembersPopup" aria-label="Close members popup">
                                     <i class="material-icons-round">close</i>
                                 </button>
                             </div>
                         </div>
                         <div class="members-search">
-                            <input type="text" placeholder="Search participants..." id="membersSearch" aria-label="Search participants">
+                            <input type="text" placeholder="Search participants..." id="membersSearch" aria-label="Search members">
                             <i class="material-icons-round">search</i>
                         </div>
-                        <div class="members-list stylish-members-list" id="partyMembersList" role="list">
+                        <div class="members-list stylish-members-list" id="partyMembersList">
                             <!-- Members will be populated here -->
-                            <div class="member-item host" role="listitem">
-                                <div class="member-info">
-                                    <span class="member-avatar">
-                                        <i class="material-icons-round">star</i>
-                                    </span>
-                                    <span class="member-name">Host User</span>
-                                    <span class="member-badge host-badge">Host</span>
-                                </div>
-                                <div class="member-status">
-                                    <i class="material-icons-round">mic</i>
-                                    <i class="material-icons-round">videocam</i>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Main Chat Area -->
-                    <div class="party-chat" id="partyChatSection" role="region" aria-label="Party chat">
-                        <div class="chat-header">
-                            <div class="chat-tabs" role="tablist">
-                                <button class="chat-tab active" data-chat-tab="main" role="tab" aria-selected="true" aria-controls="main-chat">Main Chat</button>
-                                <button class="chat-tab" data-chat-tab="private" role="tab" aria-selected="false" aria-controls="private-chat">Private</button>
-                            </div>
-                            <button class="btn-icon chat-settings" id="chatSettingsBtn" title="Chat Settings" aria-label="Open chat settings">
-                                <i class="material-icons-round">more_vert</i>
-                            </button>
-                        </div>
-
-                        <div class="chat-messages" id="partyChatMessages" role="log" aria-label="Chat messages">
-                            <!-- Messages will appear here -->
+                    <!-- Chat Area -->
+                    <div class="chat-container" id="chatSection">
+                        <div class="chat-messages" id="chatMessages">
                             <div class="welcome-message">
-                                <i class="material-icons-round">celebration</i>
-                                <h5>Welcome to the Watch Party!</h5>
-                                <p>Start chatting with other members watching together.</p>
+                                <i class="material-icons-round">forum</i>
+                                <h5>Public Chat</h5>
+                                <p>You can chat here without joining a party.</p>
                             </div>
                         </div>
 
                         <div class="chat-input-container">
-                            <button class="btn-icon emoji-picker-btn" id="emojiPickerBtn" title="Open emoji picker" aria-label="Select emoji">
+                            <button class="btn-icon emoji-picker-btn" id="emojiPickerBtn" title="Emoji">
                                 <i class="material-icons-round">mood</i>
                             </button>
                             <div class="input-wrapper">
-                                <input type="text" id="partyChatInput" placeholder="Type a message..." maxlength="500" aria-label="Type a chat message">
+                                <input type="text" id="chatInput" placeholder="Type a message..." maxlength="500" aria-label="Type a message">
                                 <div class="input-actions">
-                                    <button class="btn-icon attachment-btn" title="Attach file" aria-label="Attach file">
+                                    <button class="btn-icon attachment-btn" id="attachmentBtn" title="Attach file (not implemented)" disabled>
                                         <i class="material-icons-round">attach_file</i>
                                     </button>
-                                    <span class="char-counter" aria-live="polite">0/500</span>
+                                    <span class="char-counter">0/500</span>
                                 </div>
                             </div>
-                            <button class="btn send-btn" id="sendPartyMessage" title="Send message" aria-label="Send chat message">
+                            <button class="btn send-btn" id="sendMessage" title="Send" aria-label="Send message">
                                 <i class="material-icons-round">send</i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="party-controls" role="group" aria-label="Party controls">
-                        <button class="control-btn play-pause" id="partyPlayPause" title="Play/Pause" aria-label="Play or pause party video">
+                    <!-- Party Controls (visible when in party) -->
+                    <div class="party-controls" id="partyControls" style="display: none;">
+                        <button class="control-btn play-pause" id="partyPlayPause" title="Play/Pause" aria-label="Play or Pause party video">
                             <i class="material-icons-round">play_arrow</i>
                         </button>
                         <button class="control-btn sync" id="partySync" title="Sync with host" aria-label="Sync video with host">
                             <i class="material-icons-round">sync</i>
                         </button>
-                        <button class="control-btn volume" id="partyVolume" title="Volume" aria-label="Adjust party volume">
+                        <button class="control-btn user-volume" id="partyVolume" title="User Audio" aria-label="Adjust user audio">
                             <i class="material-icons-round">volume_up</i>
                         </button>
-                        <div class="divider" aria-hidden="true"></div>
-                        <button class="control-btn mic-toggle" id="toggleMicBtnSidebar" title="Toggle microphone" data-enabled="true" aria-label="Toggle microphone">
+                        <div class="divider"></div>
+                        <button class="control-btn mic-toggle" id="toggleMicBtnSidebar" title="Mute microphone" data-enabled="true" aria-label="Toggle microphone">
                             <i class="material-icons-round">mic</i>
                         </button>
                         <button class="control-btn leave-btn" id="leavePartyBtn" title="Leave party" aria-label="Leave watch party">
                             <i class="material-icons-round">exit_to_app</i>
                         </button>
                     </div>
+
+                    <!-- Public Chat Controls (visible when not in party) -->
+                    <div class="public-chat-controls" id="publicChatControls">
+                        <button class="control-btn user-volume" id="publicVolumeControl" title="Toggle Chat Sound">
+                            <i class="material-icons-round">volume_up</i>
+                        </button>
+                        <div class="divider"></div>
+                        <button class="control-btn clear-chat" id="clearChatBtn" title="Clear Chat">
+                            <i class="material-icons-round">delete</i>
+                        </button>
+                    </div>
                 </div>
             </aside>
 
-            <!-- User Action Menu (Context Menu) -->
-            <div class="user-action-menu stylish-context-menu" id="userActionMenu" role="menu" aria-label="User actions">
-                <button class="action-btn private-chat" data-action="private-chat" role="menuitem" aria-label="Start private message">
-                    <i class="material-icons-round">chat</i> Private Message
-                </button>
-                <button class="action-btn hide-user" data-action="hide" role="menuitem" aria-label="Hide user messages">
-                    <i class="material-icons-round">visibility_off</i> Hide User
-                </button>
-                <button class="action-btn block-user" data-action="block" role="menuitem" aria-label="Block user">
+            <!-- User Action Menu -->
+            <div class="user-action-menu" id="userActionMenu">
+                <button class="action-btn block-user" data-action="block" aria-label="Block user">
                     <i class="material-icons-round">block</i> Block User
                 </button>
-                <div class="host-only-actions" id="hostOnlyActions">
-                    <button class="action-btn mute-user" data-action="mute" role="menuitem" aria-label="Mute user">
-                        <i class="material-icons-round">volume_off</i> Mute User
-                    </button>
-                    <button class="action-btn kick-user" data-action="kick" role="menuitem" aria-label="Kick user from party">
-                        <i class="material-icons-round">person_remove</i> Kick User
-                    </button>
-                    <button class="action-btn ban-user" data-action="ban" role="menuitem" aria-label="Ban user from party">
-                        <i class="material-icons-round">gavel</i> Ban User
-                    </button>
-                </div>
-                <button class="action-btn report-user" data-action="report" role="menuitem" aria-label="Report user">
+                <button class="action-btn report-user" data-action="report" aria-label="Report user">
                     <i class="material-icons-round">report</i> Report User
                 </button>
-                <div class="menu-divider" aria-hidden="true"></div>
-                <button class="action-btn close-menu" data-action="close" role="menuitem" aria-label="Close menu">
+                <div class="host-actions" id="hostActions" style="display: none;">
+                    <button class="action-btn kick-user" data-action="kick" aria-label="Kick user">
+                        <i class="material-icons-round">person_remove</i> Kick User
+                    </button>
+                    <button class="action-btn ban-user" data-action="ban" aria-label="Ban user">
+                        <i class="material-icons-round">gavel</i> Ban User
+                    </button>
+                    <button class="action-btn timeout-user" data-action="timeout" aria-label="Timeout user">
+                        <i class="material-icons-round">timer</i> Timeout User
+                    </button>
+                </div>
+                <button class="action-btn close-menu" data-action="close" aria-label="Close menu">
                     <i class="material-icons-round">close</i> Cancel
                 </button>
             </div>
 
-            <!-- Ban User Confirmation Modal -->
-            <div class="modal-overlay" id="banUserModal" role="dialog" aria-label="Ban user confirmation">
-                <div class="modal-content stylish-modal">
-                    <div class="modal-header">
-                        <h4>
-                            <i class="material-icons-round">warning</i>
-                            Ban User
-                        </h4>
-                        <button class="btn-icon close-modal" id="closeBanModal" aria-label="Close ban user modal">
-                            <i class="material-icons-round">close</i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Are you sure you want to ban <span class="user-to-ban" id="userToBanName">Username</span> from this party?</p>
-                        <div class="ban-options">
-                            <label>
-                                <input type="checkbox" id="banTemporaryCheck" aria-label="Temporary ban for 24 hours">
-                                <span>Temporary ban (24 hours)</span>
-                            </label>
-                            <label>
-                                <input type="checkbox" id="banPermanentCheck" aria-label="Permanent ban">
-                                <span>Permanent ban</span>
-                            </label>
-                        </div>
-                        <div class="ban-reason">
-                            <label for="banReason">Reason (optional):</label>
-                            <textarea id="banReason" placeholder="Enter reason for banning this user..." aria-label="Ban reason"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn cancel-btn" id="cancelBanBtn" aria-label="Cancel ban">Cancel</button>
-                        <button class="btn danger-btn" id="confirmBanBtn" aria-label="Confirm ban">
-                            <i class="material-icons-round">gavel</i> Confirm Ban
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Blocked Notification -->
-            <div class="toast-notification stylish-toast" id="userBlockedToast" role="alert" aria-live="assertive">
-                <div class="toast-icon">
-                    <i class="material-icons-round">block</i>
-                </div>
-                <div class="toast-content">
-                    <h5>User Blocked</h5>
-                    <p>You won't see messages from this user anymore.</p>
-                </div>
-                <button class="btn-icon toast-close" id="closeBlockToast" aria-label="Close notification">
-                    <i class="material-icons-round">close</i>
-                </button>
-            </div>
-
-            <!-- Party Locked Notification -->
-            <div class="toast-notification stylish-toast" id="partyLockedToast" role="alert" aria-live="assertive">
-                <div class="toast-icon">
-                    <i class="material-icons-round">lock</i>
-                </div>
-                <div class="toast-content">
-                    <h5>Party Locked</h5>
-                    <p>New members can't join without an invitation.</p>
-                </div>
-                <button class="btn-icon toast-close" id="closeLockToast" aria-label="Close notification">
-                    <i class="material-icons-round">close</i>
-                </button>
-            </div>
-
             <!-- Emoji Picker -->
-            <div class="emoji-picker-container" id="emojiPickerContainer" role="dialog" aria-label="Emoji picker">
+            <div class="emoji-picker-container" id="emojiPickerContainer">
                 <div class="emoji-picker-header">
                     <h6>Select Emoji</h6>
                     <button class="btn-icon close-emoji-picker" id="closeEmojiPicker" aria-label="Close emoji picker">
                         <i class="material-icons-round">close</i>
                     </button>
                 </div>
-                <div class="emoji-categories" role="tablist">
-                    <button class="emoji-category-btn active" data-category="smileys" role="tab" aria-selected="true" aria-label="Smileys emojis">
+                <div class="emoji-categories">
+                    <button class="emoji-category-btn active" data-category="smileys" aria-label="Smileys emojis">
                         <i class="material-icons-round">mood</i>
                     </button>
-                    <button class="emoji-category-btn" data-category="animals" role="tab" aria-selected="false" aria-label="Animals emojis">
+                    <button class="emoji-category-btn" data-category="animals" aria-label="Animals emojis">
                         <i class="material-icons-round">pets</i>
                     </button>
-                    <button class="emoji-category-btn" data-category="food" role="tab" aria-selected="false" aria-label="Food emojis">
+                    <button class="emoji-category-btn" data-category="food" aria-label="Food emojis">
                         <i class="material-icons-round">fastfood</i>
                     </button>
-                    <button class="emoji-category-btn" data-category="activities" role="tab" aria-selected="false" aria-label="Activities emojis">
+                    <button class="emoji-category-btn" data-category="activities" aria-label="Activities emojis">
                         <i class="material-icons-round">sports_soccer</i>
                     </button>
                 </div>
-                <div class="emoji-grid" id="emojiGrid" role="grid" aria-label="Emoji selection grid"></div>
+                <div class="emoji-grid" id="emojiGrid" role="grid" aria-label="Emoji selection grid">
+                    <!-- Emojis will be populated here -->
+                </div>
             </div>
 
             <!-- Watch Party Popup -->
-            <div id="watchPartyPopup" class="modal-overlay hidden" role="dialog" aria-label="Watch party management">
+            <div id="watchPartyPopup" class="modal-overlay hidden">
                 <div class="modal-container party-modal">
                     <div class="modal-header">
                         <h2>Watch Party</h2>
@@ -769,15 +654,15 @@
                     </div>
                     <div class="modal-body">
                         <!-- Party Tabs -->
-                        <div class="party-tabs" role="tablist">
-                            <button class="party-tab active" data-tab="create" role="tab" aria-selected="true" aria-controls="create-party" aria-label="Create party tab">Create Party</button>
-                            <button class="party-tab" data-tab="join" role="tab" aria-selected="false" aria-controls="join-party" aria-label="Join party tab">Join Party</button>
-                            <button class="party-tab" data-tab="public" role="tab" aria-selected="false" aria-controls="public-parties" aria-label="Public parties tab">Public Parties</button>
-                            <button class="party-tab hidden" data-tab="active" id="activePartyTab" role="tab" aria-selected="false" aria-controls="active-party" aria-label="Active party tab">Active Party</button>
+                        <div class="party-tabs">
+                            <button class="party-tab active" data-tab="create" aria-label="Create party tab">Create Party</button>
+                            <button class="party-tab" data-tab="join" aria-label="Join party tab">Join Party</button>
+                            <button class="party-tab" data-tab="public" aria-label="Public parties tab">Public Parties</button>
+                            <button class="party-tab hidden" data-tab="active" id="activePartyTab" aria-label="Active party tab">Active Party</button>
                         </div>
                         <!-- Create Party Tab -->
-                        <div class="party-tab-content active" id="create-party" data-tab-content="create" role="tabpanel">
-                            <form id="createPartyForm" class="party-form" aria-label="Create party form">
+                        <div class="party-tab-content active" data-tab-content="create">
+                            <form id="createPartyForm" class="party-form">
                                 <div class="form-group">
                                     <label for="partyName">Party Name</label>
                                     <input type="text" id="partyName" placeholder="Enter party name" required aria-required="true">
@@ -835,8 +720,8 @@
                             </form>
                         </div>
                         <!-- Join Party Tab -->
-                        <div class="party-tab-content" id="join-party" data-tab-content="join" role="tabpanel">
-                            <form id="joinPartyForm" class="party-form" aria-label="Join party form">
+                        <div class="party-tab-content" data-tab-content="join">
+                            <form id="joinPartyForm" class="party-form">
                                 <div class="form-group">
                                     <label for="partyCode">Party Code</label>
                                     <input type="text" id="partyCode" placeholder="Enter party code" required aria-required="true">
@@ -852,7 +737,7 @@
                             </form>
                         </div>
                         <!-- Public Parties Tab -->
-                        <div class="party-tab-content" id="public-parties" data-tab-content="public" role="tabpanel">
+                        <div class="party-tab-content" data-tab-content="public">
                             <div class="public-parties-header">
                                 <h4>Public Parties</h4>
                                 <button class="btn btn-sm btn-outline" id="refreshPublicParties" aria-label="Refresh public parties">
@@ -860,7 +745,7 @@
                                     Refresh
                                 </button>
                             </div>
-                            <div class="public-parties-list" id="publicPartiesList" role="list">
+                            <div class="public-parties-list" id="publicPartiesList">
                                 <div class="empty-state">
                                     <i class="bx bx-group"></i>
                                     <p>No public parties available</p>
@@ -869,11 +754,12 @@
                             </div>
                         </div>
                         <!-- Active Party Tab -->
-                        <div class="party-tab-content" id="active-party" data-tab-content="active" role="tabpanel">
+                        <div class="party-tab-content" data-tab-content="active" id="activePartyView">
                             <div class="active-party-info">
                                 <h3 id="activePartyName">Party Name</h3>
-                                <p class="party-code">Code: <strong id="activePartyCode">ABC123</strong></p>
+                                <p class="party-code">Code: <strong id="activePartyCode"></strong></p>
                                 <p class="party-status">Status: <span id="activePartyStatus">Active</span></p>
+                                <p class="party-video">Video: <span id="activePartyVideoId"></span></p>
                                 <p class="member-count">Members: <span id="activePartyMemberCount">0</span></p>
                                 <button class="btn btn-sm btn-outline" id="copyActivePartyCodeBtn" aria-label="Copy active party code">
                                     <i class="bx bx-copy"></i>
@@ -884,7 +770,7 @@
                             <div class="party-controls">
                                 <h4>Controls</h4>
                                 <div class="control-buttons">
-                                    <button class="btn btn-sm" id="popupPartyPlayPause" data-icon-on="bx bx-pause" data-icon-off="bx bx-play" aria-label="Play or pause party video">
+                                    <button class="btn btn-sm" id="popupPartyPlayPause" data-icon-on="bx bx-pause" data-icon-off="bx bx-play" aria-label="Play or Pause party video">
                                         <i class="bx bx-play"></i>
                                         Play/Pause
                                     </button>
@@ -909,10 +795,10 @@
                             <!-- Mini Chat -->
                             <div class="popup-chat">
                                 <h4>Chat</h4>
-                                <div class="chat-messages-mini" id="popupPartyChatMessages" role="log" aria-label="Party chat messages"></div>
+                                <div class="chat-messages-mini" id="popupPartyChatMessages"></div>
                                 <div class="chat-input-container">
-                                    <input type="text" id="popupPartyChatInput" placeholder="Type a message..." aria-label="Type a chat message">
-                                    <button id="popupSendPartyMessage" class="send-btn" aria-label="Send chat message">
+                                    <input type="text" id="popupPartyChatInput" placeholder="Type a message..." aria-label="Type a message">
+                                    <button id="popupSendPartyMessage" class="send-btn" aria-label="Send message">
                                         <i class="bx bx-send"></i>
                                     </button>
                                 </div>
@@ -920,7 +806,7 @@
                             <!-- Members List -->
                             <div class="popup-members">
                                 <h4>Members</h4>
-                                <ul class="party-member-list" id="popupPartyMembersList" role="list"></ul>
+                                <ul class="party-member-list" id="popupPartyMembersList"></ul>
                             </div>
                             <div class="form-actions">
                                 <button class="btn btn-danger" id="popupLeavePartyBtn" aria-label="Leave party">Leave Party</button>
@@ -931,7 +817,7 @@
             </div>
 
             <!-- Media Controls Popup -->
-            <div id="mediaControlsPopup" class="modal-overlay hidden" role="dialog" aria-label="Media controls">
+            <div id="mediaControlsPopup" class="modal-overlay hidden">
                 <div class="modal-container media-controls-modal">
                     <div class="modal-header">
                         <h3>Media Controls</h3>
@@ -942,7 +828,7 @@
                     <div class="modal-body">
                         <div class="media-preview">
                             <video id="localVideo" muted autoplay aria-label="Local video preview"></video>
-                            <div class="permission-status" id="permissionStatus" aria-live="polite"></div>
+                            <div class="permission-status" id="permissionStatus"></div>
                         </div>
                         <div class="media-controls">
                             <button class="btn media-toggle" id="toggleCamera" data-enabled="false" data-icon-on="bx bx-video" data-icon-off="bx bx-video-off" aria-label="Toggle camera">
@@ -967,8 +853,8 @@
             </div>
 
             <!-- Reaction Picker -->
-            <div id="reactionPicker" class="reaction-picker hidden" role="menu" aria-label="Reaction picker">
-                <div class="reaction-options">
+            <div id="reactionPicker" class="reaction-picker hidden">
+                <div class="reaction-options" role="menu" aria-label="Reaction picker">
                     <button class="reaction-option" data-reaction="👍" aria-label="Thumbs up reaction">👍</button>
                     <button class="reaction-option" data-reaction="❤️" aria-label="Heart reaction">❤️</button>
                     <button class="reaction-option" data-reaction="😂" aria-label="Laughing reaction">😂</button>
@@ -983,7 +869,7 @@
     </main>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://vjs.zencdn.net/8.6.1/video.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>

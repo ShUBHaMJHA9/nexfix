@@ -1,630 +1,736 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Configuration
-    const socket = io(); // Assuming Socket.IO is included for real-time communication
-    let currentParty = null;
-    let isHost = false;
-    let userId = `user_${Math.random().toString(36).substr(2, 9)}`; // Temporary user ID
-    const syncToleranceOptions = {
-        strict: 0,
-        normal: 2000,
-        loose: 5000
-    };
-
-    // DOM Elements
-    const elements = {
-        // Watch Party Popup
-        watchPartyPopup: document.getElementById('watchPartyPopup'),
-        closePartyPopup: document.getElementById('closePartyPopup'),
-        partyTabButtons: document.querySelectorAll('.party-tab'),
-        partyTabContents: document.querySelectorAll('.party-tab-content'),
-        createPartyBtn: document.getElementById('createPartyBtn'),
-        joinPartyBtn: document.getElementById('joinPartyBtn'),
-        leavePartyBtnTop: document.getElementById('leavePartyBtnTop'),
-        partyNameInput: document.getElementById('partyName'),
-        partyPasswordInput: document.getElementById('partyPassword'),
-        hostControlsSelect: document.getElementById('hostControls'),
-        partyPrivacySelect: document.getElementById('partyPrivacy'),
-        confirmCreateParty: document.getElementById('confirmCreateParty'),
-        cancelCreateParty: document.getElementById('cancelCreateParty'),
-        partyCodeInput: document.getElementById('partyCode'),
-        joinPasswordInput: document.getElementById('joinPassword'),
-        confirmJoinParty: document.getElementById('confirmJoinParty'),
-        cancelJoinParty: document.getElementById('cancelJoinParty'),
-        activePartyTab: document.getElementById('activePartyTab'),
-        activePartyView: document.querySelector('.party-tab-content[data-tab-content="active"]'),
-        activePartyName: document.getElementById('activePartyName'),
-        activePartyCode: document.getElementById('activePartyCode'),
-        activePartyStatus: document.getElementById('activePartyStatus'),
-        activePartyMemberCount: document.getElementById('activePartyMemberCount'),
-        copyActivePartyCodeBtn: document.getElementById('copyActivePartyCodeBtn'),
-        popupPartyChatMessages: document.getElementById('popupPartyChatMessages'),
-        popupPartyChatInput: document.getElementById('popupPartyChatInput'),
-        popupSendPartyMessage: document.getElementById('popupSendPartyMessage'),
-        popupPartyMembersList: document.getElementById('popupPartyMembersList'),
-        popupLeavePartyBtn: document.getElementById('popupLeavePartyBtn'),
-        popupPartyPlayPause: document.getElementById('popupPartyPlayPause'),
-        popupPartySeekBack: document.getElementById('popupPartySeekBack'),
-        popupPartySeekForward: document.getElementById('popupPartySeekForward'),
-        popupPartySync: document.getElementById('popupPartySync'),
-        popupPartyChangeVideo: document.getElementById('popupPartyChangeVideo'),
-        popupPartySettings: document.getElementById('popupPartySettings'),
-        publicPartiesList: document.getElementById('publicPartiesList'),
-        partyInfoContainer: document.getElementById('partyInfoContainer'),
-        partyNameDisplay: document.getElementById('partyNameDisplay'),
-        partyMemberCount: document.getElementById('partyMemberCount'),
-        partyCodeDisplay: document.getElementById('partyCodeDisplay'),
-        copyPartyCodeBtn: document.getElementById('copyPartyCodeBtn'),
-        currentPartyStatus: document.getElementById('currentPartyStatus'),
-        partyStatusIndicator: document.getElementById('partyStatusIndicator'),
-        // Party Chat
-        partyChatSection: document.getElementById('partyChatSection'),
-        partyChatMessages: document.getElementById('partyChatMessages'),
-        partyChatInput: document.getElementById('partyChatInput'),
-        sendPartyChatBtn: document.getElementById('sendPartyChatBtn'),
-        togglePartyChatBtn: document.getElementById('togglePartyChatBtn'),
-        partySyncBtn: document.getElementById('partySyncBtn'),
-        partyReactionBtn: document.getElementById('partyReactionBtn'),
-        // Party Members Sidebar
-        partyMembersSidebar: document.getElementById('partyMembersSidebar'),
-        partyMemberList: document.getElementById('partyMemberList'),
-        partyMemberCountSidebar: document.getElementById('partyMemberCountSidebar'),
-        partyAdminControls: document.getElementById('partyAdminControls'),
-        partyKickBtn: document.getElementById('partyKickBtn'),
-        partyMuteBtn: document.getElementById('partyMuteBtn'),
-        partyTransferHostBtn: document.getElementById('partyTransferHostBtn'),
-        partyLockBtn: document.getElementById('partyLockBtn'),
-        // Party Settings Modal
-        partySettingsModal: document.getElementById('partySettingsModal'),
-        closePartySettingsModal: document.getElementById('closePartySettingsModal'),
-        partyNameSetting: document.getElementById('partyNameSetting'),
-        partyPrivacySetting: document.getElementById('partyPrivacySetting'),
-        partyPasswordSetting: document.getElementById('partyPasswordSetting'),
-        syncTolerance: document.getElementById('syncTolerance'),
-        controlMode: document.getElementById('controlMode'),
-        enableReactions: document.getElementById('enableReactions'),
-        maxMembers: document.getElementById('maxMembers'),
-        allowGuests: document.getElementById('allowGuests'),
-        autoSyncOnJoin: document.getElementById('autoSyncOnJoin'),
-        savePartySettings: document.getElementById('savePartySettings'),
-        cancelPartySettings: document.getElementById('cancelPartySettings'),
-        // Reaction Picker
-        reactionPicker: document.getElementById('reactionPicker'),
-        reactionOptions: document.querySelectorAll('.reaction-option'),
-        // Invite Friends Modal
-        inviteFriendsModal: document.getElementById('inviteFriendsModal'),
-        closeInviteFriendsModal: document.getElementById('closeInviteFriendsModal'),
-        inviteMethodTabs: document.querySelectorAll('.invite-tab'),
-        inviteTabContents: document.querySelectorAll('.invite-tab-content'),
-        partyInviteLink: document.getElementById('partyInviteLink'),
-        copyInviteLink: document.getElementById('copyInviteLink'),
-        partyInviteQrCode: document.getElementById('partyInviteQrCode'),
-        friendsSearchInput: document.getElementById('friendsSearchInput'),
-        friendsList: document.getElementById('friendsList'),
-        socialShareButtons: document.querySelectorAll('.social-share-btn'),
-        socialShareMessage: document.getElementById('socialShareMessage')
-    };
-
-    // Utility Functions
-    function showElement(element) {
-        element.classList.remove('hidden');
+// Chat Management System
+class ChatManager {
+    constructor(partyManager) {
+        this.partyManager = partyManager;
+        this.socket = partyManager.socket;
+        this.messageHistory = [];
+        this.maxMessages = 100;
+        this.isEmojiPickerOpen = false;
+        
+        this.initializeDOM();
+        this.initializeEventListeners();
+        this.initializeSocketEvents();
     }
 
-    function hideElement(element) {
-        element.classList.add('hidden');
+    initializeDOM() {
+        this.elements = {
+            // Main chat elements
+            partyChatSection: document.getElementById('partyChatSection'),
+            partyChatMessages: document.getElementById('partyChatMessages'),
+            partyChatInput: document.getElementById('partyChatInput'),
+            sendPartyChatBtn: document.getElementById('sendPartyChatBtn'),
+            togglePartyChatBtn: document.getElementById('togglePartyChatBtn'),
+            
+            // Popup chat elements
+            popupPartyChatMessages: document.getElementById('popupPartyChatMessages'),
+            popupPartyChatInput: document.getElementById('popupPartyChatInput'),
+            popupSendPartyMessage: document.getElementById('popupSendPartyMessage'),
+            
+            // Reaction elements
+            partyReactionBtn: document.getElementById('partyReactionBtn'),
+            reactionPicker: document.getElementById('reactionPicker'),
+            reactionOptions: document.querySelectorAll('.reaction-option')
+        };
     }
 
-    function toggleElement(element) {
-        element.classList.toggle('hidden');
-    }
+    initializeEventListeners() {
+        // Main chat input
+        if (this.elements.partyChatInput) {
+            this.elements.partyChatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage(this.elements.partyChatInput);
+                }
+            });
 
-    function showPopup(tab = 'create') {
-        showElement(elements.watchPartyPopup);
-        switchTab(tab);
-    }
+            this.elements.partyChatInput.addEventListener('input', () => {
+                this.handleTyping();
+            });
+        }
 
-    function hidePopup() {
-        hideElement(elements.watchPartyPopup);
-        switchTab('create');
-    }
+        // Popup chat input
+        if (this.elements.popupPartyChatInput) {
+            this.elements.popupPartyChatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage(this.elements.popupPartyChatInput);
+                }
+            });
 
-    function switchTab(tab) {
-        elements.partyTabButtons.forEach(btn => btn.classList.remove('active'));
-        elements.partyTabContents.forEach(content => {
-            content.classList.remove('active');
-            content.style.display = 'none';
+            this.elements.popupPartyChatInput.addEventListener('input', () => {
+                this.handleTyping();
+            });
+        }
+
+        // Send buttons
+        if (this.elements.sendPartyChatBtn) {
+            this.elements.sendPartyChatBtn.addEventListener('click', () => {
+                this.sendMessage(this.elements.partyChatInput);
+            });
+        }
+
+        if (this.elements.popupSendPartyMessage) {
+            this.elements.popupSendPartyMessage.addEventListener('click', () => {
+                this.sendMessage(this.elements.popupPartyChatInput);
+            });
+        }
+
+        // Chat toggle
+        if (this.elements.togglePartyChatBtn) {
+            this.elements.togglePartyChatBtn.addEventListener('click', () => {
+                this.toggleChat();
+            });
+        }
+
+        // Reaction button
+        if (this.elements.partyReactionBtn) {
+            this.elements.partyReactionBtn.addEventListener('click', () => {
+                this.toggleReactionPicker();
+            });
+        }
+
+        // Reaction options
+        this.elements.reactionOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const reaction = option.getAttribute('data-reaction');
+                this.sendReaction(reaction);
+                this.hideReactionPicker();
+            });
         });
-        const activeBtn = document.querySelector(`.party-tab[data-tab="${tab}"]`);
-        const activeContent = document.querySelector(`.party-tab-content[data-tab-content="${tab}"]`);
-        if (activeBtn && activeContent) {
-            activeBtn.classList.add('active');
-            activeContent.classList.add('active');
-            activeContent.style.display = 'block';
-        }
+
+        // Close reaction picker when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#partyReactionBtn') && 
+                !e.target.closest('#reactionPicker')) {
+                this.hideReactionPicker();
+            }
+        });
+
+        // Auto-resize chat inputs
+        this.setupAutoResize(this.elements.partyChatInput);
+        this.setupAutoResize(this.elements.popupPartyChatInput);
     }
 
-    function updatePartyUI(party) {
-        elements.partyNameDisplay.textContent = party.name;
-        elements.partyCodeDisplay.textContent = party.code;
-        elements.activePartyName.textContent = party.name;
-        elements.activePartyCode.textContent = party.code;
-        elements.activePartyStatus.textContent = party.status;
-        elements.activePartyMemberCount.textContent = party.members.length;
-        elements.partyMemberCount.textContent = party.members.length;
-        elements.partyMemberCountSidebar.textContent = party.members.length;
-        elements.currentPartyStatus.innerHTML = `<span>In ${party.name}</span>`;
-        showElement(elements.partyInfoContainer);
-        showElement(elements.partyStatusIndicator);
-        showElement(elements.partyChatSection);
-        showElement(elements.partyMembersSidebar);
-        showElement(elements.leavePartyBtnTop);
-        elements.activePartyTab.style.display = 'block';
-        updatePartyMembersList(party.members);
-        if (isHost) {
-            showElement(elements.partyAdminControls);
-            elements.popupPartySettings.style.display = 'inline-flex';
-            elements.popupPartyPlayPause.style.display = 'inline-flex';
-            elements.popupPartySeekBack.style.display = 'inline-flex';
-            elements.popupPartySeekForward.style.display = 'inline-flex';
-            elements.popupPartyChangeVideo.style.display = 'inline-flex';
-        } else {
-            hideElement(elements.partyAdminControls);
-            elements.popupPartySettings.style.display = party.controlMode === 'free' ? 'inline-flex' : 'none';
-            elements.popupPartyPlayPause.style.display = party.controlMode === 'free' ? 'inline-flex' : 'none';
-            elements.popupPartySeekBack.style.display = party.controlMode === 'free' ? 'inline-flex' : 'none';
-            elements.popupPartySeekForward.style.display = party.controlMode === 'free' ? 'inline-flex' : 'none';
-            elements.popupPartyChangeVideo.style.display = party.controlMode === 'free' ? 'inline-flex' : 'none';
-        }
-    }
+    initializeSocketEvents() {
+        // Listen for new messages
+        this.socket.on('new_message', (message) => {
+            this.handleNewMessage(message);
+        });
 
-    function updatePartyMembersList(members) {
-        elements.partyMemberList.innerHTML = '';
-        elements.popupPartyMembersList.innerHTML = '';
-        members.forEach(member => {
-            const isMemberHost = member.id === currentParty.hostId;
-            const li = document.createElement('li');
-            li.className = `member-item ${isMemberHost ? 'host' : ''}`;
-            li.innerHTML = `
-                <div class="member-avatar">
-                    <i class='bx bx-user'></i>
-                </div>
-                <div class="member-info">
-                    <span class="member-name">${member.name} ${isMemberHost ? '(Host)' : ''}</span>
-                    <span class="member-status">${member.status}</span>
-                </div>
-                ${isHost && !isMemberHost ? `
-                    <div class="member-actions">
-                        <button class="member-action-btn" data-member-id="${member.id}" aria-label="Member options">
-                            <i class='bx bx-dots-vertical-rounded'></i>
-                        </button>
-                    </div>
-                ` : ''}
-            `;
-            elements.partyMemberList.appendChild(li);
-            elements.popupPartyMembersList.appendChild(li.cloneNode(true));
+        // Listen for chat history
+        this.socket.on('chat_history', (data) => {
+            this.loadChatHistory(data.messages);
+        });
+
+        // Listen for reactions
+        this.socket.on('reaction_sent', (data) => {
+            this.handleReaction(data);
+        });
+
+        // Listen for typing indicators
+        this.socket.on('user_typing', (data) => {
+            this.showTypingIndicator(data);
+        });
+
+        this.socket.on('user_stopped_typing', (data) => {
+            this.hideTypingIndicator(data);
         });
     }
 
-    function addChatMessage(container, message, isSystem = false) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = isSystem ? 'system-message' : 'chat-message';
-        messageDiv.innerHTML = isSystem ? message : `
-            <span class="chat-user">${message.user}</span>: 
-            <span class="chat-text">${message.text}</span>
-            <span class="chat-timestamp">${new Date().toLocaleTimeString()}</span>
-        `;
-        container.appendChild(messageDiv);
+    // Message handling
+    sendMessage(inputElement) {
+        if (!inputElement || !this.partyManager.currentParty) return;
+
+        const messageText = inputElement.value.trim();
+        if (!messageText) return;
+
+        // Basic message validation
+        if (messageText.length > 500) {
+            this.showNotification('Message too long (max 500 characters)', 'error');
+            return;
+        }
+
+        // Send message via socket
+        this.socket.emit('send_message', {
+            message: messageText,
+            type: 'chat'
+        });
+
+        // Clear input
+        inputElement.value = '';
+        this.adjustTextareaHeight(inputElement);
+
+        // Stop typing indicator
+        this.stopTyping();
+    }
+
+    sendReaction(reaction) {
+        if (!this.partyManager.currentParty) return;
+
+        this.socket.emit('send_message', {
+            message: reaction,
+            type: 'reaction'
+        });
+
+        this.showFloatingReaction(reaction);
+    }
+
+    handleNewMessage(message) {
+        // Add to message history
+        this.messageHistory.push(message);
+        
+        // Keep only last maxMessages
+        if (this.messageHistory.length > this.maxMessages) {
+            this.messageHistory = this.messageHistory.slice(-this.maxMessages);
+        }
+
+        // Display message in both chat containers
+        this.displayMessage(message, this.elements.partyChatMessages);
+        this.displayMessage(message, this.elements.popupPartyChatMessages);
+
+        // Play notification sound for other users' messages
+        if (message.user_id !== this.partyManager.userId) {
+            this.playNotificationSound();
+            
+            // Show desktop notification if page is not focused
+            if (document.hidden) {
+                this.showDesktopNotification(message);
+            }
+        }
+    }
+
+    handleReaction(data) {
+        this.showFloatingReaction(data.reaction, data.username);
+        
+        // Add reaction as a system message
+        const reactionMessage = {
+            id: `reaction_${Date.now()}`,
+            user_id: data.user_id,
+            username: data.username,
+            text: `reacted with ${data.reaction}`,
+            timestamp: new Date().toISOString(),
+            type: 'reaction'
+        };
+
+        this.displayMessage(reactionMessage, this.elements.partyChatMessages);
+        this.displayMessage(reactionMessage, this.elements.popupPartyChatMessages);
+    }
+
+    loadChatHistory(messages) {
+        this.messageHistory = messages;
+        
+        // Clear existing messages
+        if (this.elements.partyChatMessages) {
+            this.elements.partyChatMessages.innerHTML = '';
+        }
+        if (this.elements.popupPartyChatMessages) {
+            this.elements.popupPartyChatMessages.innerHTML = '';
+        }
+
+        // Display all messages
+        messages.forEach(message => {
+            this.displayMessage(message, this.elements.partyChatMessages);
+            this.displayMessage(message, this.elements.popupPartyChatMessages);
+        });
+    }
+
+    displayMessage(message, container) {
+        if (!container) return;
+
+        const messageElement = this.createMessageElement(message);
+        container.appendChild(messageElement);
+        
+        // Auto-scroll to bottom
         container.scrollTop = container.scrollHeight;
+
+        // Animate new message
+        setTimeout(() => {
+            messageElement.classList.add('message-appear');
+        }, 10);
     }
 
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            alert('Copied to clipboard!');
-        });
-    }
-
-    function generateQRCode(code) {
-        elements.partyInviteQrCode.innerHTML = '';
-        new QRCode(elements.partyInviteQrCode, {
-            text: `https://streamx.com/party/join/${code}`,
-            width: 128,
-            height: 128
-        });
-    }
-
-    function syncVideo(time, state) {
-        const video = document.getElementById('iframePlayer');
-        if (video && Math.abs(video.currentTime - time) > syncToleranceOptions[currentParty.syncTolerance]) {
-            video.currentTime = time;
-            if (state === 'playing') {
-                video.play();
-            } else {
-                video.pause();
-            }
-        }
-    }
-
-    // Event Listeners
-    elements.createPartyBtn.addEventListener('click', () => showPopup('create'));
-    elements.joinPartyBtn.addEventListener('click', () => showPopup('join'));
-    elements.closePartyPopup.addEventListener('click', hidePopup);
-    elements.cancelCreateParty.addEventListener('click', hidePopup);
-    elements.cancelJoinParty.addEventListener('click', hidePopup);
-
-    elements.partyTabButtons.forEach(btn => {
-        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-    });
-
-    elements.confirmCreateParty.addEventListener('click', () => {
-        const party = {
-            name: elements.partyNameInput.value || 'Movie Night',
-            password: elements.partyPasswordInput.value,
-            hostControls: elements.hostControlsSelect.value,
-            privacy: elements.partyPrivacySelect.value,
-            code: Math.random().toString(36).substr(2, 6).toUpperCase(),
-            members: [{ id: userId, name: 'You', status: 'Online' }],
-            hostId: userId,
-            status: 'Active',
-            syncTolerance: elements.syncTolerance.value || 'normal',
-            controlMode: elements.controlMode.value || 'host',
-            maxMembers: parseInt(elements.maxMembers.value) || 20,
-            allowGuests: elements.allowGuests.checked,
-            autoSyncOnJoin: elements.autoSyncOnJoin.checked,
-            enableReactions: elements.enableReactions.checked
-        };
-        socket.emit('createParty', party);
-    });
-
-    elements.confirmJoinParty.addEventListener('click', () => {
-        socket.emit('joinParty', {
-            code: elements.partyCodeInput.value,
-            password: elements.joinPasswordInput.value,
-            userId,
-            userName: 'You'
-        });
-    });
-
-    elements.leavePartyBtnTop.addEventListener('click', () => {
-        socket.emit('leaveParty', { partyCode: currentParty.code, userId });
-    });
-
-    elements.popupLeavePartyBtn.addEventListener('click', () => {
-        socket.emit('leaveParty', { partyCode: currentParty.code, userId });
-    });
-
-    elements.copyPartyCodeBtn.addEventListener('click', () => {
-        copyToClipboard(currentParty.code);
-    });
-
-    elements.copyActivePartyCodeBtn.addEventListener('click', () => {
-        copyToClipboard(currentParty.code);
-    });
-
-    elements.copyInviteLink.addEventListener('click', () => {
-        copyToClipboard(elements.partyInviteLink.value);
-    });
-
-    elements.sendPartyChatBtn.addEventListener('click', () => {
-        const message = elements.partyChatInput.value.trim();
-        if (message) {
-            socket.emit('partyMessage', { partyCode: currentParty.code, user: 'You', text: message });
-            elements.partyChatInput.value = '';
-        }
-    });
-
-    elements.popupSendPartyMessage.addEventListener('click', () => {
-        const message = elements.popupPartyChatInput.value.trim();
-        if (message) {
-            socket.emit('partyMessage', { partyCode: currentParty.code, user: 'You', text: message });
-            elements.popupPartyChatInput.value = '';
-        }
-    });
-
-    elements.partyChatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            elements.sendPartyChatBtn.click();
-        }
-    });
-
-    elements.popupPartyChatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            elements.popupSendPartyMessage.click();
-        }
-    });
-
-    elements.togglePartyChatBtn.addEventListener('click', () => {
-        toggleElement(elements.partyChatContainer);
-        elements.togglePartyChatBtn.querySelector('i').classList.toggle('bx-chevron-down');
-        elements.togglePartyChatBtn.querySelector('i').classList.toggle('bx-chevron-up');
-    });
-
-    elements.partySyncBtn.addEventListener('click', () => {
-        socket.emit('syncVideo', { partyCode: currentParty.code, time: document.getElementById('iframePlayer').currentTime });
-    });
-
-    elements.popupPartySync.addEventListener('click', () => {
-        socket.emit('syncVideo', { partyCode: currentParty.code, time: document.getElementById('iframePlayer').currentTime });
-    });
-
-    elements.partyReactionBtn.addEventListener('click', () => {
-        toggleElement(elements.reactionPicker);
-    });
-
-    elements.reactionOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            if (currentParty.enableReactions) {
-                socket.emit('partyReaction', { partyCode: currentParty.code, user: 'You', reaction: option.dataset.reaction });
-                hideElement(elements.reactionPicker);
-            }
-        });
-    });
-
-    elements.popupPartyPlayPause.addEventListener('click', () => {
-        if (isHost || currentParty.controlMode === 'free') {
-            const video = document.getElementById('iframePlayer');
-            const state = video.paused ? 'playing' : 'paused';
-            socket.emit('controlVideo', { partyCode: currentParty.code, action: 'playPause', state });
-        }
-    });
-
-    elements.popupPartySeekBack.addEventListener('click', () => {
-        if (isHost || currentParty.controlMode === 'free') {
-            const video = document.getElementById('iframePlayer');
-            const time = video.currentTime - 10;
-            socket.emit('controlVideo', { partyCode: currentParty.code, action: 'seek', time });
-        }
-    });
-
-    elements.popupPartySeekForward.addEventListener('click', () => {
-        if (isHost || currentParty.controlMode === 'free') {
-            const video = document.getElementById('iframePlayer');
-            const time = video.currentTime + 10;
-            socket.emit('controlVideo', { partyCode: currentParty.code, action: 'seek', time });
-        }
-    });
-
-    elements.popupPartyChangeVideo.addEventListener('click', () => {
-        if (isHost || currentParty.controlMode === 'free') {
-            const videoUrl = prompt('Enter new video URL:');
-            if (videoUrl) {
-                socket.emit('changeVideo', { partyCode: currentParty.code, videoUrl });
-            }
-        }
-    });
-
-    elements.popupPartySettings.addEventListener('click', () => {
-        if (isHost || currentParty.controlMode === 'free') {
-            showElement(elements.partySettingsModal);
-        }
-    });
-
-    elements.closePartySettingsModal.addEventListener('click', () => {
-        hideElement(elements.partySettingsModal);
-    });
-
-    elements.cancelPartySettings.addEventListener('click', () => {
-        hideElement(elements.partySettingsModal);
-    });
-
-    elements.savePartySettings.addEventListener('click', () => {
-        const updatedSettings = {
-            name: elements.partyNameSetting.value,
-            privacy: elements.partyPrivacySetting.value,
-            password: elements.partyPasswordSetting.value,
-            syncTolerance: elements.syncTolerance.value,
-            controlMode: elements.controlMode.value,
-            enableReactions: elements.enableReactions.checked,
-            maxMembers: parseInt(elements.maxMembers.value),
-            allowGuests: elements.allowGuests.checked,
-            autoSyncOnJoin: elements.autoSyncOnJoin.checked
-        };
-        socket.emit('updatePartySettings', { partyCode: currentParty.code, settings: updatedSettings });
-        hideElement(elements.partySettingsModal);
-    });
-
-    elements.partyKickBtn.addEventListener('click', () => {
-        if (isHost) {
-            const memberId = prompt('Enter member ID to kick:');
-            if (memberId) {
-                socket.emit('kickMember', { partyCode: currentParty.code, memberId });
-            }
-        }
-    });
-
-    elements.partyMuteBtn.addEventListener('click', () => {
-        if (isHost) {
-            const memberId = prompt('Enter member ID to mute:');
-            if (memberId) {
-                socket.emit('muteMember', { partyCode: currentParty.code, memberId });
-            }
-        }
-    });
-
-    elements.partyTransferHostBtn.addEventListener('click', () => {
-        if (isHost) {
-            const memberId = prompt('Enter member ID to transfer host:');
-            if (memberId) {
-                socket.emit('transferHost', { partyCode: currentParty.code, newHostId: memberId });
-            }
-        }
-    });
-
-    elements.partyLockBtn.addEventListener('click', () => {
-        if (isHost) {
-            socket.emit('lockParty', { partyCode: currentParty.code, locked: !currentParty.locked });
-        }
-    });
-
-    elements.closeInviteFriendsModal.addEventListener('click', () => {
-        hideElement(elements.inviteFriendsModal);
-    });
-
-    elements.inviteMethodTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            elements.inviteMethodTabs.forEach(t => t.classList.remove('active'));
-            elements.inviteTabContents.forEach(c => {
-                c.classList.remove('active');
-                c.style.display = 'none';
-            });
-            tab.classList.add('active');
-            const content = document.querySelector(`.invite-tab-content[data-tab-content="${tab.dataset.tab}"]`);
-            content.classList.add('active');
-            content.style.display = 'block';
-        });
-    });
-
-    elements.socialShareButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const platform = btn.className.split(' ')[1];
-            const message = encodeURIComponent(elements.socialShareMessage.value);
-            const url = encodeURIComponent(elements.partyInviteLink.value);
-            let shareUrl;
-            switch (platform) {
-                case 'facebook':
-                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-                    break;
-                case 'twitter':
-                    shareUrl = `https://twitter.com/intent/tweet?text=${message}&url=${url}`;
-                    break;
-                case 'whatsapp':
-                    shareUrl = `https://api.whatsapp.com/send?text=${message}%20${url}`;
-                    break;
-                case 'telegram':
-                    shareUrl = `https://t.me/share/url?url=${url}&text=${message}`;
-                    break;
-                case 'discord':
-                    shareUrl = `https://discord.com/channels/@me?content=${message}%20${url}`;
-                    break;
-                case 'email':
-                    shareUrl = `mailto:?subject=Join my StreamX Watch Party&body=${message}%20${url}`;
-                    break;
-            }
-            window.open(shareUrl, '_blank');
-        });
-    });
-
-    // Socket.IO Event Handlers
-    socket.on('partyCreated', (party) => {
-        currentParty = party;
-        isHost = true;
-        updatePartyUI(party);
-        showPopup('active');
-        generateQRCode(party.code);
-        elements.partyInviteLink.value = `https://streamx.com/party/join/${party.code}`;
-        addChatMessage(elements.partyChatMessages, 'Party created!', true);
-        addChatMessage(elements.popupPartyChatMessages, 'Party created!', true);
-    });
-
-    socket.on('partyJoined', (party) => {
-        currentParty = party;
-        isHost = party.hostId === userId;
-        updatePartyUI(party);
-        showPopup('active');
-        generateQRCode(party.code);
-        elements.partyInviteLink.value = `https://streamx.com/party/join/${party.code}`;
-        if (party.autoSyncOnJoin) {
-            socket.emit('requestSync', { partyCode: party.code });
-        }
-        addChatMessage(elements.partyChatMessages, 'Joined the party!', true);
-        addChatMessage(elements.popupPartyChatMessages, 'Joined the party!', true);
-    });
-
-    socket.on('partyUpdated', (party) => {
-        currentParty = party;
-        updatePartyUI(party);
-    });
-
-    socket.on('partyMessage', (message) => {
-        addChatMessage(elements.partyChatMessages, message);
-        addChatMessage(elements.popupPartyChatMessages, message);
-    });
-
-    socket.on('partyReaction', ({ user, reaction }) => {
-        addChatMessage(elements.partyChatMessages, `${user} reacted with ${reaction}`, true);
-        addChatMessage(elements.popupPartyChatMessages, `${user} reacted with ${reaction}`, true);
-    });
-
-    socket.on('syncVideo', ({ time, state }) => {
-        syncVideo(time, state);
-    });
-
-    socket.on('controlVideo', ({ action, state, time }) => {
-        const video = document.getElementById('iframePlayer');
-        if (action === 'playPause') {
-            if (state === 'playing') {
-                video.play();
-            } else {
-                video.pause();
-            }
-        } else if (action === 'seek') {
-            video.currentTime = time;
-        }
-    });
-
-    socket.on('changeVideo', ({ videoUrl }) => {
-        const video = document.getElementById('iframePlayer');
-        video.src = videoUrl;
-    });
-
-    socket.on('memberKicked', ({ memberId }) => {
-        if (memberId === userId) {
-            currentParty = null;
-            isHost = false;
-            hideElement(elements.partyInfoContainer);
-            hideElement(elements.partyStatusIndicator);
-            hideElement(elements.partyChatSection);
-            hideElement(elements.partyMembersSidebar);
-            hideElement(elements.leavePartyBtnTop);
-            elements.activePartyTab.style.display = 'none';
-            hidePopup();
-            alert('You have been kicked from the party.');
-        }
-    });
-
-    socket.on('memberMuted', ({ memberId }) => {
-        if (memberId === userId) {
-            alert('You have been muted by the host.');
-        }
-    });
-
-    socket.on('hostTransferred', ({ newHostId }) => {
-        isHost = newHostId === userId;
-        updatePartyUI(currentParty);
-        addChatMessage(elements.partyChatMessages, isHost ? 'You are now the host!' : 'Host transferred.', true);
-        addChatMessage(elements.popupPartyChatMessages, isHost ? 'You are now the host!' : 'Host transferred.', true);
-    });
-
-    socket.on('partyLocked', ({ locked }) => {
-        currentParty.locked = locked;
-        addChatMessage(elements.partyChatMessages, `Party is now ${locked ? 'locked' : 'unlocked'}.`, true);
-        addChatMessage(elements.popupPartyChatMessages, `Party is now ${locked ? 'locked' : 'unlocked'}.`, true);
-    });
-
-    socket.on('publicParties', (parties) => {
-        elements.publicPartiesList.innerHTML = '';
-        parties.forEach(party => {
-            const partyItem = document.createElement('div');
-            partyItem.className = 'party-item';
-            partyItem.innerHTML = `
-                <div class="party-item-info">
-                    <h5>${party.name}</h5>
-                    <p>Watching: ${party.currentVideo || 'Unknown'}</p>
-                    <div class="party-meta">
-                        <span><i class='bx bx-user'></i> ${party.members.length}</span>
-                        <span><i class='bx bx-lock-open'></i> ${party.privacy}</span>
-                    </div>
-                </div>
-                <button class="btn join-party-btn" data-code="${party.code}">Join</button>
+    createMessageElement(message) {
+        const messageDiv = document.createElement('div');
+        
+        if (message.type === 'reaction') {
+            messageDiv.className = 'reaction-message';
+            messageDiv.innerHTML = `
+                <span class="reaction-user">${message.username}</span>
+                <span class="reaction-text">${message.text}</span>
+                <span class="message-timestamp">${this.formatTimestamp(message.timestamp)}</span>
             `;
-            elements.publicPartiesList.appendChild(partyItem);
-        });
-        document.querySelectorAll('.join-party-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                elements.partyCodeInput.value = btn.dataset.code;
-                elements.confirmJoinParty.click();
-            });
-        });
-    });
+        } else if (message.type === 'system') {
+            messageDiv.className = 'system-message';
+            messageDiv.textContent = message.text;
+        } else {
+            messageDiv.className = 'chat-message';
+            const isOwnMessage = message.user_id === this.partyManager.userId;
+            
+            if (isOwnMessage) {
+                messageDiv.classList.add('own-message');
+            }
 
-    // Initialize
-    socket.emit('getPublicParties');
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span class="chat-user" style="color: ${this.getUserColor(message.user_id)}">${message.username}</span>
+                    <span class="chat-timestamp">${this.formatTimestamp(message.timestamp)}</span>
+                </div>
+                <div class="chat-text">${this.formatMessageText(message.text)}</div>
+            `;
+        }
+
+        return messageDiv;
+    }
+
+    formatMessageText(text) {
+        // Basic text formatting
+        let formattedText = this.escapeHtml(text);
+        
+        // Convert URLs to links
+        formattedText = formattedText.replace(
+            /(https?:\/\/[^\s]+)/g,
+            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+        );
+
+        // Convert emoji shortcodes
+        formattedText = this.convertEmojiShortcodes(formattedText);
+
+        return formattedText;
+    }
+
+    convertEmojiShortcodes(text) {
+        const emojiMap = {
+            ':)': '😊',
+            ':D': '😃',
+            ':(': '😢',
+            ':P': '😛',
+            ';)': '😉',
+            ':heart:': '❤️',
+            ':thumbsup:': '👍',
+            ':thumbsdown:': '👎',
+            ':fire:': '🔥',
+            ':clap:': '👏',
+            ':party:': '🎉'
+        };
+
+        let result = text;
+        Object.entries(emojiMap).forEach(([shortcode, emoji]) => {
+            result = result.replace(new RegExp(this.escapeRegex(shortcode), 'g'), emoji);
+        });
+
+        return result;
+    }
+
+    formatTimestamp(timestamp) {
+        const date = new Date(timestamp);
+        const now = new Date();
+        
+        if (date.toDateString() === now.toDateString()) {
+            // Same day - show only time
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else {
+            // Different day - show date and time
+            return date.toLocaleString([], { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+    }
+
+    getUserColor(userId) {
+        // Generate consistent color for each user
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+        ];
+        
+        let hash = 0;
+        for (let i = 0; i < userId.length; i++) {
+            hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    // Typing indicators
+    handleTyping() {
+        if (!this.typingTimer) {
+            this.socket.emit('typing_start');
+        }
+        
+        clearTimeout(this.typingTimer);
+        this.typingTimer = setTimeout(() => {
+            this.stopTyping();
+        }, 1000);
+    }
+
+    stopTyping() {
+        if (this.typingTimer) {
+            clearTimeout(this.typingTimer);
+            this.typingTimer = null;
+            this.socket.emit('typing_stop');
+        }
+    }
+
+    showTypingIndicator(data) {
+        if (data.user_id === this.partyManager.userId) return;
+
+        const indicator = document.createElement('div');
+        indicator.className = 'typing-indicator';
+        indicator.id = `typing_${data.user_id}`;
+        indicator.innerHTML = `
+            <span class="typing-user">${data.username} is typing</span>
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        `;
+
+        // Add to both chat containers
+        [this.elements.partyChatMessages, this.elements.popupPartyChatMessages].forEach(container => {
+            if (container) {
+                // Remove existing typing indicator for this user
+                const existing = container.querySelector(`#typing_${data.user_id}`);
+                if (existing) existing.remove();
+                
+                container.appendChild(indicator.cloneNode(true));
+                container.scrollTop = container.scrollHeight;
+            }
+        });
+    }
+
+    hideTypingIndicator(data) {
+        [this.elements.partyChatMessages, this.elements.popupPartyChatMessages].forEach(container => {
+            if (container) {
+                const indicator = container.querySelector(`#typing_${data.user_id}`);
+                if (indicator) indicator.remove();
+            }
+        });
+    }
+
+    // Reaction picker
+    toggleReactionPicker() {
+        if (this.elements.reactionPicker) {
+            this.isEmojiPickerOpen = !this.isEmojiPickerOpen;
+            
+            if (this.isEmojiPickerOpen) {
+                this.showReactionPicker();
+            } else {
+                this.hideReactionPicker();
+            }
+        }
+    }
+
+    showReactionPicker() {
+        if (this.elements.reactionPicker) {
+            this.elements.reactionPicker.classList.remove('hidden');
+            this.isEmojiPickerOpen = true;
+        }
+    }
+
+    hideReactionPicker() {
+        if (this.elements.reactionPicker) {
+            this.elements.reactionPicker.classList.add('hidden');
+            this.isEmojiPickerOpen = false;
+        }
+    }
+
+    showFloatingReaction(reaction, username = null) {
+        const reactionElement = document.createElement('div');
+        reactionElement.className = 'floating-reaction';
+        reactionElement.textContent = reaction;
+        
+        if (username) {
+            reactionElement.title = `Reaction from ${username}`;
+        }
+
+        // Position randomly on screen
+        reactionElement.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+        reactionElement.style.top = Math.random() * (window.innerHeight - 100) + 100 + 'px';
+
+        document.body.appendChild(reactionElement);
+
+        // Animate and remove
+        setTimeout(() => {
+            reactionElement.style.opacity = '0';
+            reactionElement.style.transform = 'translateY(-50px) scale(1.5)';
+        }, 100);
+
+        setTimeout(() => {
+            if (reactionElement.parentNode) {
+                reactionElement.parentNode.removeChild(reactionElement);
+            }
+        }, 2000);
+    }
+
+    // Chat visibility
+    toggleChat() {
+        if (this.elements.partyChatMessages) {
+            this.elements.partyChatMessages.classList.toggle('hidden');
+        }
+    }
+
+    showChat() {
+        if (this.elements.partyChatSection) {
+            this.elements.partyChatSection.classList.remove('hidden');
+        }
+    }
+
+    hideChat() {
+        if (this.elements.partyChatSection) {
+            this.elements.partyChatSection.classList.add('hidden');
+        }
+    }
+
+    // Auto-resize functionality
+    setupAutoResize(textarea) {
+        if (!textarea) return;
+
+        textarea.addEventListener('input', () => {
+            this.adjustTextareaHeight(textarea);
+        });
+    }
+
+    adjustTextareaHeight(textarea) {
+        if (!textarea) return;
+
+        textarea.style.height = 'auto';
+        const maxHeight = 100; // Maximum height in pixels
+        const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+        textarea.style.height = newHeight + 'px';
+        textarea.style.overflowY = newHeight >= maxHeight ? 'scroll' : 'hidden';
+    }
+
+    // Notifications
+    playNotificationSound() {
+        try {
+            // Create a subtle notification sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (error) {
+            console.log('Could not play notification sound:', error);
+        }
+    }
+
+    showDesktopNotification(message) {
+        if (Notification.permission === 'granted') {
+            new Notification(`${message.username} in party chat`, {
+                body: message.text,
+                icon: '/static/images/logo.png', // Add your logo
+                tag: 'party-chat'
+            });
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    this.showDesktopNotification(message);
+                }
+            });
+        }
+    }
+
+    // Utility functions
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    showNotification(message, type = 'info') {
+        if (window.showNotification) {
+            window.showNotification(message, type);
+        }
+    }
+
+    // Clear chat
+    clearChat() {
+        this.messageHistory = [];
+        
+        if (this.elements.partyChatMessages) {
+            this.elements.partyChatMessages.innerHTML = '';
+        }
+        if (this.elements.popupPartyChatMessages) {
+            this.elements.popupPartyChatMessages.innerHTML = '';
+        }
+    }
+
+    // Export chat history
+    exportChatHistory() {
+        if (this.messageHistory.length === 0) {
+            this.showNotification('No chat history to export', 'info');
+            return;
+        }
+
+        const chatText = this.messageHistory.map(message => {
+            const timestamp = this.formatTimestamp(message.timestamp);
+            return `[${timestamp}] ${message.username}: ${message.text}`;
+        }).join('\n');
+
+        const blob = new Blob([chatText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `party_chat_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        URL.revokeObjectURL(url);
+        this.showNotification('Chat history exported', 'success');
+    }
+}
+
+// CSS for floating reactions and typing indicators
+const chatStyles = `
+.floating-reaction {
+    position: fixed;
+    font-size: 2rem;
+    pointer-events: none;
+    z-index: 10000;
+    transition: all 2s ease-out;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-lighter);
+    border-radius: var(--border-radius);
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.typing-dots {
+    display: flex;
+    gap: 2px;
+}
+
+.typing-dots span {
+    width: 4px;
+    height: 4px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    animation: typing-dot 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing-dot {
+    0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.message-appear {
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reaction-message {
+    text-align: center;
+    font-style: italic;
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+}
+
+.own-message {
+    margin-left: 20%;
+}
+
+.own-message .message-header .chat-user {
+    color: var(--primary-color) !important;
+}
+
+.chat-message .message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.chat-user {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.chat-timestamp {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.chat-text {
+    line-height: 1.4;
+}
+
+.chat-text a {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.chat-text a:hover {
+    text-decoration: none;
+}
+`;
+
+// Inject chat styles
+const styleSheet = document.createElement('style');
+styleSheet.textContent = chatStyles;
+document.head.appendChild(styleSheet);
+
+// Initialize chat manager when party manager is available
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait for party manager to be available
+    const initChatManager = () => {
+        if (window.partyManager) {
+            window.chatManager = new ChatManager(window.partyManager);
+            console.log('Chat manager initialized');
+        } else {
+            setTimeout(initChatManager, 100);
+        }
+    };
+    
+    initChatManager();
 });
+

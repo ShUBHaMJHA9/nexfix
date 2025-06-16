@@ -14,13 +14,16 @@ def initialize_database():
         with conn.cursor() as cur:
             # Users table
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    email VARCHAR(255) UNIQUE NOT NULL,
-                    hashed_password VARCHAR(255) NOT NULL
-                )
-            """)
+    CREATE TABLE IF NOT EXISTS users (
+        user_id VARCHAR(36) PRIMARY KEY,
+        name VARCHAR(255),  -- can be NULL
+        email VARCHAR(255) UNIQUE,  -- can be NULL
+        hashed_password VARCHAR(255),  -- can be NULL
+        sid VARCHAR(255) NOT NULL,
+        username VARCHAR(255) NOT NULL,
+        connected_at TIMESTAMP NOT NULL
+    )
+""")
 
             # Movies table
             cur.execute("""
@@ -74,6 +77,29 @@ def initialize_database():
                     image TEXT DEFAULT 'poster.jpg'
                 )
             """)
+            cur.execute("""
+DO $$ BEGIN
+    CREATE TYPE privacy_enum AS ENUM ('public', 'private');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+""")                 
+            cur.execute("""
+CREATE TABLE IF NOT EXISTS party (
+    code VARCHAR(6) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    privacy privacy_enum NOT NULL,
+    password VARCHAR(255),
+    max_members INT NOT NULL,
+    settings JSON NOT NULL,
+    members JSON NOT NULL,
+    video_id VARCHAR(50),
+    created_at TIMESTAMP NOT NULL
+)
+""")
+            cur.execute("""
+CREATE INDEX IF NOT EXISTS idx_created_at ON party (created_at);
+""")
 
             conn.commit()
             logger.info("All database tables initialized successfully.")
